@@ -12,9 +12,18 @@
 	<link rel="stylesheet" href="../static/style.css" type="text/css" />	
 </head>
 <body id="background">
-<nav class="navbar navbar-expand-sm navbar-dark bg-dark" aria-label="Fourth navbar example">
-<!-- <nav class="navbar navbar-expand-md navbar-dark bg-dark" aria-label="Fourth navbar example"> -->
-	<div class="container-fluid" >
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for  category, message in messages %}
+<div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+	{{ message }}
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<nav class="navbar navbar-expand-md navbar-dark bg-dark" aria-label="Fourth navbar example">
+	<div class="container-fluid">
 		<a class="navbar-brand" href="/index.html">Home</a>
 		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample04" aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
@@ -26,10 +35,10 @@
 			<a class="nav-link active" aria-current="page" href="/mail.html">Mail</a>
 			</li>
 			<li class="nav-item">
-			<a class="nav-link" href="/youtube.html">Youtube</a>
+			<a class="nav-link" href="/youtube.html">YouTube</a>
 			</li>
 			<li class="nav-item">
-			<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Link</a>
+			<a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
 			</li>
 			<li class="nav-item dropdown">
 			<a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>
@@ -46,8 +55,20 @@
 		</div>
 	</div>
 </nav>
-<center>
-<h1 class="neon-label">Home Page</h1>
-</center>
+<form action="/sendMail" method="post">
+	<center>
+	<table class="table-form" border="1">
+	<tr><td><h1>
+	<label class="neon-label">>email adress</label>
+	<input class="input-text" type="email" placeholder="example@gmail.com"
+	name="senderInput" size="40"/>
+	</h1></td></tr>
+	<tr><td>
+	<textarea class="input-text" name="messageText" rows="15" cols="70" placeholder="Enter text here"></textarea>
+	</td></tr>	
+	</table>
+	<input class="neon-button" name="buttonSubmit" type="submit" value="Send"/>
+	</center>
+</form>
 </body>
 </html>
