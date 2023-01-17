@@ -1,6 +1,6 @@
 from flask import Flask, flash, render_template, request, send_file
 from mailManager import MailManager
-from youtubeDL import YoutubeDL, AudioYoutube
+from youtubeDL import AudioYoutube
 import os
 
 app = Flask(__name__)
@@ -48,6 +48,11 @@ def downloadYoutube():
         if youtubeURL == "":
             flash("Please enter YouTube URL", category="danger")
             return render_template("youtube.html")
+        elif "list=" in youtubeURL:
+            flash("You entered URL with playlist has - only single video has been downloaded", 
+            category="danger")
+            hashTuple = AudioYoutube.getVideoHash(youtubeURL)
+            youtubeURL = hashTuple[0]
         youtubeDownloder = AudioYoutube(config)
         direcotryPath = youtubeDownloder.savePath
         if type == "mp3":
@@ -56,9 +61,6 @@ def downloadYoutube():
             flash("Downloaded audio file", category="success")
         else:
             metaData = youtubeDownloder.downloadVideo(youtubeURL, type)
-            print(youtubeDownloder.ydl_video_opts)
-            # print(metaData)
-            # print(metaData["ext"])
             fileName = f'{metaData["title"]}_{type}p.{metaData["ext"]}'
             flash("Downloaded video file", category="success")
         return render_template("downloadPage.html", downloadFileName=fileName, downloadDirectoryPath=direcotryPath)
@@ -76,3 +78,5 @@ def youtube():
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
+
+# problem z tym linkiem https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1

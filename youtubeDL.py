@@ -64,7 +64,7 @@ class YoutubeDL():
             playlistHash = playlistURL[playlistURL.index("=") + 1:]
             self.downloadFile(playlistHash, self.ydl_video_opts)
 
-    def downloadDoubleHashedLinkVideo(self, videoHash, playlistHash, type):
+    def terminalDoubleHashedLinkVideo(self, videoHash, playlistHash, type):
         userResponse = input("""
         Playlist link detected. 
         If you want to download single video/audio press 's'
@@ -257,7 +257,7 @@ if __name__ == "__main__":
         if link == None:
             terminalUser.downoladConfigPlaylistVideo(type)
         elif videoHash and playlistHash:
-            terminalUser.downloadDoubleHashedLinkVideo(videoHash, playlistHash, type)
+            terminalUser.terminalDoubleHashedLinkVideo(videoHash, playlistHash, type)
         else:
             terminalUser.downloadVideo(link, type)
 
