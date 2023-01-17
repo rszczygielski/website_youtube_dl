@@ -67,6 +67,7 @@ background-color: var(--clr-bg);
 
 
 .neon-label{
+    font-size: 50px;
     color: var(--clr-neon);
     text-shadow: 0 0 0.3em;
 }
@@ -91,6 +92,3 @@ background-color: var(--clr-bg);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
-.neon-button-yt{
-    
-}

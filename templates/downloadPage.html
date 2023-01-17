@@ -58,44 +58,16 @@
     
 <div>
 <center>
-    <form action="/downloadYoutube" method="post">
-    <h1>
-        <div>
-        <center>
-        <td><label class="neon-label">
-            Enter YouTube URL</label></td>
-        </center>
-        </dir>
-        </center>
-        <center>
-        <table>
-        <tr><td>
-        <input class="input-text" type="url" name="youtubeURL" placeholder="YouTube URL" 
-            size="50"></input>
-        </td></tr>
-        </center>
-        <tr><td>
-        <center>
-        <input type="radio" name="qualType" id="360p" value="360">
-        <label class="radio-buttons-label">360p</label>
-        <input type="radio" name="qualType" id="720p" value="720">
-        <label class="radio-buttons-label">720p</label>
-        <input type="radio" name="qualType" id="1080p" value="1080">
-        <label class="radio-buttons-label">1080p</label>
-        <input type="radio" name="qualType" id="2160p" value="2160">
-        <label class="radio-buttons-label">2160p</label>
-        <input type="radio" name="qualType" id="mp3" value="mp3">
-        <label class="radio-buttons-label">mp3</label>
-        </center>
-        </td></tr>
-        </table>
-        </h1>
-        </center>
-        <div>
-        <center>
-        <button class="neon-button" type="submit">Convert</button>
-        </center>
-        </div>
+    <form action="/downloadFile" method="post">
+    <label class="neon-label">{{downloadFileName}}</label>
+    <input type="hidden" name="fileName" value="{{downloadFileName}}"></input>
+    <input type="hidden" name="directoryPath" value="{{downloadDirectoryPath}}"></input>
+    <br>
+    <br>
+    <br>
+    <button class="neon-button" type="submit" value="Download">Download</button>
     </form>
+</center>
+</div>
 </body>
 </html>
