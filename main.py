@@ -1,6 +1,7 @@
 from flask import Flask, flash, render_template, request, send_file
 from mailManager import MailManager
-from youtubeDL import AudioYoutube
+from youtubeDL import YoutubeDL
+import yt_dlp
 import os
 
 app = Flask(__name__)
@@ -49,11 +50,9 @@ def downloadYoutube():
             flash("Please enter YouTube URL", category="danger")
             return render_template("youtube.html")
         elif "list=" in youtubeURL:
-            flash("You entered URL with playlist has - only single video has been downloaded", 
+            flash("You entered URL with playlist hash - only single video has been downloaded", 
             category="danger")
-            hashTuple = AudioYoutube.getVideoHash(youtubeURL)
-            youtubeURL = hashTuple[0]
-        youtubeDownloder = AudioYoutube(config)
+        youtubeDownloder = YoutubeDL(config)
         direcotryPath = youtubeDownloder.savePath
         if type == "mp3":
             metaData = youtubeDownloder.downloadAudio(youtubeURL)
@@ -67,10 +66,17 @@ def downloadYoutube():
 
 @app.route("/downloadFile", methods=["POST", "GET"])
 def downloadFile():
-    fileName = request.form["fileName"]
+    fileName = yt_dlp.utils.sanitize_filename(request.form["fileName"])
     directoryPath = request.form["directoryPath"]
     fullPath = os.path.join(directoryPath, fileName)
     return send_file(fullPath, as_attachment=True)
+
+@app.route("/downloadConfigPlaylist", methods=["POST", "GET"])
+def downloadConfigPlaylist():
+    youtubeDownloder = YoutubeDL("youtube_config.ini")
+    youtubeDownloder.downoladConfigPlaylistVideo(type=720)
+    return render_template("youtube.html")
+
 
 @app.route("/youtube.html")
 def youtube():
@@ -80,3 +86,5 @@ if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
 
 # problem z tym linkiem https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1
+# dodać komunikat o pobieraniu config playlist 
+# zrobić podstronę do zmiany pliku konfiguracyjnego

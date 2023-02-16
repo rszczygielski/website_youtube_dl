@@ -1,2 +1,4 @@
 /__pycache__
 /.vscode
+/client_secret.json
+/gmail_token.json
