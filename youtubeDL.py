@@ -3,7 +3,8 @@ import configparser
 import os
 import argparse
 from enum import Enum
-from mutagen.easyid3 import EasyID3
+# from mutagen.easyid3 import EasyID3
+import mutagen.easyid3
 from mutagen.mp3 import MP3
 
 class MetaDataType(Enum):
@@ -27,7 +28,7 @@ class MetaData():
             metaDataDict = self.getMetaDataDict(trackMetaData)
             path = f'{self.directoryPath}/{yt_dlp.utils.sanitize_filename(metaDataDict["title"])}.mp3'
             self.saveMetaData(metaDataDict, path)
-            audio = EasyID3(path)
+            audio = mutagen.easyid3.EasyID3(path)
             audio['album'] = playlistName
             audio.save()
             self.showMetaDataInfo(path)
@@ -58,6 +59,9 @@ class MetaData():
                 metaDataDict[data.value] = metaData[data.value]
         return metaDataDict
 
+    def saveEasyID3(self, easyid3Instance):
+        easyid3Instance.save()
+
     def saveMetaData(self, metaDataDict, path):
         """Method used to set Metadata
 
@@ -65,13 +69,13 @@ class MetaData():
             metaDataDict (dict): Metadata dict
             path (str): file path
         """
-        audio = EasyID3(path)
+        audio = mutagen.easyid3.EasyID3(path)
         for data in metaDataDict:
             if data == "playlist_index":
                 audio['tracknumber'] = str(metaDataDict[data])
                 continue
             audio[data] = metaDataDict[data]
-        audio.save()
+        self.saveEasyID3(audio)
 
     def showMetaDataInfo(self, path):
         """Method used to show Metadata info
@@ -79,7 +83,7 @@ class MetaData():
         Args:
             path (str): file path
         """
-        audioInfo = MP3(path, ID3=EasyID3)
+        audioInfo = MP3(path, ID3=mutagen.easyid3.EasyID3)
         print(audioInfo.pprint())
 
 class YoutubeDL(MetaData):

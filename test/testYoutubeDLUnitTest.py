@@ -1,5 +1,6 @@
 import os
 import youtubeDL
+import mutagen.easyid3
 from unittest import TestCase, main
 from unittest.mock import MagicMock, patch
 
@@ -39,7 +40,10 @@ class YoutubeAudioTest(TestCase):
         self.youtubeTest.savePath = self.testDir
         self.youtubeTest.ydl_audio_opts['outtmpl'] = self.testDir + '/%(title)s.%(ext)s'
 
-    def testDownloadAudio(self):
+    @patch.object(youtubeDL.YoutubeDL, "showMetaDataInfo")
+    @patch.object(youtubeDL.YoutubeDL, "saveEasyID3")
+    @patch.object(mutagen.easyid3, "EasyID3", return_value={'title': "Society", 'album': "Into The Wild", 'artist': "Eddie Vedder", "tracknumber": None})
+    def testDownloadAudio(self, mockEasyID3, mockSave, mockShowMetaData):
         testMetaData = {
         "title": "Society",
         "album": "Into The Wild",
@@ -66,8 +70,11 @@ class YoutubeAudioTest(TestCase):
             "playlist_index": None
             }
 
+    @patch.object(youtubeDL.YoutubeDL, "showMetaDataInfo")
+    @patch.object(youtubeDL.YoutubeDL, "saveEasyID3")
+    @patch.object(mutagen.easyid3, "EasyID3", return_value={'title': "Society", 'album': "Into The Wild", 'artist': "Eddie Vedder", "tracknumber": None})
     @patch.object(youtubeDL.YoutubeDL,"downloadFile", side_effect=getMetaDataFromYoutube2)
-    def testDownloadAudioWithDecorator(self, mockDownloadFile):
+    def testDownloadAudioWithDecorator(self, mockDownloadFile, mockEasyID3, mockSave, mockShowMetaData):
         metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
         mockDownloadFile.assert_called_once_with("ABsslEoL0-c", self.youtubeTest.ydl_audio_opts)
         self.assertEqual("Society", metaData["title"])
@@ -75,6 +82,9 @@ class YoutubeAudioTest(TestCase):
         self.assertEqual("Eddie Vedder", metaData["artist"])
         self.assertIsNone(metaData["playlist_index"])
 
+    @patch.object(youtubeDL.YoutubeDL, "showMetaDataInfo")
+    @patch.object(youtubeDL.YoutubeDL, "saveEasyID3")
+    @patch.object(mutagen.easyid3, "EasyID3", return_value={'title': "Society", 'album': "Into The Wild", 'artist': "Eddie Vedder", "tracknumber": None})
     @patch("youtubeDL.YoutubeDL.downloadFile", return_value=
             {
             "title": "Society",
@@ -83,7 +93,7 @@ class YoutubeAudioTest(TestCase):
             "ext": "webm",
             "playlist_index": None
             })
-    def testDownloadAudioWithDecorator(self, mockDownloadFile):
+    def testDownloadAudioWithDecorator(self, mockDownloadFile, mockEasyID3, mockSave, mockShowMetaData):
         metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
         mockDownloadFile.assert_called_once_with("ABsslEoL0-c", self.youtubeTest.ydl_audio_opts)
         self.assertEqual("Society", metaData["title"])
