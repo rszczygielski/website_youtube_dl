@@ -8,7 +8,8 @@ class YoutubeDlTest(TestCase):
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtubeDL.YoutubeDL(f'{self.testDir}/test_youtube_config.ini')
-        
+        self.youtubeTest.savePath = self.testDir
+
     def test_downloadFile(self):
         testMetaData = {
         "title": "Society",
@@ -35,9 +36,9 @@ class YoutubeAudioTest(TestCase):
     def setUp(self) -> None:
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtubeDL.YoutubeDL(f'{self.testDir}/test_youtube_config.ini')
+        self.youtubeTest.savePath = self.testDir
         self.youtubeTest.ydl_audio_opts['outtmpl'] = self.testDir + '/%(title)s.%(ext)s'
 
-    
     def testDownloadAudio(self):
         testMetaData = {
         "title": "Society",
@@ -64,7 +65,7 @@ class YoutubeAudioTest(TestCase):
             "ext": "webm",
             "playlist_index": None
             }
-    
+
     @patch.object(youtubeDL.YoutubeDL,"downloadFile", side_effect=getMetaDataFromYoutube2)
     def testDownloadAudioWithDecorator(self, mockDownloadFile):
         metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")

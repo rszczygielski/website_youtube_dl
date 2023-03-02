@@ -306,7 +306,6 @@ if __name__ == "__main__":
     terminalUser = TerminalUsage(config)
     terminalUser.downloadTerminal(url, type)
 
-
     # do weba no-playlist argument i po błedzie
     # https://github.com/yt-dlp/yt-dlp#video-selection
 
