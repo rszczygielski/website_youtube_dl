@@ -1,2 +1,4 @@
 [html]
 directory = results/coverage
+[run]
+omit = test/*

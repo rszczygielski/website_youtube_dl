@@ -5,7 +5,7 @@ jobs:
   build:
     docker:
       - image: cimg/python:3.10.1
-    
+
 
     steps:
       - checkout
@@ -13,16 +13,16 @@ jobs:
           name: Instal reqirements
           command: |
             pip install -r requirements.txt
-      
+
       - run:
           name: Run tests
           command: |
             export PYTHONPATH=:
             coverage run -m pytest --junitxml=results/TestsReport.xml --html=results/TestsReport.html --self-contained-html test/testYoutubeDLUnitTest.py
             coverage html
-      
+
       - store_test_results:
           path: results
-          
+
       - store_artifacts:
           path: results
