@@ -1,5 +1,6 @@
 import yt_dlp
 import configparser
+import os
 import argparse
 from enum import Enum
 from mutagen.easyid3 import EasyID3
@@ -14,7 +15,7 @@ class MetaDataType(Enum):
 class MetaData():
     def __init__(self, directoryPath):
         self.directoryPath = directoryPath
-    
+
     def setMetaDataPlaylist(self, metaData):
         """Method used to set Metadata for playlist
 
@@ -30,7 +31,7 @@ class MetaData():
             audio['album'] = playlistName
             audio.save()
             self.showMetaDataInfo(path)
-    
+
     def setMetaDataSingleFile(self, metaData):
         """Method used to set meta data for the single file
 
@@ -41,7 +42,7 @@ class MetaData():
         path = f'{self.directoryPath}/{yt_dlp.utils.sanitize_filename(metaDataDict["title"])}.mp3'
         self.saveMetaData(metaDataDict, path)
         self.showMetaDataInfo(path)
-    
+
     def getMetaDataDict(self, metaData):
         """Method returns metadata dict based on metadata taken form Youtube video
 
@@ -61,7 +62,7 @@ class MetaData():
         """Method used to set Metadata
 
         Args:
-            metaDataDict (dict): Metadata dict  
+            metaDataDict (dict): Metadata dict
             path (str): file path
         """
         audio = EasyID3(path)
@@ -84,9 +85,9 @@ class MetaData():
 class YoutubeDL(MetaData):
     def __init__(self, configFilePath):
         self.configFilePath = configFilePath
-        config = configparser.ConfigParser()
-        config.read(self.configFilePath)
-        self.savePath = config["global"]["path"]
+        self.config = configparser.ConfigParser()
+        self.config.read(self.configFilePath)
+        self.savePath = self.config["global"]["path"]
         super().__init__(self.savePath)
         self.ydl_video_opts = {
         # 'download_archive': 'downloaded_songs.txt',
@@ -103,7 +104,7 @@ class YoutubeDL(MetaData):
         'addmetadata': True,
         'outtmpl':  self.savePath + '/%(title)s.%(ext)s',
         }
-    
+
     def downloadFile(self, youtubeURL:str, youtubeOptions:dict):
         """Method used to download youtube media based on URL
 
@@ -116,7 +117,7 @@ class YoutubeDL(MetaData):
         """
         with yt_dlp.YoutubeDL(youtubeOptions) as ydl:
             return ydl.extract_info(youtubeURL)
-    
+
     def setVideoOptions(self, type):
         self.ydl_video_opts['format'] = f'bestvideo[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
         if type == "2160":
@@ -128,7 +129,7 @@ class YoutubeDL(MetaData):
         """Method uded to download video type from YouTube
 
         Args:
-            youtubeURL (str): YouTube URL 
+            youtubeURL (str): YouTube URL
         """
         self.setVideoOptions(type)
         videoHash = self.getVideoHash(youtubeURL)
@@ -140,7 +141,7 @@ class YoutubeDL(MetaData):
         return self.downloadFile(playlistHash, self.ydl_video_opts)
 
     def downloadAudio(self, youtubeURL:str):
-        """Method uded to download audio type from Youtube, convert metadata 
+        """Method uded to download audio type from Youtube, convert metadata
         into mp3 format used mutagen.easyid3
 
         Args:
@@ -161,10 +162,10 @@ class YoutubeDL(MetaData):
         playlistList = []
         config = configparser.ConfigParser()
         config.read(self.configFilePath)
-        for key in config["playlists"]:  
+        for key in config["playlists"]:
             playlistList.append(config["playlists"][key])
         return playlistList
-    
+
     def downoladConfigPlaylistVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
         """
@@ -196,7 +197,7 @@ class YoutubeDL(MetaData):
         elif numberOfEqualSign == 2:
             videoHash = splitedHashes[1][:splitedHashes[1].index("&")]
             return videoHash
-    
+
     def getPlaylistHash(self, url):
         onlyHashesInLink = url.split("?")[1]
         numberOfEqualSign = url.count("=")
@@ -212,7 +213,12 @@ class YoutubeDL(MetaData):
             return playlistHash
         elif numberOfEqualSign == 2:
             playlistHash = splitedHashes[2]
-            return playlistHash  
+            return playlistHash
+
+    def addPlaylistToConfig(self, playlistName, playlistURL):
+        self.config["playlists"][playlistName] = playlistURL
+        with open(self.configFilePath, 'w') as configfile:
+            self.config.write(configfile)
 
 class TerminalUsage(YoutubeDL):
     def __init__(self, configFilePath) -> None:
@@ -220,15 +226,15 @@ class TerminalUsage(YoutubeDL):
 
     def isPlaylist(self, url):
         if url == None:
-            return False 
+            return False
         elif "list=" in url:
             return True
         else:
             return False
-    
+
     def ifDoubleHash(self, url):
         if url == None:
-            return False 
+            return False
         elif "list=" in url and "v=" in url:
             return True
         else:
@@ -236,7 +242,7 @@ class TerminalUsage(YoutubeDL):
 
     def downloadDoubleHashedLinkVideo(self, url, type):
         userResponse = input("""
-        Playlist url detected. 
+        Playlist url detected.
         If you want to download single video/audio press 's'
         If you want to download whole playlist press 'p'
         """)
@@ -249,7 +255,7 @@ class TerminalUsage(YoutubeDL):
 
     def downloadDoubleHashedLinkAudio(self, url):
         userResponse = input("""
-        Playlist url detected. 
+        Playlist url detected.
         If you want to download single video/audio press 's'
         If you want to download whole playlist press 'p'
         """)
@@ -259,7 +265,7 @@ class TerminalUsage(YoutubeDL):
             self.downloadAudioPlaylist(url)
         else:
             raise ValueError("Please enter 's' for single video or 'p' for playlist")
-    
+
     def downloadTerminal(self, url, type):
         if url == None and type == "mp3":
             self.downoladConfigPlaylistAudio()
@@ -299,10 +305,8 @@ if __name__ == "__main__":
     config= args.config
     terminalUser = TerminalUsage(config)
     terminalUser.downloadTerminal(url, type)
-    
+
 
     # do weba no-playlist argument i po błedzie
     # https://github.com/yt-dlp/yt-dlp#video-selection
-    # zaminieć static method na getVideoHash i getPlaylistHash uzywać w metodach pobierania
 
-    

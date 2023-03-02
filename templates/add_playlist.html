@@ -54,18 +54,22 @@
             </div>
         </div>
     </nav>
+
+<br>
+<br>
 <div>
+<form action="add_playlist" method="post">
 <center>
-    <form action="/downloadFile" method="post">
-    <label class="neon-label">{{downloadFileName}}</label>
-    <input type="hidden" name="fileName" value="{{downloadFileName}}"></input>
-    <input type="hidden" name="directoryPath" value="{{downloadDirectoryPath}}"></input>
+    <tr><td>
+    <input class="input-text" type="text" name="playlistName" placeholder="Playlist Name" size="30"></input>
+    <input class="input-text"  type="url" name="playlistURL" placeholder="Playlist URL" size="50"></input>
+    </td></tr>
+    </center>
     <br>
-    <br>
-    <br>
-    <button class="neon-button" type="submit" value="Download">Download</button>
-    </form>
+    <center>
+    <button class="neon-button" type="submit" value="AddPlaylist">Add playlist</button>
 </center>
+</form>
 </div>
 </body>
 </html>

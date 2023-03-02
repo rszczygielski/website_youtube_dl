@@ -36,8 +36,8 @@ def sendMail():
 def mail():
     return render_template("mail.html")
 
-@app.route("/downloadYoutube", methods=["POST", "GET"])
-def downloadYoutube():
+@app.route("/downloadToServer", methods=["POST", "GET"])
+def downloadToServer():
     if request.method == "POST":
         youtubeURL = request.form["youtubeURL"]
         if "qualType" not in request.form:
@@ -50,7 +50,7 @@ def downloadYoutube():
             flash("Please enter YouTube URL", category="danger")
             return render_template("youtube.html")
         elif "list=" in youtubeURL:
-            flash("You entered URL with playlist hash - only single video has been downloaded", 
+            flash("You entered URL with playlist hash - only single video has been downloaded",
             category="danger")
         youtubeDownloder = YoutubeDL(config)
         direcotryPath = youtubeDownloder.savePath
@@ -75,8 +75,25 @@ def downloadFile():
 def downloadConfigPlaylist():
     youtubeDownloder = YoutubeDL("youtube_config.ini")
     youtubeDownloder.downoladConfigPlaylistVideo(type=720)
+    flash("All config playlist has been downloaded", category="success")
     return render_template("youtube.html")
 
+@app.route("/add_playlist_page", methods=["POST", "GET"])
+def add_playlist_page():
+    return render_template("add_playlist.html")
+
+@app.route("/add_playlist", methods=["POST", "GET"])
+def add_playlist():
+    if request.method == "POST":
+        youtubeDownloder = YoutubeDL("youtube_config.ini")
+        playlistName = request.form["playlistName"]
+        playlistURL = request.form["playlistURL"]
+        if "list=" not in playlistURL:
+            flash("Please enter YouTube URL", category="danger")
+            return render_template("add_playlist.html")
+        youtubeDownloder.addPlaylistToConfig(playlistName, playlistURL)
+        flash(f"Playlist {playlistName} added to config file", category="success")
+        return render_template("youtube.html")
 
 @app.route("/youtube.html")
 def youtube():
@@ -85,6 +102,5 @@ def youtube():
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
 
-# problem z tym linkiem https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1
-# dodać komunikat o pobieraniu config playlist 
-# zrobić podstronę do zmiany pliku konfiguracyjnego
+# tworzyć konstruktor youtuba poza funkcjami oraz w przypadku edycji pliku config za
+# każdym razem go sczytywać

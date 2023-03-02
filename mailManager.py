@@ -7,7 +7,7 @@ class MailManager():
 
     def sendMail(self, msg, subject, toSend):
          self.gmail.send_message(to= toSend, msg_html=msg, sender=self.sender, subject=subject)
-    
+
     def sendMailFromHTML(self, subject, msg):
         self.gmail.send_message(to="radek.szczygielski87@gmail.com", msg_html=msg, subject=subject, sender=self.sender)
 

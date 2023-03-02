@@ -28,7 +28,7 @@
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample04" aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
             </button>
-    
+
             <div class="collapse navbar-collapse" id="navbarsExample04">
             <ul class="navbar-nav me-auto mb-2 mb-md-0">
                 <li class="nav-item">
@@ -38,7 +38,7 @@
                 <a class="nav-link" href="/youtube.html">YouTube</a>
                 </li>
                 <li class="nav-item">
-                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                <a class="nav-link" href="/add_playlist.html">Add playlist to config file</a>
                 </li>
                 <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>
@@ -55,10 +55,10 @@
             </div>
         </div>
     </nav>
-    
+
 <div>
 <center>
-    <form action="/downloadYoutube" method="post">
+    <form action="/downloadToServer" method="post">
     <h1>
         <div>
         <center>
@@ -92,10 +92,30 @@
         </h1>
         </center>
         <div>
-        <center>
-        <button class="neon-button" type="submit">Convert</button>
-        </center>
+            <br>
+            <center>
+            <button class="neon-button" type="submit">Convert</button>
+            </center>
         </div>
     </form>
+        <form action="/downloadConfigPlaylist" method="post">
+        <center>
+        <br>
+        <button class="neon-button" type="submit">Download Config Playlist</button>
+    </center>
+    </form>
+
+    </form>
+    <form action="/add_playlist_page">
+    <center>
+    <br>
+    <button class="neon-button" type="submit">Add playlist to config file</button>
+    </center>
+    </form>
+
+<!-- <br>
+<div class="progress">
+    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
+  </div> -->
 </body>
 </html>

@@ -1,4 +1,11 @@
-/__pycache__
-/.vscode
-/client_secret.json
-/gmail_token.json
+# python files
+__pycache__
+# vsc
+.vscode
+#config files gmail
+client_secret.json
+gmail_token.json
+# unittests results
+results
+# archive song file from youtube
+test_downloaded_songs.txt
