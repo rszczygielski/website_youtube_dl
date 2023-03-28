@@ -77,6 +77,9 @@ class YoutubeAudioTest(TestCase):
     def testDownloadAudioWithDecorator(self, mockDownloadFile, mockEasyID3, mockSave, mockShowMetaData):
         metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
         mockDownloadFile.assert_called_once_with("ABsslEoL0-c", self.youtubeTest.ydl_audio_opts)
+        mockEasyID3.assert_called_once()
+        mockSave.assert_called_once()
+        mockShowMetaData.assert_called_once()
         self.assertEqual("Society", metaData["title"])
         self.assertEqual("Into The Wild", metaData["album"])
         self.assertEqual("Eddie Vedder", metaData["artist"])
@@ -100,6 +103,8 @@ class YoutubeAudioTest(TestCase):
         self.assertEqual("Into The Wild", metaData["album"])
         self.assertEqual("Eddie Vedder", metaData["artist"])
         self.assertIsNone(metaData["playlist_index"])
+
+    # def testSetMetaDataPlaylist()
 
 if __name__ == "__main__":
     main()

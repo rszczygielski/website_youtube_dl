@@ -1,4 +1,10 @@
 [html]
 directory = results/coverage
 [run]
-omit = test/*
+omit =
+    test/*
+    */dist-packages/*
+[report] =
+exclude_lines =
+    if __name__ == "__main__":
+    pragma: no_cover

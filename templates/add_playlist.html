@@ -22,54 +22,35 @@
 {% endwith %}
 
 <body id="background">
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark" aria-label="Fourth navbar example">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/index.html">Home</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample04" aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarsExample04">
-            <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/mail.html">Mail</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="/youtube.html">YouTube</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
-                </li>
-                <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>
-                <ul class="dropdown-menu" aria-labelledby="dropdown04">
-                    <li><a class="dropdown-item" href="#">Action</a></li>
-                    <li><a class="dropdown-item" href="#">Another action</a></li>
-                    <li><a class="dropdown-item" href="#">Something else here</a></li>
-                </ul>
-                </li>
-            </ul>
-            <form>
-                <input class="form-control" type="text" placeholder="Search" aria-label="Search">
-            </form>
-            </div>
-        </div>
-    </nav>
-
+{% include "headers.html"%}
 <br>
 <br>
-<div>
-<form action="add_playlist" method="post">
 <center>
-    <tr><td>
-    <input class="input-text" type="text" name="playlistName" placeholder="Playlist Name" size="30"></input>
-    <input class="input-text"  type="url" name="playlistURL" placeholder="Playlist URL" size="50"></input>
-    </td></tr>
-    </center>
-    <br>
-    <center>
-    <button class="neon-button" type="submit" value="AddPlaylist">Add playlist</button>
+    <form action="add_playlist" method="post"></form>
+        <table class="ms-auto me-auto">
+            <tr>
+                <td><label style="color:#ffffff" for="fname">Name:</label></td>
+                <td><input type="text"></td>
+            </tr>
+            <tr>
+                <td><label style="color:#ffffff" for="lname">link:</label></td>
+                <td><input type="text"><br></td>
+            </tr>
+        </table>
+        <!-- <table class="ms-auto me-auto">
+            <tr>
+                <td><p style="color:#ffffff; font-size: 20px;" font-size="40">Playlist Name   </p></td>
+                <td><input class="input-text" type="text" name="playlistName" placeholder="Playlist Name" size="30"></input></td>
+            </tr>
+            <tr>
+                <td><p style="color:#ffffff; font-size: 20px;";>URL</p></td>
+                <td><input class="input-text"  type="url" name="playlistURL" placeholder="Playlist URL" size="50"></input></td>
+            </tr>
+            <tr>
+                <button class="neon-button" type="submit" value="AddPlaylist">Add playlist</button>
+            </tr>
+        </table> -->
+    </form>
 </center>
-</form>
-</div>
 </body>
 </html>

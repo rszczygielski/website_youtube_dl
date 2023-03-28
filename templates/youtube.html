@@ -22,58 +22,22 @@
 {% endwith %}
 
 <body id="background">
-    <nav class="navbar navbar-expand-md navbar-dark bg-dark" aria-label="Fourth navbar example">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/index.html">Home</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample04" aria-controls="navbarsExample04" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarsExample04">
-            <ul class="navbar-nav me-auto mb-2 mb-md-0">
-                <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/mail.html">Mail</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="/youtube.html">YouTube</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="/add_playlist.html">Add playlist to config file</a>
-                </li>
-                <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="dropdown04" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>
-                <ul class="dropdown-menu" aria-labelledby="dropdown04">
-                    <li><a class="dropdown-item" href="#">Action</a></li>
-                    <li><a class="dropdown-item" href="#">Another action</a></li>
-                    <li><a class="dropdown-item" href="#">Something else here</a></li>
-                </ul>
-                </li>
-            </ul>
-            <form>
-                <input class="form-control" type="text" placeholder="Search" aria-label="Search">
-            </form>
-            </div>
-        </div>
-    </nav>
-
+{% include "headers.html"%}
 <div>
-<center>
-    <form action="/downloadToServer" method="post">
-    <h1>
-        <div>
-        <center>
-        <td><label class="neon-label">
-            Enter YouTube URL</label></td>
-        </center>
-        </dir>
-        </center>
-        <center>
+    <center>
+        <form action="/downloadToServer" method="post">
+            <h1>
+            <div>
+            <center>
+            <td><label class="neon-label">
+                Enter YouTube URL</label></td>
+            </dir>
+    <center>
         <table>
         <tr><td>
-        <input class="input-text" type="url" name="youtubeURL" placeholder="YouTube URL" 
+        <input class="input-text" type="url" name="youtubeURL" placeholder="YouTube URL"
             size="50"></input>
         </td></tr>
-        </center>
         <tr><td>
         <center>
         <input type="radio" name="qualType" id="360p" value="360">
@@ -86,11 +50,9 @@
         <label class="radio-buttons-label">2160p</label>
         <input type="radio" name="qualType" id="mp3" value="mp3">
         <label class="radio-buttons-label">mp3</label>
-        </center>
         </td></tr>
         </table>
         </h1>
-        </center>
         <div>
             <br>
             <center>
@@ -99,13 +61,13 @@
         </div>
     </form>
         <form action="/downloadConfigPlaylist" method="post">
-        <center>
-        <br>
-        <button class="neon-button" type="submit">Download Config Playlist</button>
-    </center>
+            <center>
+            <br>
+            <button class="neon-button" type="submit">Download Config Playlist</button>
+            </center>
+        </form>
     </form>
 
-    </form>
     <form action="/add_playlist_page">
     <center>
     <br>

@@ -18,7 +18,7 @@ jobs:
           name: Run tests
           command: |
             export PYTHONPATH=:
-            coverage run -m pytest --junitxml=results/TestsReport.xml --html=results/TestsReport.html --self-contained-html test/testYoutubeDLUnitTest.py
+            coverage run -m pytest --junitxml=results/TestsReport.xml --html=results/TestsReport.html --self-contained-html test/*.py
             coverage html
 
       - store_test_results:

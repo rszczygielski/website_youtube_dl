@@ -27,10 +27,7 @@ class MetaData():
         for trackMetaData in metaData['entries']:
             metaDataDict = self.getMetaDataDict(trackMetaData)
             path = f'{self.directoryPath}/{yt_dlp.utils.sanitize_filename(metaDataDict["title"])}.mp3'
-            self.saveMetaData(metaDataDict, path)
-            audio = mutagen.easyid3.EasyID3(path)
-            audio['album'] = playlistName
-            audio.save()
+            self.saveMetaDataForPlaylist(metaDataDict, path, playlistName)
             self.showMetaDataInfo(path)
 
     def setMetaDataSingleFile(self, metaData):
@@ -41,7 +38,7 @@ class MetaData():
         """
         metaDataDict = self.getMetaDataDict(metaData)
         path = f'{self.directoryPath}/{yt_dlp.utils.sanitize_filename(metaDataDict["title"])}.mp3'
-        self.saveMetaData(metaDataDict, path)
+        self.saveMetaDataForSingleFile(metaDataDict, path)
         self.showMetaDataInfo(path)
 
     def getMetaDataDict(self, metaData):
@@ -59,10 +56,22 @@ class MetaData():
                 metaDataDict[data.value] = metaData[data.value]
         return metaDataDict
 
-    def saveEasyID3(self, easyid3Instance):
+    def saveEasyID3(self, easyid3Instance): #pragma: no_cover
         easyid3Instance.save()
 
-    def saveMetaData(self, metaDataDict, path):
+    def saveMetaDataForPlaylist(self, metaDataDict, path, playlistName):
+        audio = mutagen.easyid3.EasyID3(path)
+        for data in metaDataDict:
+            if data == "playlist_index":
+                audio['tracknumber'] = str(metaDataDict[data])
+                continue
+            elif data == "album":
+                audio['album'] = playlistName
+            else:
+                audio[data] = metaDataDict[data]
+        self.saveEasyID3(audio)
+
+    def saveMetaDataForSingleFile(self, metaDataDict, path):
         """Method used to set Metadata
 
         Args:
@@ -77,7 +86,7 @@ class MetaData():
             audio[data] = metaDataDict[data]
         self.saveEasyID3(audio)
 
-    def showMetaDataInfo(self, path):
+    def showMetaDataInfo(self, path): #pragma: no_cover
         """Method used to show Metadata info
 
         Args:
@@ -94,6 +103,7 @@ class YoutubeDL(MetaData):
         self.savePath = self.config["global"]["path"]
         super().__init__(self.savePath)
         self.ydl_video_opts = {
+        "format": "bestvideo+bestaudio",
         # 'download_archive': 'downloaded_songs.txt',
         'addmetadata': True,
         }
@@ -109,7 +119,7 @@ class YoutubeDL(MetaData):
         'outtmpl':  self.savePath + '/%(title)s.%(ext)s',
         }
 
-    def downloadFile(self, youtubeURL:str, youtubeOptions:dict):
+    def downloadFile(self, youtubeURL:str, youtubeOptions:dict): #pragma: no_cover
         """Method used to download youtube media based on URL
 
         Args:

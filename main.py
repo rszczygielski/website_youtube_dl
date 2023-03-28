@@ -4,6 +4,8 @@ from youtubeDL import YoutubeDL
 import yt_dlp
 import os
 
+
+
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/' # Obczaić o co chodzi, mogę wpisać dokładnie to co chce i będzie działać
 
@@ -95,8 +97,13 @@ def add_playlist():
         flash(f"Playlist {playlistName} added to config file", category="success")
         return render_template("youtube.html")
 
+@app.route("/add_playlist.html")
+def add_playlist_html():
+    return render_template("add_playlist.html")
+
+
 @app.route("/youtube.html")
-def youtube():
+def youtube_html():
     return render_template("youtube.html")
 
 if __name__ == "__main__":
@@ -104,3 +111,5 @@ if __name__ == "__main__":
 
 # tworzyć konstruktor youtuba poza funkcjami oraz w przypadku edycji pliku config za
 # każdym razem go sczytywać
+# select w HTMLU jak działa dla przykładu
+# https://www.w3schools.com/tags/tag_select.asp
