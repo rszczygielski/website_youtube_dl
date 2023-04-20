@@ -4,7 +4,7 @@ import mutagen.easyid3
 import mutagen.mp3
 from youtubeDL import MetaDataType
 from unittest import TestCase, main
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 class TestYoutubeDL(TestCase):
 
@@ -93,13 +93,70 @@ class TestYoutubeDL(TestCase):
         mockSetMetaData.assert_called_once_with(metaData)
         self.assertEqual(self.testMetaDataPlaylist, metaData)
 
-    @patch.object(youtubeDL.YoutubeDL, "setMetaDataPlaylist")
-    @patch.object(youtubeDL.YoutubeDL, "downloadFile", return_value={"title": "testPlaylist", "entries":[{"title": "Society","album": "Into The Wild","artist": "Eddie Vedder","ext": "webm","playlist_index": None}]})
-    def testDownloadPlaylistAudio(self, mockDownload, mockSetMetaData):
-        metaData = self.youtubeTest.downloadAudioPlaylist("https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0")
-        mockDownload.assert_called_once_with("PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0", self.youtubeTest.ydl_audio_opts)
-        mockSetMetaData.assert_called_once_with(metaData)
-        self.assertEqual(self.testMetaDataPlaylist, metaData)
+    def getMetaDataFromYoutube(youtubeURL, youtubeOptions):
+            return {
+                "title": "Society",
+                "album": "Into The Wild",
+                "artist": "Eddie Vedder",
+                "ext": "webm",
+                "playlist_index": None
+                }
+
+    @patch.object(youtubeDL.YoutubeDL, "showMetaDataInfo")
+    @patch.object(youtubeDL.YoutubeDL, "saveEasyID3")
+    @patch.object(mutagen.easyid3, "EasyID3", return_value={'title': "Society", 'album': "Into The Wild", 'artist': "Eddie Vedder", "tracknumber": None})
+    @patch.object(youtubeDL.YoutubeDL,"downloadFile", side_effect=getMetaDataFromYoutube)
+    def testDownloadAudio(self, mockDownloadFile, mockEasyID3, mockSave, mockShowMetaData):
+        metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
+        mockDownloadFile.assert_called_once_with("ABsslEoL0-c", self.youtubeTest.ydl_audio_opts)
+        mockEasyID3.assert_called_once()
+        mockSave.assert_called_once()
+        mockShowMetaData.assert_called_once()
+        self.assertEqual("Society", metaData["title"])
+        self.assertEqual("Into The Wild", metaData["album"])
+        self.assertEqual("Eddie Vedder", metaData["artist"])
+        self.assertIsNone(metaData["playlist_index"])
+
+    @patch.object(youtubeDL.YoutubeDL, "downloadAudioPlaylist")
+    @patch.object(youtubeDL.ConfigParserMenager, "getUrlOfPlaylists", return_value=["https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0",\
+                                                                               "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"])
+    def testDownloadAudioFromConfigTwoPlaylists(self, mockGetPlaylists, mockDownloadAudio):
+        metaData = self.youtubeTest.downoladConfigPlaylistAudio()
+        mockGetPlaylists.assert_called_once()
+        self.assertEqual(mockDownloadAudio.call_count, 2)
+
+    @patch.object(youtubeDL.YoutubeDL, "downloadAudioPlaylist")
+    @patch.object(youtubeDL.ConfigParserMenager, "getUrlOfPlaylists", return_value=[])
+    def testDownloadAudioFromConfigZeroPlaylists(self, mockGetPlaylists, mockDownloadAudio):
+        metaData = self.youtubeTest.downoladConfigPlaylistAudio()
+        mockGetPlaylists.assert_called_once()
+        self.assertEqual(mockDownloadAudio.call_count, 0)
+
+    @patch.object(youtubeDL.YoutubeDL, "setVideoOptions")
+    @patch.object(youtubeDL.YoutubeDL, "downloadVideoPlaylist")
+    @patch.object(youtubeDL.ConfigParserMenager, "getUrlOfPlaylists", return_value=["https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0"])
+    def testDownloadVideoFromConfigOnePlaylists(self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
+        type = "720"
+        metaData = self.youtubeTest.downoladConfigPlaylistVideo(type)
+        mockGetPlaylists.assert_called_once()
+        mockDownloadVideo.assert_called_once_with("https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0", type)
+        mockSetVideo.assert_called_once_with(type)
+
+    @patch.object(youtubeDL.YoutubeDL, "setVideoOptions")
+    @patch.object(youtubeDL.YoutubeDL, "downloadVideoPlaylist")
+    @patch.object(youtubeDL.ConfigParserMenager, "getUrlOfPlaylists", return_value=["https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0", \
+                                                                                    "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"])
+    def testDownloadVideoFromConfigTwoPlaylists(self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
+        type = "720"
+        metaData = self.youtubeTest.downoladConfigPlaylistVideo(type)
+        mockGetPlaylists.assert_called_once()
+        self.assertEqual(mockDownloadVideo.call_count, 2)
+        mockDownloadVideo.assert_has_calls([call('https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0', '720'), \
+                                            call('https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU', '720')])
+        mockSetVideo.assert_called_once_with(type)
+        self.assertEqual(mockDownloadVideo.call_count, 2)
 
 if __name__ == "__main__":
     main()
+
+# testy do pobierania playlist z configa

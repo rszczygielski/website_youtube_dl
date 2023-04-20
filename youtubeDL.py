@@ -3,7 +3,7 @@ import configparser
 import os
 import argparse
 from enum import Enum
-# from mutagen.easyid3 import EasyID3
+from mutagen.easyid3 import EasyID3
 import mutagen.easyid3
 from mutagen.mp3 import MP3
 
@@ -111,14 +111,6 @@ class ConfigParserMenager():
         for key in config["playlists"]:
             playlistList.append(config["playlists"][key])
         return playlistList
-
-    def getPlaylists(self):
-        playlistsFromConfig = {}
-        config = configparser.ConfigParser()
-        config.read(self.configFilePath)
-        for key in config["playlists"]:
-            playlistsFromConfig[key] = config["playlists"][key]
-        return playlistsFromConfig
 
     def saveConfig(self, config):
         with open(self.configFilePath, 'w') as configfile:
@@ -349,4 +341,3 @@ if __name__ == "__main__":
 
     # https://github.com/yt-dlp/yt-dlp#video-selection
     # nie dziedziczyć MetaData tylko w inicie tworzyć instancje i przez nią operować metodami w całej klasie - tak jak configMangaer
-
