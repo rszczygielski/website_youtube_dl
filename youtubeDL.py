@@ -95,12 +95,51 @@ class MetaData():
         audioInfo = MP3(path, ID3=mutagen.easyid3.EasyID3)
         print(audioInfo.pprint())
 
-class YoutubeDL(MetaData):
+class ConfigParserMenager():
     def __init__(self, configFilePath):
         self.configFilePath = configFilePath
-        self.config = configparser.ConfigParser()
-        self.config.read(self.configFilePath)
-        self.savePath = self.config["global"]["path"]
+
+    def getSavePath(self):
+        config = configparser.ConfigParser()
+        config.read(self.configFilePath)
+        return config["global"]["path"]
+
+    def getUrlOfPlaylists(self):
+        playlistList = []
+        config = configparser.ConfigParser()
+        config.read(self.configFilePath)
+        for key in config["playlists"]:
+            playlistList.append(config["playlists"][key])
+        return playlistList
+
+    def getPlaylists(self):
+        playlistsFromConfig = {}
+        config = configparser.ConfigParser()
+        config.read(self.configFilePath)
+        for key in config["playlists"]:
+            playlistsFromConfig[key] = config["playlists"][key]
+        return playlistsFromConfig
+
+    def saveConfig(self, config):
+        with open(self.configFilePath, 'w') as configfile:
+            config.write(configfile)
+
+    def addPlaylist(self, playlistName, playlistURL):
+        config = configparser.ConfigParser()
+        config.read(self.configFilePath)
+        config["playlists"][playlistName] = playlistURL
+        self.saveConfig(config)
+
+    def deletePlylist(self, playlistName):
+        config = configparser.ConfigParser()
+        config.read(self.configFilePath)
+        config.remove_option("playlists", playlistName)
+        self.saveConfig(config)
+
+class YoutubeDL(MetaData):
+    def __init__(self, configFilePath):
+        self.configMeneager = ConfigParserMenager(configFilePath)
+        self.savePath = self.configMeneager.getSavePath()
         super().__init__(self.savePath)
         self.ydl_video_opts = {
         "format": "bestvideo+bestaudio",
@@ -172,18 +211,10 @@ class YoutubeDL(MetaData):
         self.setMetaDataPlaylist(metaData)
         return metaData
 
-    def getPlaylistsFromConfig(self):
-        playlistList = []
-        config = configparser.ConfigParser()
-        config.read(self.configFilePath)
-        for key in config["playlists"]:
-            playlistList.append(config["playlists"][key])
-        return playlistList
-
     def downoladConfigPlaylistVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
         """
-        playlistList = self.getPlaylistsFromConfig()
+        playlistList = self.configMeneager.getUrlOfPlaylists()
         self.setVideoOptions(type)
         for playlistURL in playlistList:
             self.downloadVideoPlaylist(playlistURL, type)
@@ -191,7 +222,7 @@ class YoutubeDL(MetaData):
     def downoladConfigPlaylistAudio(self):
         """Method used to dowload all playlists added to cofig file - type audio
         """
-        playlistList = self.getPlaylistsFromConfig()
+        playlistList = self.configMeneager.getUrlOfPlaylists()
         for playlistURL in playlistList:
             self.downloadAudioPlaylist(playlistURL)
 
@@ -229,12 +260,8 @@ class YoutubeDL(MetaData):
             playlistHash = splitedHashes[2]
             return playlistHash
 
-    def addPlaylistToConfig(self, playlistName, playlistURL):
-        self.config["playlists"][playlistName] = playlistURL
-        with open(self.configFilePath, 'w') as configfile:
-            self.config.write(configfile)
 
-class TerminalUsage(YoutubeDL):
+class TerminalUsage(YoutubeDL): #pragma: no_cover
     def __init__(self, configFilePath) -> None:
         super().__init__(configFilePath)
 
@@ -320,6 +347,6 @@ if __name__ == "__main__":
     terminalUser = TerminalUsage(config)
     terminalUser.downloadTerminal(url, type)
 
-    # do weba no-playlist argument i po błedzie
     # https://github.com/yt-dlp/yt-dlp#video-selection
+    # nie dziedziczyć MetaData tylko w inicie tworzyć instancje i przez nią operować metodami w całej klasie - tak jak configMangaer
 

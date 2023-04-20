@@ -93,13 +93,13 @@ class TestYoutubeDL(TestCase):
         mockSetMetaData.assert_called_once_with(metaData)
         self.assertEqual(self.testMetaDataPlaylist, metaData)
 
-    @patch.object(youtubeDL.YoutubeDL, "setMetaDataSingleFile")
-    @patch.object(youtubeDL.YoutubeDL, "downloadFile", return_value={"title": "Society","album": "Into The Wild","artist": "Eddie Vedder","ext": "webm","playlist_index": None})
+    @patch.object(youtubeDL.YoutubeDL, "setMetaDataPlaylist")
+    @patch.object(youtubeDL.YoutubeDL, "downloadFile", return_value={"title": "testPlaylist", "entries":[{"title": "Society","album": "Into The Wild","artist": "Eddie Vedder","ext": "webm","playlist_index": None}]})
     def testDownloadPlaylistAudio(self, mockDownload, mockSetMetaData):
-        metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
-        mockDownload.assert_called_once_with("ABsslEoL0-c", self.youtubeTest.ydl_audio_opts)
+        metaData = self.youtubeTest.downloadAudioPlaylist("https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0")
+        mockDownload.assert_called_once_with("PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0", self.youtubeTest.ydl_audio_opts)
         mockSetMetaData.assert_called_once_with(metaData)
-        self.assertEqual(self.testMetaData, metaData)
+        self.assertEqual(self.testMetaDataPlaylist, metaData)
 
 if __name__ == "__main__":
     main()

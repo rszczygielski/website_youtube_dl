@@ -26,30 +26,29 @@
 <br>
 <br>
 <center>
-    <form action="add_playlist" method="post"></form>
+    <form action="modify_playlist" method="post">
         <table class="ms-auto me-auto">
             <tr>
-                <td><label style="color:#ffffff" for="fname">Name:</label></td>
-                <td><input type="text"></td>
-            </tr>
-            <tr>
-                <td><label style="color:#ffffff" for="lname">link:</label></td>
-                <td><input type="text"><br></td>
-            </tr>
-        </table>
-        <!-- <table class="ms-auto me-auto">
-            <tr>
-                <td><p style="color:#ffffff; font-size: 20px;" font-size="40">Playlist Name   </p></td>
+                <td><p class="neon-label" style="font-size: 30px">Playlist Name</p></td>
                 <td><input class="input-text" type="text" name="playlistName" placeholder="Playlist Name" size="30"></input></td>
             </tr>
             <tr>
-                <td><p style="color:#ffffff; font-size: 20px;";>URL</p></td>
+                <td><p class="neon-label" style="font-size: 30px">URL</p></td>
                 <td><input class="input-text"  type="url" name="playlistURL" placeholder="Playlist URL" size="50"></input></td>
             </tr>
-            <tr>
-                <button class="neon-button" type="submit" value="AddPlaylist">Add playlist</button>
-            </tr>
-        </table> -->
+        </table>
+        <input class="neon-button" type="submit" value="Add playlist" name="AddPlaylistButton"/>
+        <br>
+        <label for="playlists" class="neon-label">List of playlists</label>
+        <br>
+        <select name="playlistSelect" id="playlistSelect" size="5" style="width: 300px;" class="input-text">
+            {% for playlistName in playlistsNames %}
+            <option value={{ playlistName }}>{{ playlistName }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <br>
+        <button class="neon-button" type="submit" value="DeletePlaylist" name="DeletePlaylistButton">Delete playlist</button>
     </form>
 </center>
 </body>
