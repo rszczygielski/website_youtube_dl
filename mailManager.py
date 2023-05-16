@@ -1,8 +1,10 @@
 from simplegmail import Gmail
 
-class MailManager():
+class Mail():
     def __init__(self, sender):
         self.sender = sender
+
+    def initialize(self):
         self.gmail = Gmail()
 
     def sendMail(self, msg, subject, toSend):
@@ -13,5 +15,5 @@ class MailManager():
 
 
 if __name__ == "__main__":
-    mailManager = MailManager("radek.szczygielski.trash@gmail.com")
-    mailManager.sendMail(msg="Hello World", subject="Test email", toSend="radek.szczygielski87@gmail.com")
+    mail = Mail("radek.szczygielski.trash@gmail.com")
+    mail.sendMail(msg="Hello World", subject="Test email", toSend="radek.szczygielski87@gmail.com")

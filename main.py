@@ -1,12 +1,17 @@
 from flask import Flask, flash, render_template, request, send_file
-from mailManager import MailManager
-from youtubeDL import YoutubeDL
+from mailManager import Mail
+from youtubeDL import YoutubeDL, ConfigParserMenager, MetaDataMenager
 import yt_dlp
 import os
 
+# MetaDataMenager, ConfigParserMenager literówka poprawić
+
 config = "youtube_config.ini"
-youtubeDownloder = YoutubeDL(config)
-mailManager = MailManager("radek.szczygielski.trash@gmail.com")
+metaDataMenager = MetaDataMenager()
+configParserMenager = ConfigParserMenager(config)
+youtubeDownloder = YoutubeDL(configParserMenager, metaDataMenager)
+mail = Mail("radek.szczygielski.trash@gmail.com")
+mail.initialize()
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/' # Obczaić o co chodzi, mogę wpisać dokładnie to co chce i będzie działać
@@ -122,7 +127,4 @@ def youtube_html():
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
 
-# tworzyć konstruktor youtuba poza funkcjami oraz w przypadku edycji pliku config za
-# każdym razem go sczytywać
-# select w HTMLU jak działa dla przykładu
 # https://www.w3schools.com/tags/tag_select.asp
