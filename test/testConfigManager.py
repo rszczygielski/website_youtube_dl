@@ -3,12 +3,15 @@ from unittest import TestCase, main
 from unittest.mock import MagicMock, patch, call
 from configParserManager import ConfigParserManager
 
-
-
 class ConfigParserMock(configparser.ConfigParser):
 
     def read(self, file_path):
         self.read_string("[global]\npath = /home/rszczygielski/pythonVSC/youtube_files\n[playlists]\ntest_playlist = https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO\nnowy_swiat = https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU")
+
+class ConfigParserMockWithEmptyData(configparser.ConfigParser):
+
+    def read(self, file_path):
+        self.read_string("")
 
 class TestConfigParserMenagerWithMockConfigClass(TestCase):
     def setUp(self):
@@ -79,6 +82,19 @@ class TestConfigParserMenagerWithMockConfigClass(TestCase):
         self.assertEqual(plalistsListCount, 2)
         mockSave.assert_called_once()
         self.assertEqual(mockClear.call_count, 2)
+
+class TestConfingManagerWithEmptyConfig(TestCase):
+
+    def setUp(self):
+        self.configParserMock = ConfigParserMockWithEmptyData()
+        self.config = ConfigParserManager("/test/config_file.ini", self.configParserMock)
+
+    @patch.object(configparser.ConfigParser, "clear")
+    def testGetSavePath(self, mockClear):
+        save_path = self.config.getSavePath()
+        self.assertEqual(save_path, "/home/rszczygielski/Music")
+        mockClear.assert_called_once()
+
 
 if __name__ == "__main__":
     main()
