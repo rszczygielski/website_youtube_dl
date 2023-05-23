@@ -1,14 +1,16 @@
 from flask import Flask, flash, render_template, request, send_file
 from mailManager import Mail
-from youtubeDL import YoutubeDL, ConfigParserMenager, MetaDataMenager
+from youtubeDL import YoutubeDL
+from metaDataManager import MetaDataManager
+from configParserManager import ConfigParserManager
 import yt_dlp
 import os
 
-# MetaDataMenager, ConfigParserMenager literówka poprawić
+# MetaDataManager literówka poprawić
 
 config = "youtube_config.ini"
-metaDataMenager = MetaDataMenager()
-configParserMenager = ConfigParserMenager(config)
+metaDataMenager = MetaDataManager()
+configParserMenager = ConfigParserManager(config)
 youtubeDownloder = YoutubeDL(configParserMenager, metaDataMenager)
 mail = Mail("radek.szczygielski.trash@gmail.com")
 

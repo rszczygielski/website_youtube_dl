@@ -2,136 +2,14 @@ import yt_dlp
 import configparser
 import os
 import argparse
-from enum import Enum
-from mutagen.easyid3 import EasyID3
-import mutagen.easyid3
-from mutagen.mp3 import MP3
-
-class MetaDataType(Enum):
-    TITLE = 'title'
-    ALBUM = 'album'
-    ARTIST = 'artist'
-    PLAYLIST_INDEX = 'playlist_index'
-
-class MetaDataMenager():
-
-    def setMetaDataPlaylist(self, metaData, directoryPath):
-        """Method used to set Metadata for playlist
-
-        Args:
-            metaData (class): Metadata
-        """
-        playlistName = metaData["title"]
-        for trackMetaData in metaData['entries']:
-            metaDataDict = self.getMetaDataDict(trackMetaData)
-            path = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(metaDataDict["title"])}.mp3'
-            self.saveMetaDataForPlaylist(metaDataDict, path, playlistName)
-            self.showMetaDataInfo(path)
-
-    def setMetaDataSingleFile(self, metaData, directoryPath):
-        """Method used to set meta data for the single file
-
-        Args:
-            metaData (class): Metadata
-        """
-        metaDataDict = self.getMetaDataDict(metaData)
-        path = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(metaDataDict["title"])}.mp3'
-        self.saveMetaDataForSingleFile(metaDataDict, path)
-        self.showMetaDataInfo(path)
-
-    def getMetaDataDict(self, metaData):
-        """Method returns metadata dict based on metadata taken form Youtube video
-
-        Args:
-            metaData (dict): Metadata dict
-
-        Returns:
-            dict: Metadata dict from YouTube
-        """
-        metaDataDict = {}
-        for data in MetaDataType:
-            if data.value in metaData:
-                metaDataDict[data.value] = metaData[data.value]
-        return metaDataDict
-
-    def saveEasyID3(self, easyid3Instance): #pragma: no_cover
-        easyid3Instance.save()
-
-    def saveMetaDataForPlaylist(self, metaDataDict, path, playlistName):
-        audio = mutagen.easyid3.EasyID3(path)
-        for data in metaDataDict:
-            if data == "playlist_index":
-                audio['tracknumber'] = str(metaDataDict[data])
-                continue
-            elif data == "album":
-                audio['album'] = playlistName
-            else:
-                audio[data] = metaDataDict[data]
-        self.saveEasyID3(audio)
-
-    def saveMetaDataForSingleFile(self, metaDataDict, path):
-        """Method used to set Metadata
-
-        Args:
-            metaDataDict (dict): Metadata dict
-            path (str): file path
-        """
-        audio = mutagen.easyid3.EasyID3(path)
-        for data in metaDataDict:
-            if data == "playlist_index":
-                audio['tracknumber'] = str(metaDataDict[data])
-                continue
-            audio[data] = metaDataDict[data]
-        self.saveEasyID3(audio)
-
-    def showMetaDataInfo(self, path): #pragma: no_cover
-        """Method used to show Metadata info
-
-        Args:
-            path (str): file path
-        """
-        audioInfo = MP3(path, ID3=mutagen.easyid3.EasyID3)
-        print(audioInfo.pprint())
-
-class ConfigParserMenager():
-    def __init__(self, configFilePath, configParser=configparser.ConfigParser()):
-        self.configFilePath = configFilePath
-        self.configParser = configParser
-
-    def getSavePath(self):
-        self.configParser.clear()
-        self.configParser.read(self.configFilePath)
-        return self.configParser["global"]["path"]
-
-    def getUrlOfPlaylists(self):
-        playlistList = []
-        self.configParser.clear()
-        self.configParser.read(self.configFilePath)
-        for key in self.configParser["playlists"]:
-            playlistList.append(self.configParser["playlists"][key])
-        return playlistList
-
-    def saveConfig(self): #pragma: no_cover
-        with open(self.configFilePath, 'w') as configfile:
-            self.configParser.write(configfile)
-
-    def addPlaylist(self, playlistName, playlistURL):
-        self.configParser.clear()
-        self.configParser.read(self.configFilePath)
-        self.configParser["playlists"][playlistName] = playlistURL
-        self.saveConfig(self.configParser)
-
-    def deletePlylist(self, playlistName):
-        self.configParser.clear()
-        self.configParser.read(self.configFilePath)
-        self.configParser.remove_option("playlists", playlistName)
-        self.saveConfig(self.configParser)
+from configParserManager import ConfigParserManager
+from metaDataManager import MetaDataManager
 
 class YoutubeDL():
-    def __init__(self, configMeneager:ConfigParserMenager, metaDataMenager:MetaDataMenager):
+    def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager):
         self.metaDataMenager = metaDataMenager
-        self.configMeneager = configMeneager
-        self.savePath = self.configMeneager.getSavePath()
+        self.configManager = configManager
+        self.savePath = self.configManager.getSavePath()
         self.ydl_video_opts = {
         "format": "bestvideo+bestaudio",
         # 'download_archive': 'downloaded_songs.txt',
@@ -205,7 +83,7 @@ class YoutubeDL():
     def downoladConfigPlaylistVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
         """
-        playlistList = self.configMeneager.getUrlOfPlaylists()
+        playlistList = self.configManager.getUrlOfPlaylists()
         self.setVideoOptions(type)
         for playlistURL in playlistList:
             self.downloadVideoPlaylist(playlistURL, type)
@@ -213,7 +91,7 @@ class YoutubeDL():
     def downoladConfigPlaylistAudio(self):
         """Method used to dowload all playlists added to cofig file - type audio
         """
-        playlistList = self.configMeneager.getUrlOfPlaylists()
+        playlistList = self.configManager.getUrlOfPlaylists()
         for playlistURL in playlistList:
             self.downloadAudioPlaylist(playlistURL)
 
@@ -253,8 +131,8 @@ class YoutubeDL():
 
 
 class TerminalUser(YoutubeDL): #pragma: no_cover
-    def __init__(self, configMeneager:ConfigParserMenager, metaDataMenager:MetaDataMenager) -> None:
-        super().__init__(configMeneager, metaDataMenager)
+    def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager) -> None:
+        super().__init__(configManager, metaDataMenager)
 
     def isPlaylist(self, url):
         if url == None:
@@ -335,7 +213,7 @@ if __name__ == "__main__":
     url = args.url
     type = args.type
     config= args.config
-    configParserMenager = ConfigParserMenager(config, configparser.ConfigParser())
-    metaDataMenager = MetaDataMenager()
+    configParserMenager = ConfigParserManager(config, configparser.ConfigParser())
+    metaDataMenager = MetaDataManager()
     terminalUser = TerminalUser(configParserMenager, metaDataMenager)
     terminalUser.downloadTerminal(url, type)
