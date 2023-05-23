@@ -11,7 +11,6 @@ metaDataMenager = MetaDataMenager()
 configParserMenager = ConfigParserMenager(config)
 youtubeDownloder = YoutubeDL(configParserMenager, metaDataMenager)
 mail = Mail("radek.szczygielski.trash@gmail.com")
-mail.initialize()
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/' # Obczaić o co chodzi, mogę wpisać dokładnie to co chce i będzie działać
@@ -36,12 +35,13 @@ def sendMail():
         if len(messageText) == 0:
             flash("Wrong empty massage", category="danger")
             return render_template("mail.html")
-        mailManager.sendMailFromHTML("Automatic mail from flask", f"Otrzymałem maile: {senderInput}<br> O treści: {messageText}""")
+        mail.sendMailFromHTML(senderInput, "Automatic mail from flask", messageText)
         flash("Mail was sucessfuly was send", category="success")
     return render_template("mail.html")
 
 @app.route("/mail.html")
-def mail():
+def mail_html():
+    mail.initialize()
     return render_template("mail.html")
 
 @app.route("/downloadToServer", methods=["POST", "GET"])

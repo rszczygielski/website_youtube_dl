@@ -8,7 +8,6 @@ class TestMainWeb(TestCase):
 
     def setUp(self):
         main.app.config["TESTING"] = True
-        main.mailManager
         self.flask = main.app.test_client()
 
     def testIndexHTML(self):
@@ -26,18 +25,16 @@ class TestMainWeb(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Wrong mail adress", str(response.data))
 
-    @patch.object(Mail, "initialize")
     @patch.object(Mail, "sendMailFromHTML")
-    def testSenMail(self, mockSendMail, mockInitialize):
+    def testSendMail(self, mockSendMail):
         response = self.flask.post("/sendMail", data={"senderInput": "testSenderInput@gmail.com",
                                            "messageText": "testMessageText"})
         self.assertEqual(response.status_code, 200)
-        mockSendMail.assert_called_once()
-        mockInitialize.assert_called_once()
-        # self.assertIn("Mail was sucessfuly was send", str(response.data))
+        mockSendMail.assert_called_once_with("testSenderInput@gmail.com", "Automatic mail from flask", "testMessageText")
+        self.assertIn("Mail was sucessfuly was send", str(response.data))
 
 if __name__ == "__main__":
     unittest.main()
 
-    # przekazywać obiekt Gmail do MailManagera po to aby można było zamockować send_massage tak 
-    # samo jak w przypadku Config menagera 
+    # przekazywać obiekt Gmail do MailManagera po to aby można było zamockować send_massage tak
+    # samo jak w przypadku Config menagera

@@ -10,9 +10,9 @@ class Mail():
     def sendMail(self, msg, subject, toSend):
          self.gmail.send_message(to= toSend, msg_html=msg, sender=self.sender, subject=subject)
 
-    def sendMailFromHTML(self, subject, msg):
-        self.gmail.send_message(to="radek.szczygielski87@gmail.com", msg_html=msg, subject=subject, sender=self.sender)
-
+    def sendMailFromHTML(self, autor, subject, msg):
+        fullText = f"Otrzymałem maile: {autor}<br> O treści: {msg}"
+        self.gmail.send_message(to="radek.szczygielski87@gmail.com", msg_html=fullText, subject=subject, sender=self.sender)
 
 if __name__ == "__main__":
     mail = Mail("radek.szczygielski.trash@gmail.com")
