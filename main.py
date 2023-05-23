@@ -92,22 +92,22 @@ def downloadConfigPlaylist():
 @app.route("/modify_playlist", methods=["POST", "GET"])
 def modify_playlist():
     if request.method == "POST":
-        playlistList = youtubeDownloder.configMeneager.getPlaylists()
+        playlistList = configParserMenager.getPlaylists()
         if "AddPlaylistButton" in request.form:
             playlistName = request.form["playlistName"]
             playlistURL = request.form["playlistURL"]
             if "list=" not in playlistURL:
                 flash("Please enter correct URL of YouTube playlist", category="danger")
                 return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
-            youtubeDownloder.configMeneager.addPlaylist(playlistName, playlistURL)
-            playlistList = youtubeDownloder.configMeneager.getPlaylists()
+            configParserMenager.addPlaylist(playlistName, playlistURL)
+            playlistList = configParserMenager.getPlaylists()
             flash(f"Playlist {playlistName} added to config file", category="success")
             return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
         elif "DeletePlaylistButton" in request.form:
             if "playlistSelect" in request.form:
                 playlistToRemove = request.form["playlistSelect"]
-                youtubeDownloder.configMeneager.deletePlylist(playlistToRemove)
-                playlistList = youtubeDownloder.configMeneager.getPlaylists()
+                configParserMenager.deletePlylist(playlistToRemove)
+                playlistList = configParserMenager.getPlaylists()
                 flash(f"Playlist {playlistToRemove} deleted from config file", category="success")
                 return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
             else:
@@ -118,7 +118,7 @@ def modify_playlist():
 
 @app.route("/modify_playlist.html")
 def modify_playlist_html():
-    playlistList = youtubeDownloder.configMeneager.getPlaylists()
+    playlistList = configParserMenager.getPlaylists()
     print(playlistList.keys())
     return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
 
