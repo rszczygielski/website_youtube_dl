@@ -1,5 +1,5 @@
 import unittest
-import main
+import mainWebPage
 from mailManager import Mail
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, call
@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, patch, call
 class TestMainWeb(TestCase):
 
     def setUp(self):
-        main.app.config["TESTING"] = True
-        self.flask = main.app.test_client()
+        mainWebPage.app.config["TESTING"] = True
+        self.flask = mainWebPage.app.test_client()
 
     def testIndexHTML(self):
         response = self.flask.get("/index.html")
