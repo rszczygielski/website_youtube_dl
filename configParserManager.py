@@ -1,6 +1,17 @@
 import configparser
 import os
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 class ConfigParserManager():
     def __init__(self, configFilePath, configParser=configparser.ConfigParser()):
         self.configFilePath = configFilePath
@@ -46,8 +57,9 @@ class ConfigParserManager():
     def addPlaylist(self, playlistName, playlistURL):
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
-        if len(self.configParser.sections()) == 0:
-            self.createDefaultConfigFile()
+        if "playlists" not in self.configParser:
+            print(f"{bcolors.FAIL}Config file is not correct{bcolors.ENDC}")
+            return False
         self.configParser["playlists"][playlistName] = playlistURL
         self.saveConfig(self.configParser)
 
@@ -55,6 +67,11 @@ class ConfigParserManager():
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
-            self.createDefaultConfigFile()
+            print(f"{bcolors.FAIL}Config file is not correct{bcolors.ENDC}")
+            return False
         self.configParser.remove_option("playlists", playlistName)
         self.saveConfig(self.configParser)
+
+if __name__ == "__main__":
+    config = ConfigParserManager("/home/rszczygielski/pythonVSC/personal_classes/website/youtube_config.ini")
+    print(config.getPlaylists())

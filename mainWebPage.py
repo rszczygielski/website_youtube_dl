@@ -1,4 +1,5 @@
-from flask import Flask, flash, render_template, request, send_file
+from flask import Flask, flash, render_template, request
+import flask
 from mailManager import Mail
 from youtubeDL import YoutubeDL
 from metaDataManager import MetaDataManager
@@ -58,18 +59,26 @@ def downloadToServer():
         if youtubeURL == "":
             flash("Please enter YouTube URL", category="danger")
             return render_template("youtube.html")
-        elif "list=" in youtubeURL:
+        elif "list=" in youtubeURL and "v=" in youtubeURL:
             flash("You entered URL with playlist hash - only single video has been downloaded",
             category="danger")
         direcotryPath = youtubeDownloder.savePath
         if type == "mp3":
             metaData = youtubeDownloder.downloadAudio(youtubeURL)
-            fileName = f'{metaData["title"]}.mp3'
-            flash("Downloaded audio file", category="success")
+            if metaData:
+                fileName = f'{metaData["title"]}.mp3'
+                flash("Downloaded audio file", category="success")
+            else:
+                flash("File not downloaded", category="danger")
+                return render_template("youtube.html")
         else:
             metaData = youtubeDownloder.downloadVideo(youtubeURL, type)
-            fileName = f'{metaData["title"]}_{type}p.{metaData["ext"]}'
-            flash("Downloaded video file", category="success")
+            if metaData:
+                fileName = f'{metaData["title"]}_{type}p.{metaData["ext"]}'
+                flash("Downloaded video file", category="success")
+            else:
+                flash("File not downloaded", category="danger")
+                return render_template("youtube.html")
         return render_template("downloadPage.html", downloadFileName=fileName, downloadDirectoryPath=direcotryPath)
 
 @app.route("/downloadFile", methods=["POST", "GET"])
@@ -77,7 +86,8 @@ def downloadFile():
     fileName = yt_dlp.utils.sanitize_filename(request.form["fileName"])
     directoryPath = request.form["directoryPath"]
     fullPath = os.path.join(directoryPath, fileName)
-    return send_file(fullPath, as_attachment=True)
+    print(fullPath)
+    return flask.send_file(fullPath, as_attachment=True)
 
 @app.route("/downloadConfigPlaylist", methods=["POST", "GET"])
 def downloadConfigPlaylist():
