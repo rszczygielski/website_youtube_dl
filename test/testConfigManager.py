@@ -66,7 +66,7 @@ class TestConfigParserMenagerWithMockConfigClass(TestCase):
         self.config.getUrlOfPlaylists()
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 2)
-        self.config.deletePlylist("test_playlist")
+        self.config.deletePlaylist("test_playlist")
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 1)
         mockSave.assert_called_once()
@@ -78,7 +78,7 @@ class TestConfigParserMenagerWithMockConfigClass(TestCase):
         self.config.getUrlOfPlaylists()
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 2)
-        self.config.deletePlylist("wrongPlaylist")
+        self.config.deletePlaylist("wrongPlaylist")
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 2)
         mockSave.assert_called_once()
@@ -125,7 +125,7 @@ class TestConfingManagerWithEmptyConfig(TestCase):
 
     @patch.object(configparser.ConfigParser, "clear")
     def testDeletePlaylist(self, mockClear):
-        deletePlaylistFlag = self.config.deletePlylist("palylistName")
+        deletePlaylistFlag = self.config.deletePlaylist("palylistName")
         self.assertFalse(deletePlaylistFlag)
         mockClear.assert_called_once()
 

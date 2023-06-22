@@ -28,7 +28,6 @@ def index():
 
 @app.route("/sendMail", methods=['POST'])
 def sendMail():
-    print("Send mail")
     if request.method == "POST":
         senderInput = request.form["senderInput"]
         messageText = request.form["messageText"]
@@ -116,7 +115,7 @@ def modify_playlist():
         elif "DeletePlaylistButton" in request.form:
             if "playlistSelect" in request.form:
                 playlistToRemove = request.form["playlistSelect"]
-                configParserMenager.deletePlylist(playlistToRemove)
+                configParserMenager.deletePlaylist(playlistToRemove)
                 playlistList = configParserMenager.getPlaylists()
                 flash(f"Playlist {playlistToRemove} deleted from config file", category="success")
                 return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
@@ -124,7 +123,7 @@ def modify_playlist():
                 flash("Select a playlist to delete", category="danger")
                 return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
         else:
-            return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
+            raise Exception("Undefined behaviour")
 
 @app.route("/modify_playlist.html")
 def modify_playlist_html():

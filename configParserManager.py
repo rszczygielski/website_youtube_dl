@@ -63,7 +63,7 @@ class ConfigParserManager():
         self.configParser["playlists"][playlistName] = playlistURL
         self.saveConfig(self.configParser)
 
-    def deletePlylist(self, playlistName):
+    def deletePlaylist(self, playlistName):
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:

@@ -149,22 +149,58 @@ class TestMainWeb(TestCase):
         mockSanitizeFilename.assert_called_once_with("testFileName")
         mockSendFile.assert_called_once_with("test/path/testFileName", as_attachment=True)
 
-    @patch.object(ConfigParserManager, "addPlaylist")
     @patch.object(ConfigParserManager, "getPlaylists")
-    def testAddPlaylist(self, mockGetPlaylist, mockGetPlaylsits):
+    def testAddPlaylistNoURL(self, mockGetPlaylists):
         response = self.flask.post("/modify_playlist", data={"playlistURL": "testYoutubeURL.com",
                                                              "playlistName": "testPlaylistName",
                                                              "AddPlaylistButton": ""})
-        # self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertIn("Please enter correct URL of YouTube playlist", str(response.data))
+        self.assertIn("<title>Modify Playlist</title>", str(response.data))
+        mockGetPlaylists.assert_called_once()
 
-# testy do modify_playlist
+
+    @patch.object(ConfigParserManager, "addPlaylist")
+    @patch.object(ConfigParserManager, "getPlaylists")
+    def testAddPlaylistCorrectURL(self, mockGetPlaylists, mockAddPlaylist):
+        response = self.flask.post("/modify_playlist", data={"playlistURL": "testYoutubeURL?list=playlisHash.com",
+                                                             "playlistName": "testPlaylistName",
+                                                             "AddPlaylistButton": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mockGetPlaylists.call_count, 2)
+        self.assertIn("Playlist testPlaylistName added to config file", str(response.data))
+        self.assertIn("<title>Modify Playlist</title>", str(response.data))
+        mockAddPlaylist.assert_called_once()
+
+    @patch.object(ConfigParserManager, "getPlaylists")
+    def testDeletePlaylistNoName(self, mockGetPlaylists):
+        response = self.flask.post("/modify_playlist", data={"DeletePlaylistButton": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Select a playlist to delete", str(response.data))
+        self.assertIn("<title>Modify Playlist</title>", str(response.data))
+        mockGetPlaylists.assert_called_once()
+
+    @patch.object(ConfigParserManager, "deletePlaylist")
+    @patch.object(ConfigParserManager, "getPlaylists")
+    def testDeletePlaylistWithName(self, mockGetPlaylists, mockDeletePlaylist):
+        response = self.flask.post("/modify_playlist", data={"playlistSelect": "playlistToDelete",
+                                                             "DeletePlaylistButton": ""})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Playlist playlistToDelete deleted from config file", str(response.data))
+        self.assertIn("<title>Modify Playlist</title>", str(response.data))
+        self.assertEqual(mockGetPlaylists.call_count, 2)
+        mockDeletePlaylist.assert_called_once()
+
+    # def testModifyPlaylist(self):
+    #     response = self.flask.post("/modify_playlist", data={"playlistSelect": "playlistToDelete"})
+    #     self.assertEqual(response.status_code, 200)
+    #     self.assertIn("<title>Modify Playlist</title>", str(response.data))
 
 
 if __name__ == "__main__":
     unittest.main()
 
-    # jeśli coś nie jest linkiem to zwróc erro youtubeDL
+    # jeśli coś nie jest linkiem to zwróc error youtubeDL
 
     # przekazywać obiekt Gmail do MailManagera po to aby można było zamockować send_massage tak
     # samo jak w przypadku Config menagera
