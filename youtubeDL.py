@@ -4,15 +4,19 @@ import os
 import argparse
 from configParserManager import ConfigParserManager
 from metaDataManager import MetaDataManager
+import logging
+from myLogger import Logger
 
 class YoutubeDL():
-    def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager):
+    def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager, ytLogger:Logger=Logger):
         self.metaDataMenager = metaDataMenager
         self.configManager = configManager
         self.savePath = self.configManager.getSavePath()
         self.ydl_video_opts = {
         "format": "bestvideo+bestaudio",
         # 'download_archive': 'downloaded_songs.txt',
+        "no-override": False,
+        "logger": ytLogger,
         'addmetadata': True,
         }
         self.ydl_audio_opts = {
@@ -23,6 +27,8 @@ class YoutubeDL():
                             'preferredquality': '192',
                         }],
         # 'download_archive': 'downloaded_songs.txt',
+        # "no-override": False,
+        "logger": ytLogger,
         'addmetadata': True,
         'outtmpl':  self.savePath + '/%(title)s.%(ext)s',
         }
@@ -38,7 +44,10 @@ class YoutubeDL():
             class: meta data form youtube
         """
         with yt_dlp.YoutubeDL(youtubeOptions) as ydl:
-            return ydl.extract_info(youtubeURL)
+            try:
+                return ydl.extract_info(youtubeURL)
+            except Exception as exception:
+                return str(exception)
 
     def setVideoOptions(self, type):
         self.ydl_video_opts['format'] = f'bestvideo[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
@@ -54,8 +63,8 @@ class YoutubeDL():
             youtubeURL (str): YouTube URL
         """
         self.setVideoOptions(type)
-        videoHash = self.getVideoHash(youtubeURL)
-        return self.downloadFile(videoHash, self.ydl_video_opts)
+        mediaHash = self.getMediaHash(youtubeURL)
+        return self.downloadFile(mediaHash, self.ydl_video_opts)
 
     def downloadVideoPlaylist(self, youtubeURL:str, type:str):
         self.setVideoOptions(type)
@@ -69,14 +78,18 @@ class YoutubeDL():
         Args:
             youtubeURL (str): YouTube URL
         """
-        videoHash = self.getVideoHash(youtubeURL)
-        metaData = self.downloadFile(videoHash, self.ydl_audio_opts)
+        mediaHash = self.getMediaHash(youtubeURL)
+        metaData = self.downloadFile(mediaHash, self.ydl_audio_opts)
+        if isinstance(metaData, str):
+            return metaData
         self.metaDataMenager.setMetaDataSingleFile(metaData, self.savePath)
         return metaData
 
     def downloadAudioPlaylist(self, youtubeURL:str):
         playlistHash = self.getPlaylistHash(youtubeURL)
         metaData = self.downloadFile(playlistHash, self.ydl_audio_opts)
+        if isinstance(metaData, str):
+            return metaData
         self.metaDataMenager.setMetaDataPlaylist(metaData, self.savePath)
         return metaData
 
@@ -95,22 +108,22 @@ class YoutubeDL():
         for playlistURL in playlistList:
             self.downloadAudioPlaylist(playlistURL)
 
-    def getVideoHash(self, url):
+    def getMediaHash(self, url):
         onlyHashesInLink = url.split("?")[1]
         numberOfEqualSign = url.count("=")
         splitedHashes = onlyHashesInLink.split("=")
         if numberOfEqualSign == 1:
             if "list=" in onlyHashesInLink:
-                raise ValueError("This is playlist")
+                return ""
             else:
-                videoHash = onlyHashesInLink[2:]
-                return videoHash
+                mediaHash = onlyHashesInLink[2:]
+                return mediaHash
         elif numberOfEqualSign > 2:
-            videoHash = splitedHashes[1][:splitedHashes[1].index("&")]
-            return videoHash
+            mediaHash = splitedHashes[1][:splitedHashes[1].index("&")]
+            return mediaHash
         elif numberOfEqualSign == 2:
-            videoHash = splitedHashes[1][:splitedHashes[1].index("&")]
-            return videoHash
+            mediaHash = splitedHashes[1][:splitedHashes[1].index("&")]
+            return mediaHash
 
     def getPlaylistHash(self, url):
         onlyHashesInLink = url.split("?")[1]

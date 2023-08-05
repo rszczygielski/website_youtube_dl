@@ -53,15 +53,15 @@ class TestYoutubeDL(TestCase):
 
     def testGetVideoHash(self):
         correctVideoHash = "ABsslEoL0-c"
-        testVideoHash1 = self.youtubeTest.getVideoHash("https://www.youtube.com/watch?v=ABsslEoL0-c")
-        testVideoHash2 = self.youtubeTest.getVideoHash("https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0")
-        testVideoHash3 = self.youtubeTest.getVideoHash("https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1")
+        testVideoHash1 = self.youtubeTest.getMediaHash("https://www.youtube.com/watch?v=ABsslEoL0-c")
+        testVideoHash2 = self.youtubeTest.getMediaHash("https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0")
+        testVideoHash3 = self.youtubeTest.getMediaHash("https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1")
         wrong_link_with_video = "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0"
+        wrongMetaData = self.youtubeTest.getMediaHash(wrong_link_with_video)
         self.assertEqual(testVideoHash1, correctVideoHash)
         self.assertEqual(testVideoHash2, correctVideoHash)
         self.assertEqual(testVideoHash3, correctVideoHash)
-        with self.assertRaises(ValueError):
-            self.youtubeTest.getVideoHash(wrong_link_with_video)
+        self.assertEqual(wrongMetaData, "")
 
     def testGetPlaylistHash(self):
         correectPlaylistHash = "PLAz00b-z3I5Um0R1_XqkbiqqkB0526jx0"

@@ -88,13 +88,13 @@ class TestMainWeb(TestCase):
         self.assertIn("Downloaded video file", str(response.data))
         self.assertIn('value="testTitle_720p.mp4"', str(response.data))
 
-    @patch.object(YoutubeDL, "downloadVideo", return_value={})
+    @patch.object(YoutubeDL, "downloadVideo", return_value="error")
     def testDownoladToServerPlaylistURLNoVideo(self, mockDownload):
         response = self.flask.post("/downloadToServer", data={"youtubeURL": "testYoutubeURL?list=playlist.com",
                                    "qualType": "720"})
         self.assertEqual(response.status_code, 200)
         mockDownload.assert_called_once_with("testYoutubeURL?list=playlist.com", "720")
-        self.assertIn("File not downloaded", str(response.data))
+        self.assertIn("File not found - wrong link", str(response.data))
         self.assertIn('<title>YouTube</title>', str(response.data))
 
     @patch.object(YoutubeDL, "downloadAudio", return_value={"ext": "mp3", "title": "testTitle"})
@@ -107,13 +107,13 @@ class TestMainWeb(TestCase):
         self.assertIn("Downloaded audio file", str(response.data))
         self.assertIn('value="testTitle.mp3"', str(response.data))
 
-    @patch.object(YoutubeDL, "downloadAudio", return_value={})
+    @patch.object(YoutubeDL, "downloadAudio", return_value="error")
     def testDownoladToServerPlaylistURLNoAudio(self, mockDownload):
         response = self.flask.post("/downloadToServer", data={"youtubeURL": "testYoutubeURL?list=playlist.com",
                                    "qualType": "mp3"})
         self.assertEqual(response.status_code, 200)
         mockDownload.assert_called_once_with("testYoutubeURL?list=playlist.com")
-        self.assertIn("File not downloaded", str(response.data))
+        self.assertIn("File not found - wrong link", str(response.data))
         self.assertIn('<title>YouTube</title>', str(response.data))
 
     def testYourubeHTML(self):
@@ -191,16 +191,13 @@ class TestMainWeb(TestCase):
         self.assertEqual(mockGetPlaylists.call_count, 2)
         mockDeletePlaylist.assert_called_once()
 
-    # def testModifyPlaylist(self):
-    #     response = self.flask.post("/modify_playlist", data={"playlistSelect": "playlistToDelete"})
-    #     self.assertEqual(response.status_code, 200)
-    #     self.assertIn("<title>Modify Playlist</title>", str(response.data))
+    def testModifyPlaylist(self):
+        with self.assertRaises(Exception) as fail:
+            response = self.flask.post("/modify_playlist", data={"playlistSelect": "playlistToDelete"})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("<title>Modify Playlist</title>", str(response.data))
+        self.assertIn('Undefined behaviour', str(fail.exception))
 
 
 if __name__ == "__main__":
     unittest.main()
-
-    # jeśli coś nie jest linkiem to zwróc error youtubeDL
-
-    # przekazywać obiekt Gmail do MailManagera po to aby można było zamockować send_massage tak
-    # samo jak w przypadku Config menagera

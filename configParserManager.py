@@ -1,5 +1,8 @@
 import configparser
 import os
+import logging
+
+logger = logging.getLogger("__main__")
 
 class bcolors:
     HEADER = '\033[95m'
@@ -23,6 +26,7 @@ class ConfigParserManager():
         homePath = os.path.expanduser("~")
         musicPath = os.path.join(homePath, "Music")
         self.configParser["global"]["path"] = musicPath
+        self.saveConfig()
 
     def getSavePath(self):
         self.configParser.clear()
@@ -58,20 +62,20 @@ class ConfigParserManager():
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
         if "playlists" not in self.configParser:
-            print(f"{bcolors.FAIL}Config file is not correct{bcolors.ENDC}")
+            logger.error("Config file is not correct")
             return False
         self.configParser["playlists"][playlistName] = playlistURL
-        self.saveConfig(self.configParser)
+        logger.info(f"Playlist {playlistName}: {playlistURL} added")
+        self.saveConfig()
 
     def deletePlaylist(self, playlistName):
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
-            print(f"{bcolors.FAIL}Config file is not correct{bcolors.ENDC}")
+            logger.error("Config file is not correct")
             return False
         self.configParser.remove_option("playlists", playlistName)
-        self.saveConfig(self.configParser)
+        self.saveConfig()
 
 if __name__ == "__main__":
     config = ConfigParserManager("/home/rszczygielski/pythonVSC/personal_classes/website/youtube_config.ini")
-    print(config.getPlaylists())

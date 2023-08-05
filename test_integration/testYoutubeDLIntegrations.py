@@ -9,7 +9,7 @@ class YoutubeDlTest(TestCase):
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtube.youtubeDL.YoutubeDL(f'{self.testDir}/test_youtube_config.ini')
-        
+
     def test_downloadFile(self):
         youtubeOptions = {
         # 'download_archive': 'downloaded_songs.txt',
@@ -23,7 +23,7 @@ class YoutubeDlTest(TestCase):
         downlodedFilePath = os.path.join(self.testDir, title + '_360p' + f".{ext}")
         print(downlodedFilePath)
         self.assertTrue(os.path.isfile(downlodedFilePath))
-    
+
 
 class YoutubeAudioTest(TestCase):
 
@@ -31,7 +31,7 @@ class YoutubeAudioTest(TestCase):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtube.youtubeDL.YoutubeDL(f'{self.testDir}/test_youtube_config.ini')
         self.youtubeTest.ydl_audio_opts['outtmpl'] = self.testDir + '/%(title)s.%(ext)s'
-       
+
 
     def testDownloadAudio(self):
         print(self.testDir)

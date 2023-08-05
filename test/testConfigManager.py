@@ -100,21 +100,27 @@ class TestConfingManagerWithEmptyConfig(TestCase):
         self.musicPath = os.path.join(homePath, "Music")
 
     @patch.object(configparser.ConfigParser, "clear")
-    def testGetSavePath(self, mockClear):
+    @patch.object(ConfigParserManager, "saveConfig")
+    def testGetSavePath(self, mockSave, mockClear):
         save_path = self.config.getSavePath()
         self.assertEqual(save_path, self.musicPath)
+        mockSave.assert_called_once()
         mockClear.assert_called_once()
 
-    def testGetPlaylists(self):
+    @patch.object(ConfigParserManager, "saveConfig")
+    def testGetPlaylists(self, mockSave):
         testPlaylistDict = self.config.getPlaylists()
         self.assertEqual(testPlaylistDict, {})
         self.assertEqual(self.configParserMock["global"]["path"], self.musicPath)
+        mockSave.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
-    def testGetUrlOfPlaylists(self, mockClear):
+    @patch.object(ConfigParserManager, "saveConfig")
+    def testGetUrlOfPlaylists(self, mockSave, mockClear):
         testPlaylistUrls = self.config.getUrlOfPlaylists()
         self.assertEqual(testPlaylistUrls, [])
         self.assertEqual(self.configParserMock["global"]["path"], self.musicPath)
+        mockSave.assert_called_once()
         mockClear.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
@@ -132,5 +138,3 @@ class TestConfingManagerWithEmptyConfig(TestCase):
 
 if __name__ == "__main__":
     main()
-
-# po co mockujemy clear

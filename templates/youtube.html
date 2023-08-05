@@ -1,83 +1,130 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
-    <meta charset="utf-8"/>
+    <meta charset="utf-8" />
     <title>YouTube</title>
-    <meta name="desctiption" content="template"/>
-    <meta http-equiv="X-UA-Compatible" content="template"/>
-	<script src="../static/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
-	<link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="../static/style.css" type="text/css"/>
+    <meta name="desctiption" content="template" />
+    <meta http-equiv="X-UA-Compatible" content="template" />
+    <script src="../static/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../static/style.css" type="text/css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function () {
+            var socket = io();
+            console.log("ready")
+            socket.on('connect', function () {
+                console.log("I'm connected");
+            });
+            var allLogs = "";
+            socket.on("log", function (log_data) {
+                console.log(log_data);
+                allLogs += log_data + "\n";
+                var logs = document.getElementById("logArea");
+                logs.value = allLogs;
+            });
+            var downloadForm = document.getElementById("DownloadForm");
+            downloadForm.addEventListener("submit", function (event) {
+                event.preventDefault();
+                allLogs = "";
+                var youtubeURL = document.getElementById("youtubeURL");
+                var downloadTypes = document.getElementsByName("qualType");
+                for (var i = 0; i < downloadTypes.length; i++) {
+                    if (downloadTypes[i].checked == true) {
+                        var downloadType = downloadTypes[i].value;
+                        console.log(downloadType)
+                        break;
+                    }
+                }
+                socket.emit("FormData", {
+                    "youtubeURL": youtubeURL.value,
+                    "downloadType": downloadType
+                });
+                return true
+            })
+        });
+    </script>
 </head>
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
-{% for  category, message in messages %}
+{% for category, message in messages %}
 <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
-	{{ message }}
-	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 {% endfor %}
 {% endif %}
 {% endwith %}
 
 <body id="background">
-{% include "headers.html"%}
-<div>
-    <center>
-        <form action="/downloadToServer" method="post">
-            <h1>
-            <div>
-            <center>
-            <td><label class="neon-label">
-                Enter YouTube URL</label></td>
-            </dir>
-    <center>
-        <table>
-        <tr><td>
-        <input class="input-text" type="url" name="youtubeURL" placeholder="YouTube URL"
-            size="50"></input>
-        </td></tr>
-        <tr><td>
+    {% include "headers.html"%}
+    <div>
         <center>
-        <input type="radio" name="qualType" id="360p" value="360">
-        <label class="radio-buttons-label">360p</label>
-        <input type="radio" name="qualType" id="720p" value="720">
-        <label class="radio-buttons-label">720p</label>
-        <input type="radio" name="qualType" id="1080p" value="1080">
-        <label class="radio-buttons-label">1080p</label>
-        <input type="radio" name="qualType" id="2160p" value="2160">
-        <label class="radio-buttons-label">2160p</label>
-        <input type="radio" name="qualType" id="mp3" value="mp3">
-        <label class="radio-buttons-label">mp3</label>
-        </td></tr>
-        </table>
-        </h1>
-        <div>
-            <br>
-            <center>
-            <button class="neon-button" type="submit">Convert</button>
-            </center>
-        </div>
-    </form>
-        <form action="/downloadConfigPlaylist" method="post">
-            <center>
-            <br>
-            <button class="neon-button" type="submit">Download Config Playlist</button>
-            </center>
-        </form>
-    </form>
+            <form id="DownloadForm" action="#" method="post">
+                <h1>
+                    <div>
+                        <center>
+                            <td><label class="neon-label">
+                                    Enter YouTube URL</label></td>
+                            </dir>
+                            <center>
+                                <table>
+                                    <tr>
+                                        <td>
+                                            <input id="youtubeURL" class="input-text" type="url" name="youtubeURL"
+                                                placeholder="YouTube URL" size="50"></input>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <center>
+                                                <input type="radio" name="qualType" id="360p" value="360">
+                                                <label class="radio-buttons-label">360p</label>
+                                                <input type="radio" name="qualType" id="720p" value="720">
+                                                <label class="radio-buttons-label">720p</label>
+                                                <input type="radio" name="qualType" id="1080p" value="1080">
+                                                <label class="radio-buttons-label">1080p</label>
+                                                <input type="radio" name="qualType" id="2160p" value="2160">
+                                                <label class="radio-buttons-label">2160p</label>
+                                                <input type="radio" name="qualType" id="mp3" value="mp3">
+                                                <label class="radio-buttons-label">mp3</label>
+                                        </td>
+                                    </tr>
+                                </table>
+                </h1>
+                <div>
+                    <br>
+                    <center>
+                        <button class="neon-button" type="submit" id="DownloadButton">Download</button>
+                    </center>
+                </div>
+            </form>
+            <form action="/downloadConfigPlaylist" method="post">
+                <center>
+                    <br>
+                    <button class="neon-button" type="submit">Download Config Playlist</button>
+                </center>
+            </form>
+            </form>
 
-    <form action="/modify_playlist.html">
-    <center>
-    <br>
-    <button class="neon-button" type="submit">Add playlist to config file</button>
-    </center>
-    </form>
-
-<!-- <br>
+            <form action="/modify_playlist.html">
+                <center>
+                    <br>
+                    <button class="neon-button" type="submit">Add playlist to config file</button>
+                </center>
+            </form>
+            <br>
+            <textarea id="logArea" size="10" style="width: 600px; height: 500px;", class="input-text" readonly>
+            </textarea>
+            <!-- <br>
 <div class="progress">
     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
   </div> -->
 </body>
+
 </html>

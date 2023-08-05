@@ -3,6 +3,9 @@ import yt_dlp
 from mutagen.easyid3 import EasyID3
 import mutagen.easyid3
 from mutagen.mp3 import MP3
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MetaDataType(Enum):
     TITLE = 'title'
@@ -88,4 +91,4 @@ class MetaDataManager():
             path (str): file path
         """
         audioInfo = MP3(path, ID3=mutagen.easyid3.EasyID3)
-        print(audioInfo.pprint())
+        logger.info(audioInfo.pprint())
