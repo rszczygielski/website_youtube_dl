@@ -47,6 +47,17 @@
                 });
                 return true
             })
+            socket.on("downloadSucessful", function (downloadData){
+                var downloadSection = document.getElementById("downloadSection")
+                var fileHash = downloadData["HASH"]
+                console.log(fileHash)
+                downloadSection.innerHTML = "<br><a href=/downloadFile/" + fileHash + " class='neon-button'>Download File</a>"
+            })
+            var configPlaylist = document.getElementById("downloadConfigPlaylist");
+            configPlaylist.addEventListener("submit", function (event){
+                event.preventDefault();
+                socket.emit("downloadFromConfigFile", "")
+            })
         });
     </script>
 </head>
@@ -104,7 +115,7 @@
                     </center>
                 </div>
             </form>
-            <form action="/downloadConfigPlaylist" method="post">
+            <form id="downloadConfigPlaylist" action="#">
                 <center>
                     <br>
                     <button class="neon-button" type="submit">Download Config Playlist</button>
@@ -119,12 +130,11 @@
                 </center>
             </form>
             <br>
-            <textarea id="logArea" size="10" style="width: 600px; height: 500px;", class="input-text" readonly>
+            <textarea id="logArea" size="10" style="width: 800px; height: 500px;", class="input-text" readonly>
             </textarea>
-            <!-- <br>
-<div class="progress">
-    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100" style="width: 75%"></div>
-  </div> -->
+            <br>
+            <div id="downloadSection">
+            </div>
 </body>
 
 </html>

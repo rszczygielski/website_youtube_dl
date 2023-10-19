@@ -1,4 +1,4 @@
-from enum import Enum
+from youtubeDataKeys import MetaDataType
 import yt_dlp
 from mutagen.easyid3 import EasyID3
 import mutagen.easyid3
@@ -7,11 +7,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-class MetaDataType(Enum):
-    TITLE = 'title'
-    ALBUM = 'album'
-    ARTIST = 'artist'
-    PLAYLIST_INDEX = 'playlist_index'
 
 class MetaDataManager():
 

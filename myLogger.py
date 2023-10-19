@@ -74,4 +74,3 @@ class LoggerClass():
         self.emit(error)
 
 Logger = LoggerClass()
-Logger.debug("TESTTEST")

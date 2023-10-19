@@ -6,70 +6,139 @@ from configParserManager import ConfigParserManager
 from metaDataManager import MetaDataManager
 import logging
 from myLogger import Logger
+from youtubeDataKeys import PlaylistInfo
+
+logger = logging.getLogger(__name__)
+if __name__ == "__main__":
+    logging.basicConfig(format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
 
 class YoutubeDL():
     def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager, ytLogger:Logger=Logger):
         self.metaDataMenager = metaDataMenager
         self.configManager = configManager
+        self.ytLogger = ytLogger
         self.savePath = self.configManager.getSavePath()
-        self.ydl_video_opts = {
+        self.ydl_opts = {
         "format": "bestvideo+bestaudio",
         # 'download_archive': 'downloaded_songs.txt',
         "no-override": False,
-        "logger": ytLogger,
+        "logger": self.ytLogger,
         'addmetadata': True,
         }
-        self.ydl_audio_opts = {
-        "format": "bestvideo+bestaudio",
-        'postprocessors': [{
-                            'key': 'FFmpegExtractAudio',
-                            'preferredcodec': 'mp3',
-                            'preferredquality': '192',
-                        }],
-        # 'download_archive': 'downloaded_songs.txt',
-        # "no-override": False,
-        "logger": ytLogger,
-        'addmetadata': True,
-        'outtmpl':  self.savePath + '/%(title)s.%(ext)s',
-        }
+        self.ydl_media_info_opts ={
+              'format': 'best/best',
+              'addmetadata': True,
+              'ignoreerrors': False,
+              'quiet':True
+              }
 
-    def downloadFile(self, youtubeURL:str, youtubeOptions:dict): #pragma: no_cover
+    def downloadFile(self, youtubeMediaHash:str): #pragma: no_cover
         """Method used to download youtube media based on URL
 
         Args:
-            youtubeURL (str): YouTube URL
+            youtubeMediaHash (str): Hash of YouTube media
             youtubeOptions (dict): YouTube options dict form init
 
         Returns:
             class: meta data form youtube
         """
-        with yt_dlp.YoutubeDL(youtubeOptions) as ydl:
+        with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
             try:
-                return ydl.extract_info(youtubeURL)
+                return ydl.extract_info(youtubeMediaHash)
             except Exception as exception:
+                logger.error(f"Download file error {str(exception)}")
                 return str(exception)
 
-    def setVideoOptions(self, type):
-        self.ydl_video_opts['format'] = f'bestvideo[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
-        if type == "2160":
-            self.ydl_video_opts['outtmpl'] = self.savePath + '/%(title)s' + f'_4k' + '.%(ext)s'
-        else:
-            self.ydl_video_opts['outtmpl'] = self.savePath + '/%(title)s' + f'_{type}p' + '.%(ext)s'
+    def getDefaultOptions(self):
+        """Method returns to the defualt youtubeDL options
+        """
+        return {
+        "format": "bestvideo+bestaudio",
+        # 'download_archive': 'downloaded_songs.txt',
+        "no-override": False,
+        "logger": self.ytLogger,
+        'addmetadata': True,
+        }
+
+    def getSingleMediaInfo(self, youtubeURL):
+        pass
+
+    def getPlaylistMediaInfo(self, youtubeURL):
+        """Method used to provide youtube media info based on youtube URL without downloading it
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with Youtube info
+        """
+        with yt_dlp.YoutubeDL(self.ydl_media_info_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(youtubeURL, download=False)
+            except Exception as exception:
+                logger.error(f"Download media info error {str(exception)}")
+                return str(exception)
+        playlistMediaInfo = []
+        for track in metaData[PlaylistInfo.PLAYLIST_TRACKS.value]:
+            essentialMetaData = {}
+            essentialMetaData["hash"] = track[PlaylistInfo.YOUTUBE_HASH.value]
+            essentialMetaData["url"] = track[PlaylistInfo.URL.value]
+            essentialMetaData["playlist_index"] = track[PlaylistInfo.PLAYLIST_INDEX.value]
+            essentialMetaData["title"] = track[PlaylistInfo.TITLE.value]
+            essentialMetaData["album"] = track[PlaylistInfo.ALBUM.value]
+            essentialMetaData["artist"] = track[PlaylistInfo.ARTIST.value]
+            playlistMediaInfo.append(essentialMetaData)
+        return playlistMediaInfo
+
+    def setVideoOptions(self, type:str):
+        """Method used to change and set proper
+
+        Args:
+            type (str): _description_
+        """
+        video_options = self.getDefaultOptions()
+        video_options['format'] = f'best[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
+        video_options['outtmpl'] = self.savePath + '/%(title)s' + f'_{type}p' + '.%(ext)s'
+        self.ydl_opts = video_options
+
+    def setAudioOptions(self):
+        audio_options = self.getDefaultOptions()
+        audio_options['postprocessors'] = [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }]
+        audio_options['outtmpl'] =  self.savePath + '/%(title)s.%(ext)s'
+        self.ydl_opts = audio_options
 
     def downloadVideo(self, youtubeURL:str, type:str):
         """Method uded to download video type from YouTube
 
         Args:
             youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with YouTube video meta data
         """
         self.setVideoOptions(type)
-        mediaHash = self.getMediaHash(youtubeURL)
-        return self.downloadFile(mediaHash, self.ydl_video_opts)
+        mediaHash = self.getSingleVideoHash(youtubeURL)
+        return self.downloadFile(mediaHash)
 
     def downloadVideoPlaylist(self, youtubeURL:str, type:str):
+        """Method uded to download video playlist from YouTube
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with YouTube video playlist meta data
+        """
         self.setVideoOptions(type)
         playlistHash = self.getPlaylistHash(youtubeURL)
-        return self.downloadFile(playlistHash, self.ydl_video_opts)
+        mediaInfoList = self.getPlaylistMediaInfo(playlistHash)
+        logger.info(mediaInfoList)
+        for trackInfo in mediaInfoList:
+            self.downloadFile(trackInfo["hash"])
 
     def downloadAudio(self, youtubeURL:str):
         """Method uded to download audio type from Youtube, convert metadata
@@ -78,16 +147,26 @@ class YoutubeDL():
         Args:
             youtubeURL (str): YouTube URL
         """
-        mediaHash = self.getMediaHash(youtubeURL)
-        metaData = self.downloadFile(mediaHash, self.ydl_audio_opts)
+        self.setAudioOptions()
+        mediaHash = self.getSingleVideoHash(youtubeURL)
+        metaData = self.downloadFile(mediaHash)
         if isinstance(metaData, str):
             return metaData
         self.metaDataMenager.setMetaDataSingleFile(metaData, self.savePath)
         return metaData
 
     def downloadAudioPlaylist(self, youtubeURL:str):
+        """Method uded to download audio playlist from YouTube
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with YouTube audio playlist meta data
+        """
+        self.setAudioOptions()
         playlistHash = self.getPlaylistHash(youtubeURL)
-        metaData = self.downloadFile(playlistHash, self.ydl_audio_opts)
+        metaData = self.downloadFile(playlistHash)
         if isinstance(metaData, str):
             return metaData
         self.metaDataMenager.setMetaDataPlaylist(metaData, self.savePath)
@@ -95,26 +174,48 @@ class YoutubeDL():
 
     def downoladConfigPlaylistVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
+
+        Args:
+            type (str): type of the video to download, like 480p
+
+        Returns:
+            bool: True if finished successfully
         """
         playlistList = self.configManager.getUrlOfPlaylists()
         self.setVideoOptions(type)
         for playlistURL in playlistList:
             self.downloadVideoPlaylist(playlistURL, type)
+        return True
 
     def downoladConfigPlaylistAudio(self):
-        """Method used to dowload all playlists added to cofig file - type audio
+        """Method used to download all playlists added to cofig file - type audo
+
+        Returns:
+            bool: True if finished successfully
         """
         playlistList = self.configManager.getUrlOfPlaylists()
         for playlistURL in playlistList:
             self.downloadAudioPlaylist(playlistURL)
+        return True
 
-    def getMediaHash(self, url):
+    def getSingleVideoHash(self, url):
+        """Method extracts single video hash from full url
+
+        Args:
+            url (str): full YouTube URL
+
+        Raises:
+            ValueError: ValueError if the URL is a playlist only
+
+        Returns:
+            str: single video hash
+        """
         onlyHashesInLink = url.split("?")[1]
         numberOfEqualSign = url.count("=")
         splitedHashes = onlyHashesInLink.split("=")
         if numberOfEqualSign == 1:
             if "list=" in onlyHashesInLink:
-                return ""
+                raise ValueError("This a playlist only - without video hash to download")
             else:
                 mediaHash = onlyHashesInLink[2:]
                 return mediaHash
@@ -126,22 +227,31 @@ class YoutubeDL():
             return mediaHash
 
     def getPlaylistHash(self, url):
+        """Method extracts playlist hash from full url
+
+        Args:
+            url (str): full YouTube URL
+
+        Raises:
+            ValueError: ValueError if the URL is not a playlist
+
+        Returns:
+            str: playlist hash
+        """
+        if not "list=" in url:
+            raise ValueError("This is not a playlist")
         onlyHashesInLink = url.split("?")[1]
         numberOfEqualSign = url.count("=")
         splitedHashes = onlyHashesInLink.split("=")
         if numberOfEqualSign == 1:
-            if "list=" in onlyHashesInLink:
-                playlistHash = onlyHashesInLink[5:]
-                return playlistHash
-            else:
-                raise ValueError("This is not a playlist")
+            playlistHash = onlyHashesInLink[5:]
+            return playlistHash
         elif numberOfEqualSign > 2:
             playlistHash = splitedHashes[2][:splitedHashes[2].index("&")]
             return playlistHash
         elif numberOfEqualSign == 2:
             playlistHash = splitedHashes[2]
             return playlistHash
-
 
 class TerminalUser(YoutubeDL): #pragma: no_cover
     def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager) -> None:
