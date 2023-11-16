@@ -144,12 +144,25 @@ def socketDownloadServer(formData):
         fileName = downloadSingleAudio(youtubeURL)
     if type != "mp3" and not isPlaylist:
         logger.debug(f"Download single video")
-        fileName = downloadSingleVideo(youtubeURL, type)
-    direcotryPath = youtubeDownloder.savePath
-    logger.debug(f"Direcotry path: {direcotryPath}")
-    hash = ''.join(random.sample(string.ascii_letters + string.digits, 6))
-    hashTable[hash] = {"downloadFileName": fileName, "downloadDirectoryPath": direcotryPath}
-    socketio.emit("downloadSucessful", {"HASH": hash})
+        medaInfo = youtubeDownloder.getSingleMediaInfo(youtubeURL)
+        if isinstance(medaInfo, str):
+            socketio.emit("downloadMediaFinish", {"error": medaInfo})
+            return False
+        socketio.emit("mediaInfo", {"data": medaInfo})
+        metaData = youtubeDownloder.downloadVideo(youtubeURL, type)
+        logger.debug(type)
+        if isinstance(metaData, dict):
+            fileName = f'{metaData["title"]}_{type}p.{metaData["ext"]}'
+            logger.info(f"Video file {metaData['title']} donwloaded")
+        else:
+            socketio.emit("downloadMediaFinish", {"error": medaInfo})
+            return False
+        direcotryPath = youtubeDownloder.savePath
+        logger.debug(f"Direcotry path: {direcotryPath}")
+        hash = ''.join(random.sample(string.ascii_letters + string.digits, 6))
+        hashTable[hash] = {"downloadFileName": fileName, "downloadDirectoryPath": direcotryPath}
+        socketio.emit("downloadMediaFinish", {"data": {"HASH": hash}})
+    # socketio.emit("downloadSucessful", {"HASH": hash})
 
 @app.route("/downloadFile/<name>")
 def downloadFile(name):

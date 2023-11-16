@@ -1,4 +1,6 @@
 import unittest
+import sys
+sys.path.append("..")
 from yt_dlp import utils
 import mainWebPage
 import flask

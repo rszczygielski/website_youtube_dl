@@ -1,5 +1,7 @@
 import configparser
 import os
+import sys
+sys.path.append("..")
 from unittest import TestCase, main
 from unittest.mock import MagicMock, patch, call
 from configParserManager import ConfigParserManager

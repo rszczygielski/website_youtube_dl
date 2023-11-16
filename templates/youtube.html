@@ -47,12 +47,18 @@
                 });
                 return true
             })
-            socket.on("downloadSucessful", function (downloadData){
-                var downloadSection = document.getElementById("downloadSection")
-                var fileHash = downloadData["HASH"]
-                console.log(fileHash)
-                downloadSection.innerHTML = "<br><a href=/downloadFile/" + fileHash + " class='neon-button'>Download File</a>"
-            })
+            socket.on("downloadMediaFinish", function (response){
+                if ("error" in response){
+                    console.log("Error", response["error"])}
+                else{
+                    var downloadSection = document.getElementById("downloadSection")
+                    var fileHash = response["data"]["HASH"]
+                    console.log(fileHash)
+                    downloadSection.innerHTML = "<br><a href=/downloadFile/" + fileHash + " class='neon-button'>Download File</a>"
+                    }})
+            socket.on("mediaInfo", function(response){
+                    console.log("InProgress", response["data"])
+                })
             var configPlaylist = document.getElementById("downloadConfigPlaylist");
             configPlaylist.addEventListener("submit", function (event){
                 event.preventDefault();

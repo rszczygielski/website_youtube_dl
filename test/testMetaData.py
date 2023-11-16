@@ -1,4 +1,7 @@
-from metaDataManager import MetaDataManager, MetaDataType
+import sys
+sys.path.append("..")
+from metaDataManager import MetaDataManager
+from youtubeDataKeys import PlaylistInfo
 import mutagen.easyid3
 import mutagen.mp3
 from unittest import TestCase, main
@@ -13,16 +16,16 @@ class MetaDataTest(TestCase):
         self.metaDataPlaylist = {
             "title": "testPlaylist",
             "entries": [{
-                MetaDataType.TITLE.value: "testTitle",
-                MetaDataType.ALBUM.value: "testAlbum",
-                MetaDataType.ARTIST.value: "testArtist",
-                MetaDataType.PLAYLIST_INDEX.value: 1
+                PlaylistInfo.TITLE.value: "testTitle",
+                PlaylistInfo.ALBUM.value: "testAlbum",
+                PlaylistInfo.ARTIST.value: "testArtist",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1
             }]}
         self.metaData ={
-                MetaDataType.TITLE.value: "testTitle",
-                MetaDataType.ALBUM.value: "testAlbum",
-                MetaDataType.ARTIST.value: "testArtist",
-                MetaDataType.PLAYLIST_INDEX.value: 1
+                PlaylistInfo.TITLE.value: "testTitle",
+                PlaylistInfo.ALBUM.value: "testAlbum",
+                PlaylistInfo.ARTIST.value: "testArtist",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1
             }
 
     @patch.object(MetaDataManager, "showMetaDataInfo")
@@ -30,10 +33,10 @@ class MetaDataTest(TestCase):
     def testSetMetaDataPlaylist(self, mockSavePlaylist, mockShow):
         self.testMetaData.setMetaDataPlaylist(self.metaDataPlaylist, self.testDir)
         mockSavePlaylist.assert_called_once_with({
-                MetaDataType.TITLE.value: "testTitle",
-                MetaDataType.ALBUM.value: "testAlbum",
-                MetaDataType.ARTIST.value: "testArtist",
-                MetaDataType.PLAYLIST_INDEX.value: 1
+                PlaylistInfo.TITLE.value: "testTitle",
+                PlaylistInfo.ALBUM.value: "testAlbum",
+                PlaylistInfo.ARTIST.value: "testArtist",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1
             }, f"{self.testDir}/testTitle.mp3", "testPlaylist")
         mockShow.assert_called_once_with(f"{self.testDir}/testTitle.mp3")
 
@@ -42,19 +45,19 @@ class MetaDataTest(TestCase):
     def testSetMetaDataPlaylistTwoPlaylists(self, mockSavePlaylist, mockShow):
         metaDataPlaylistTwoArgs = self.metaDataPlaylist
         metaDataPlaylistTwoArgs["entries"].append({
-                MetaDataType.TITLE.value: "testTitle2",
-                MetaDataType.ALBUM.value: "testAlbum2",
-                MetaDataType.ARTIST.value: "testArtist2",
-                MetaDataType.PLAYLIST_INDEX.value: 1
+                PlaylistInfo.TITLE.value: "testTitle2",
+                PlaylistInfo.ALBUM.value: "testAlbum2",
+                PlaylistInfo.ARTIST.value: "testArtist2",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1
             })
         self.testMetaData.setMetaDataPlaylist(metaDataPlaylistTwoArgs, self.testDir)
         mockSavePlaylist.assert_has_calls([call(metaDataPlaylistTwoArgs["entries"][0], f"{self.testDir}/testTitle.mp3", "testPlaylist"),
                                            call(metaDataPlaylistTwoArgs["entries"][1], f"{self.testDir}/testTitle2.mp3", "testPlaylist")])
         mockSavePlaylist.assert_called_with({
-                MetaDataType.TITLE.value: "testTitle2",
-                MetaDataType.ALBUM.value: "testAlbum2",
-                MetaDataType.ARTIST.value: "testArtist2",
-                MetaDataType.PLAYLIST_INDEX.value: 1
+                PlaylistInfo.TITLE.value: "testTitle2",
+                PlaylistInfo.ALBUM.value: "testAlbum2",
+                PlaylistInfo.ARTIST.value: "testArtist2",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1
             }, f"{self.testDir}/testTitle2.mp3", "testPlaylist")
         mockShow.assert_called_with(f"{self.testDir}/testTitle2.mp3")
 
@@ -63,30 +66,30 @@ class MetaDataTest(TestCase):
     def testSetMetaDataSingleFile(self, mockSaveFile, mockShow):
         self.testMetaData.setMetaDataSingleFile(self.metaData, self.testDir)
         mockSaveFile.assert_called_with({
-                MetaDataType.TITLE.value: "testTitle",
-                MetaDataType.ALBUM.value: "testAlbum",
-                MetaDataType.ARTIST.value: "testArtist",
-                MetaDataType.PLAYLIST_INDEX.value: 1
+                PlaylistInfo.TITLE.value: "testTitle",
+                PlaylistInfo.ALBUM.value: "testAlbum",
+                PlaylistInfo.ARTIST.value: "testArtist",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1
             }, f"{self.testDir}/testTitle.mp3")
         mockShow.assert_called_with(f"{self.testDir}/testTitle.mp3")
 
     def testGetMetaDataDict(self):
         metaData = {
-                MetaDataType.TITLE.value: "testTitle",
+                PlaylistInfo.TITLE.value: "testTitle",
                 "testDictKey": "testDictValue",
-                MetaDataType.ALBUM.value: "testAlbum",
+                PlaylistInfo.ALBUM.value: "testAlbum",
                 "testDictKey": "testDictValue2",
-                MetaDataType.ARTIST.value: "testArtist",
-                MetaDataType.PLAYLIST_INDEX.value: 1,
+                PlaylistInfo.ARTIST.value: "testArtist",
+                PlaylistInfo.PLAYLIST_INDEX.value: 1,
                 "testDictKey": "testDictValue3",
                 "testDictKey": "testDictValue4"
             }
         metaDataDict = self.testMetaData.getMetaDataDict(metaData)
         self.assertEqual(metaDataDict, {
-            MetaDataType.TITLE.value: "testTitle",
-            MetaDataType.ALBUM.value: "testAlbum",
-            MetaDataType.ARTIST.value: "testArtist",
-            MetaDataType.PLAYLIST_INDEX.value: 1
+            PlaylistInfo.TITLE.value: "testTitle",
+            PlaylistInfo.ALBUM.value: "testAlbum",
+            PlaylistInfo.ARTIST.value: "testArtist",
+            PlaylistInfo.PLAYLIST_INDEX.value: 1
             })
 
     @patch.object(MetaDataManager, "saveEasyID3")

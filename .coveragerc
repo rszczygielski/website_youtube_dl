@@ -2,6 +2,7 @@
 directory = results/coverage
 [run]
 omit =
+    *myLogger.py
     test/*
     */dist-packages/*
 [report] =
