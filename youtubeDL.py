@@ -91,7 +91,7 @@ class YoutubeDL():
             youtubeURL (str): YouTube URL
 
         Returns:
-            dict: dict with Youtube info
+            list: list of Youtube tracks form playlist
         """
         with yt_dlp.YoutubeDL(self.ydl_media_info_opts) as ydl:
             try:
@@ -100,6 +100,7 @@ class YoutubeDL():
                 logger.error(f"Download media info error {str(exception)}")
                 return str(exception)
         playlistMediaInfo = []
+        playlistName = metaData[PlaylistInfo.TITLE.value]
         for track in metaData[PlaylistInfo.PLAYLIST_TRACKS.value]:
             essentialMetaData = {}
             for data in PlaylistInfo:
@@ -108,6 +109,7 @@ class YoutubeDL():
                         essentialMetaData["hash"] = track[data.value]
                         continue
                     essentialMetaData[data.value] = track[data.value]
+            essentialMetaData["playlist_name"] = playlistName
             playlistMediaInfo.append(essentialMetaData)
         return playlistMediaInfo
 
@@ -182,22 +184,6 @@ class YoutubeDL():
         self.metaDataMenager.setMetaDataSingleFile(metaData, self.savePath)
         return metaData
 
-    # def downloadAudioPlaylist(self, youtubeURL:str):
-    #     """Method uded to download audio playlist from YouTube
-
-    #     Args:
-    #         youtubeURL (str): YouTube URL
-
-    #     Returns:
-    #         dict: dict with YouTube audio playlist meta data
-    #     """
-    #     self.setAudioOptions()
-    #     playlistHash = self.getPlaylistHash(youtubeURL)
-    #     metaData = self.downloadFile(playlistHash)
-    #     if isinstance(metaData, str):
-    #         return metaData
-    #     self.metaDataMenager.setMetaDataPlaylist(metaData, self.savePath)
-    #     return metaData
 
     def downloadAudioPlaylist(self, youtubeURL:str):
         """Method uded to download audio playlist from YouTube

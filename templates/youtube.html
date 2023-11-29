@@ -58,6 +58,16 @@
                     }})
             socket.on("mediaInfo", function(response){
                     console.log("InProgress", response["data"])
+                    for (var i = 0; i < response["data"].length; i++){
+                        var table = document.getElementById("downloadInfo")
+                        var row = table.insertRow()
+                        var cell = row.insertCell()
+                        var cell2 = row.insertCell()
+                        var cell3 = row.insertCell()
+                        cell.innerHTML = response["data"][i]["artist"]
+                        cell2.innerHTML = response["data"][i]["title"]
+                        cell3.innerHTML = "<a href=" + response["data"][i]["original_url"] + ">" + "url</a>"
+                    }
                 })
             var configPlaylist = document.getElementById("downloadConfigPlaylist");
             configPlaylist.addEventListener("submit", function (event){
@@ -138,6 +148,9 @@
             <br>
             <textarea id="logArea" size="10" style="width: 800px; height: 500px;", class="input-text" readonly>
             </textarea>
+            <br>
+            <table id="downloadInfo" class="input-text">
+            </table>
             <br>
             <div id="downloadSection">
             </div>

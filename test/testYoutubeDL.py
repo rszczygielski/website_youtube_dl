@@ -245,8 +245,6 @@ class TestYoutubeDL(TestCase):
         mockDownloadFile.assert_called_once()
         songMetaDataUpdated1 = self.updateDict(songMetaData1)
         songMetaDataUpdated2 = self.updateDict(songMetaData2)
-        print(testMediaInfo[0], "_______1")
-        print(songMetaDataUpdated1, "_______2")
         self.assertEqual(testMediaInfo[0], songMetaDataUpdated1)
         self.assertEqual(testMediaInfo[1], songMetaDataUpdated2)
 

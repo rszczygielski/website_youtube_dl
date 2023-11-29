@@ -4,6 +4,7 @@ from mailManager import Mail
 from youtubeDL import YoutubeDL
 from metaDataManager import MetaDataManager
 from configParserManager import ConfigParserManager
+from youtubeDataKeys import PlaylistInfo
 import yt_dlp
 import os
 import logging
@@ -70,6 +71,7 @@ def downloadSingleAudio(youtubeURL):
     else:
         logger.warning("File not found - wrong url")
         socketio.emit("downloadError", "File not found - wrong url")
+        return
     return fileName
 
 def downloadSingleVideo(youtubeURL, type):
@@ -138,25 +140,45 @@ def socketDownloadServer(formData):
     if  type == "mp3" and isPlaylist:
         fileName = downloadPlaylistAudio(youtubeURL)
     if  type != "mp3" and isPlaylist:
-        fileName = downloadPlaylistVideo(youtubeURL, type)
+        playlistInfo = youtubeDownloder.getPlaylistMediaInfo(youtubeURL)
+        if isinstance(playlistInfo, str):
+            socketio.emit("downloadMediaFinish", {"error": playlistInfo})
+            return False
+        socketio.emit("mediaInfo", {"data": playlistInfo})
+        filePaths = []
+        direcotryPath = youtubeDownloder.savePath
+        print(playlistInfo)
+        for track in playlistInfo:
+            trackInfo = youtubeDownloder.downloadVideo(track[PlaylistInfo.URL.value], type)
+            if isinstance(trackInfo, str):
+                logger.error(f"Failed download: {trackInfo} for {track}")
+                continue
+            trackTitle = track["title"]
+            filePath = os.path.join(direcotryPath, f"{trackTitle}_{type}p.mp4")
+            filePaths.append(filePath)
+        fileName = f'{playlistInfo[0]["playlist_name"]}.zip'
+        zipNameFile = zipAllFilesInList(direcotryPath, filePaths)
+        logger.info(f"Playlist {playlistInfo[0]['playlist_name']} donwloaded")
+        logger.debug(f"Direcotry path: {direcotryPath}")
+        hash = ''.join(random.sample(string.ascii_letters + string.digits, 6))
+        hashTable[hash] = {"downloadFileName": zipNameFile, "downloadDirectoryPath": direcotryPath}
+        socketio.emit("downloadMediaFinish", {"data": {"HASH": hash}})
     if  type == "mp3" and not isPlaylist:
         logger.debug(f"Download single audio")
         fileName = downloadSingleAudio(youtubeURL)
     if type != "mp3" and not isPlaylist:
         logger.debug(f"Download single video")
-        medaInfo = youtubeDownloder.getSingleMediaInfo(youtubeURL)
-        if isinstance(medaInfo, str):
-            socketio.emit("downloadMediaFinish", {"error": medaInfo})
+        mediaInfo = youtubeDownloder.getSingleMediaInfo(youtubeURL)
+        if isinstance(mediaInfo, str):
+            socketio.emit("downloadMediaFinish", {"error": mediaInfo})
             return False
-        socketio.emit("mediaInfo", {"data": medaInfo})
+        socketio.emit("mediaInfo", {"data": mediaInfo})
         metaData = youtubeDownloder.downloadVideo(youtubeURL, type)
-        logger.debug(type)
-        if isinstance(metaData, dict):
-            fileName = f'{metaData["title"]}_{type}p.{metaData["ext"]}'
-            logger.info(f"Video file {metaData['title']} donwloaded")
-        else:
-            socketio.emit("downloadMediaFinish", {"error": medaInfo})
+        if isinstance(metaData, str):
+            socketio.emit("downloadMediaFinish", {"error": mediaInfo})
             return False
+        fileName = f'{metaData["title"]}_{type}p.{metaData["ext"]}'
+        logger.info(f"Video file {metaData['title']} donwloaded")
         direcotryPath = youtubeDownloder.savePath
         logger.debug(f"Direcotry path: {direcotryPath}")
         hash = ''.join(random.sample(string.ascii_letters + string.digits, 6))
