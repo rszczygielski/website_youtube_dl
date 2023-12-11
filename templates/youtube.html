@@ -66,7 +66,9 @@
                         var cell3 = row.insertCell()
                         cell.innerHTML = response["data"][i]["artist"]
                         cell2.innerHTML = response["data"][i]["title"]
-                        cell3.innerHTML = "<a href=" + response["data"][i]["original_url"] + ">" + "url</a>"
+                        console.log(response["data"][i]["artist"])
+                        console.log(response["data"][i]["title"])
+                        cell3.innerHTML = "<a class=neon-button target='_blank' href=" + response["data"][i]["original_url"] + ">" + "url</a>"
                     }
                 })
             var configPlaylist = document.getElementById("downloadConfigPlaylist");
@@ -149,7 +151,7 @@
             <textarea id="logArea" size="10" style="width: 800px; height: 500px;", class="input-text" readonly>
             </textarea>
             <br>
-            <table id="downloadInfo" class="input-text">
+            <table id="downloadInfo" class="neon-label-small">
             </table>
             <br>
             <div id="downloadSection">

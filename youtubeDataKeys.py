@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 class MetaDataType(Enum):
     TITLE = 'title'
@@ -21,3 +21,18 @@ class MediaInfo(Enum):
     ARTIST = 'artist'
     YOUTUBE_HASH = 'id'
     URL = 'original_url'
+
+class YoutubeOptiones(Enum):
+    FORMAT = "format"
+    DOWNLOAD_ARCHIVE = 'downloaded_songs.txt'
+    NO_OVERRIDE = "no-override"
+    ADD_META_DATA = "addmetadata"
+    IGNORE_ERRORS = "ignoreerrors"
+    QIET = "quiet"
+    LOGGER = "logger"
+    OUT_TEMPLATE = "outtmpl"
+
+class YoutubeDlStructure():
+
+    def __init__(self) -> None:
+        pass

@@ -6,7 +6,7 @@ from configParserManager import ConfigParserManager
 from metaDataManager import MetaDataManager
 import logging
 from myLogger import Logger
-from youtubeDataKeys import PlaylistInfo, MediaInfo
+from youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
 
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
@@ -19,17 +19,17 @@ class YoutubeDL():
         self.ytLogger = ytLogger
         self.savePath = self.configManager.getSavePath()
         self.ydl_opts = {
-        "format": "bestvideo+bestaudio",
-        # 'download_archive': 'downloaded_songs.txt',
-        "no-override": False,
-        "logger": self.ytLogger,
-        'addmetadata': True,
+        YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
+        YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+        YoutubeOptiones.NO_OVERRIDE.value: False,
+        YoutubeOptiones.LOGGER.value: self.ytLogger,
+        YoutubeOptiones.ADD_META_DATA.value: True,
         }
         self.ydl_media_info_opts ={
-              'format': 'best/best',
-              'addmetadata': True,
-              'ignoreerrors': False,
-              'quiet':True
+            YoutubeOptiones.FORMAT.value: 'best/best',
+            YoutubeOptiones.ADD_META_DATA.value: True,
+            YoutubeOptiones.IGNORE_ERRORS.value: False,
+            YoutubeOptiones.QIET.value: True
               }
 
     def downloadFile(self, youtubeMediaHash:str): #pragma: no_cover
@@ -53,11 +53,11 @@ class YoutubeDL():
         """Method returns to the defualt youtubeDL options
         """
         return {
-        "format": "bestvideo+bestaudio",
-        # 'download_archive': 'downloaded_songs.txt',
-        "no-override": False,
-        "logger": self.ytLogger,
-        'addmetadata': True,
+        YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
+        YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+        YoutubeOptiones.NO_OVERRIDE.value: False,
+        YoutubeOptiones.LOGGER.value: self.ytLogger,
+        YoutubeOptiones.ADD_META_DATA.value: True,
         }
 
     def getSingleMediaInfo(self, youtubeURL):
@@ -78,7 +78,7 @@ class YoutubeDL():
         singleMediaInfo = {}
         for data in MediaInfo:
             if data.value in metaData:
-                if data.value == "id":
+                if data.value == MediaInfo.YOUTUBE_HASH.value:
                     singleMediaInfo["hash"] = metaData[data.value]
                     continue
                 singleMediaInfo[data.value] = metaData[data.value]
@@ -105,7 +105,7 @@ class YoutubeDL():
             essentialMetaData = {}
             for data in PlaylistInfo:
                 if data.value in track:
-                    if data.value == "id":
+                    if data.value == PlaylistInfo.YOUTUBE_HASH.value:
                         essentialMetaData["hash"] = track[data.value]
                         continue
                     essentialMetaData[data.value] = track[data.value]
@@ -120,8 +120,8 @@ class YoutubeDL():
             type (str): _description_
         """
         video_options = self.getDefaultOptions()
-        video_options['format'] = f'best[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
-        video_options['outtmpl'] = self.savePath + '/%(title)s' + f'_{type}p' + '.%(ext)s'
+        video_options[YoutubeOptiones.FORMAT.value] = f'best[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
+        video_options[YoutubeOptiones.OUT_TEMPLATE.value] = self.savePath + '/%(title)s' + f'_{type}p' + '.%(ext)s'
         self.ydl_opts = video_options
 
     def setAudioOptions(self):
@@ -183,7 +183,6 @@ class YoutubeDL():
             return metaData
         self.metaDataMenager.setMetaDataSingleFile(metaData, self.savePath)
         return metaData
-
 
     def downloadAudioPlaylist(self, youtubeURL:str):
         """Method uded to download audio playlist from YouTube
