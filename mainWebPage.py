@@ -73,13 +73,19 @@ def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
 
 def downloadSingleInfoAndMedia(youtubeURL, type=False):
     logger.debug(f"Download single video")
-    mediaInfo = youtubeDownloder.getSingleMediaInfo(youtubeURL)
-    if isinstance(mediaInfo, str):
-        socketio.emit("downloadMediaFinish", {"error": mediaInfo})
-        logger.error(f"Download media info error: {mediaInfo}")
+    singleMediaInfoResult = youtubeDownloder.getSingleMediaInfo(youtubeURL)
+    if singleMediaInfoResult.isError():
+        socketio.emit("downloadMediaFinish", {"error": singleMediaInfoResult.getErrorInfo()})
+        logger.error(f"Download media info error: {singleMediaInfoResult.getErrorInfo()}")
         return False
-    socketio.emit("mediaInfo", {"data": [mediaInfo]})
-    fullPath = downloadSingleMedia(mediaInfo[MediaInfo.URL.value], mediaInfo[MediaInfo.TITLE.value], type)
+    mediaInfo = singleMediaInfoResult.getData()
+    mediaInfoDict = {
+        PlaylistInfo.TITLE.value: mediaInfo.title ,PlaylistInfo.ALBUM.value: mediaInfo.album ,
+        PlaylistInfo.ARTIST.value: mediaInfo.artist ,PlaylistInfo.YOUTUBE_HASH.value: mediaInfo.ytHash ,
+        PlaylistInfo.URL.value: mediaInfo.url
+    }
+    socketio.emit("mediaInfo", {"data": [mediaInfoDict]})
+    fullPath = downloadSingleMedia(mediaInfo.url, mediaInfo.title, type)
     return fullPath
 
 def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
@@ -87,7 +93,7 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
     trackTitle = singleMediaTitle
     if type:
         trackInfo = youtubeDownloder.downloadVideo(singleMediaURL, type)
-        fileName = f"{trackTitle}_{type}p.mp4"
+        fileName = f"{trackTitle}_{type}p.{trackInfo[MediaInfo.EXTENSION.value]}"
     else:
         trackInfo = youtubeDownloder.downloadAudio(singleMediaURL)
         fileName = f"{trackTitle}.mp3"
@@ -95,7 +101,7 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
         socketio.emit("downloadMediaFinish", {"error": trackInfo})
         logger.error(f"Download media error: {trackInfo}")
         return False
-    logger.info(f"Video file {trackInfo['title']} donwloaded")
+    logger.info(f"Video file {MediaInfo.TITLE.value} donwloaded")
     logger.debug(f"Direcotry path: {direcotryPath}")
     return os.path.join(direcotryPath, fileName)
 
@@ -106,12 +112,23 @@ def downloadPlaylist(youtubeURL, type=False):
         socketio.emit("downloadMediaFinish", {"error": playlistInfo})
         logger.error(f"Download playlist info error: {playlistInfo}")
         return False
-    socketio.emit("mediaInfo", {"data": playlistInfo})
+    playlistTrackList = []
+    playlistName = playlistInfo[0].playlist_name
+    for track in playlistInfo:
+        trackInfoDict = {
+            PlaylistInfo.TITLE.value: track.title ,PlaylistInfo.ALBUM.value: track.album ,
+            PlaylistInfo.ARTIST.value: track.artist ,PlaylistInfo.YOUTUBE_HASH.value: track.ytHash ,
+            PlaylistInfo.URL.value: track.url, PlaylistInfo.PLAYLIST_INDEX.value: track.playlistIndex,
+            PlaylistInfo.PLAYLIST_NAME.value: playlistName
+        }
+        playlistTrackList.append(trackInfoDict)
+    socketio.emit("mediaInfo", {"data": playlistTrackList})
     direcotryPath = youtubeDownloder.savePath
-    playlistName = playlistInfo[0]['playlist_name']
+    # playlistName = playlistInfo[0]['playlist_name']
     filePaths = []
     for track in playlistInfo:
-        fullPath = downloadSingleMedia(track[MediaInfo.URL.value], track[MediaInfo.TITLE.value], type)
+        # fullPath = downloadSingleMedia(track[MediaInfo.URL.value], track[MediaInfo.TITLE.value], type)
+        fullPath = downloadSingleMedia(track.url, track.title, type)
         filePaths.append(fullPath)
     zipNameFile = zipAllFilesInList(direcotryPath, playlistName, filePaths)
     logger.info(f"Playlist {playlistName} donwloaded")
