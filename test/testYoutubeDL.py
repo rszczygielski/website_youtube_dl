@@ -37,7 +37,7 @@ class TestYoutubeDL(TestCase):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtubeDL.YoutubeDL(ConfigParserManager(f'{self.testDir}/test_youtube_config.ini'), MetaDataManager())
         self.youtubeTest.savePath = self.testDir
-        self.youtubeTest.ydl_opts['outtmpl'] = self.testDir + '/%(title)s.%(ext)s'
+        self.youtubeTest._ydl_opts['outtmpl'] = self.testDir + '/%(title)s.%(ext)s'
 
     def updateDict(self, dictToChange):
         songMetaDataUpdated1 = dictToChange
@@ -48,16 +48,16 @@ class TestYoutubeDL(TestCase):
             songMetaDataUpdated1.pop("tracknumber")
         return songMetaDataUpdated1
 
-    def test_downloadFile(self):
+    def test__downloadFile(self):
         youtubeOptions = {
         # 'download_archive': 'downloaded_songs.txt',
         'addmetadata': True,
         'format': f'best[height=360][ext=mp4]+bestaudio/bestvideo+bestaudio',
         'outtmpl': self.testDir + '/%(title)s' + f'_360p' + '.%(ext)s'
         }
-        self.youtubeTest.downloadFile = MagicMock(return_value=songMetaData1)
-        metaData =  self.youtubeTest.downloadFile("https://www.youtube.com/watch?v=ABsslEoL0-c", youtubeOptions)
-        self.youtubeTest.downloadFile.assert_called_once_with("https://www.youtube.com/watch?v=ABsslEoL0-c", youtubeOptions)
+        self.youtubeTest._downloadFile = MagicMock(return_value=songMetaData1)
+        metaData =  self.youtubeTest._downloadFile("https://www.youtube.com/watch?v=ABsslEoL0-c", youtubeOptions)
+        self.youtubeTest._downloadFile.assert_called_once_with("https://www.youtube.com/watch?v=ABsslEoL0-c", youtubeOptions)
         self.assertEqual(metaData, songMetaData1)
 
     def testSetVideoOptions(self):
@@ -94,7 +94,7 @@ class TestYoutubeDL(TestCase):
             self.youtubeTest.getPlaylistHash(wrong_link_with_video)
         self.assertTrue('This is not a playlist' in str(context.exception))
 
-    @patch.object(youtubeDL.YoutubeDL, "downloadFile", return_value=songMetaData1)
+    @patch.object(youtubeDL.YoutubeDL, "_downloadFile", return_value=songMetaData1)
     def testDownloadVideo(self, mockDownload):
         metaData = self.youtubeTest.downloadVideo("https://www.youtube.com/watch?v=ABsslEoL0-c", "480")
         mockDownload.assert_called_once_with("ABsslEoL0-c")
@@ -113,7 +113,7 @@ class TestYoutubeDL(TestCase):
 
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value={"title": "testPlaylist", "entries":[songMetaData1,
                                                                                                       songMetaData2]})
-    @patch.object(youtubeDL.YoutubeDL, "downloadFile")
+    @patch.object(youtubeDL.YoutubeDL, "_downloadFile")
     def testDownloadVideoPlaylist(self, mockDownload, mockExtractinfo):
         metaData = self.youtubeTest.downloadVideoPlaylist("https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO", "480")
         self.assertEqual(mockExtractinfo.mock_calls[0], call('PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO', download=False))
@@ -133,7 +133,7 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value={"title": "testPlaylist", "entries":[songMetaData1,
                                                                                                       songMetaData2]})
     @patch.object(youtubeDL.MetaDataManager, "setMetaDataSingleFile")
-    @patch.object(youtubeDL.YoutubeDL, "downloadFile", return_value=songMetaData1)
+    @patch.object(youtubeDL.YoutubeDL, "_downloadFile", return_value=songMetaData1)
     def testDownloadPlaylistAudio(self, mockDownload, mockSetMetaData, mockExtractinfo):
         metaData = self.youtubeTest.downloadAudioPlaylist("https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO")
         self.assertEqual(mockExtractinfo.mock_calls[0], call('PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO', download=False))
@@ -164,9 +164,10 @@ class TestYoutubeDL(TestCase):
     @patch.object(youtubeDL.MetaDataManager, "showMetaDataInfo")
     @patch.object(youtubeDL.MetaDataManager, "saveEasyID3")
     @patch.object(mutagen.easyid3, "EasyID3", return_value=songMetaData1)
-    @patch.object(youtubeDL.YoutubeDL,"downloadFile", side_effect=getMetaDataFromYoutube)
+    @patch.object(youtubeDL.YoutubeDL,"_downloadFile", side_effect=getMetaDataFromYoutube)
     def testDownloadAudio(self, mockDownloadFile, mockEasyID3, mockSave, mockShowMetaData):
-        metaData = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
+        singleMediaInfoResult = self.youtubeTest.downloadAudio("https://www.youtube.com/watch?v=ABsslEoL0-c")
+        metaData = singleMediaInfoResult.getData()
         mockDownloadFile.assert_called_once_with("ABsslEoL0-c")
         mockEasyID3.assert_called_once()
         mockSave.assert_called_once()

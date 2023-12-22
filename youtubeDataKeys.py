@@ -15,6 +15,7 @@ class PlaylistInfo(Enum):
     YOUTUBE_HASH = "id"
     PLAYLIST_TRACKS = "entries"
     URL = "original_url"
+    EXTENSION = "ext"
 
 class MediaInfo(Enum):
     TITLE = "title"
