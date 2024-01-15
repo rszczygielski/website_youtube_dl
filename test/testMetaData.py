@@ -1,7 +1,7 @@
 import sys
 sys.path.append("..")
-from metaDataManager import MetaDataManager
-from youtubeDataKeys import PlaylistInfo
+from common.metaDataManager import MetaDataManager
+from common.youtubeDataKeys import PlaylistInfo
 import mutagen.easyid3
 import mutagen.mp3
 from unittest import TestCase, main

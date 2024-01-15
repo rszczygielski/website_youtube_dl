@@ -4,7 +4,7 @@ import sys
 sys.path.append("..")
 from unittest import TestCase, main
 from unittest.mock import MagicMock, patch, call
-from configParserManager import ConfigParserManager
+from common.youtubeConfigManager import ConfigParserManager
 
 class ConfigParserMock(configparser.ConfigParser):
 

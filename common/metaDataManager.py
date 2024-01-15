@@ -1,4 +1,4 @@
-from youtubeDataKeys import MetaDataType
+from common.youtubeDataKeys import MetaDataType
 import yt_dlp
 from mutagen.easyid3 import EasyID3
 import mutagen.easyid3
@@ -6,7 +6,6 @@ from mutagen.mp3 import MP3
 import logging
 
 logger = logging.getLogger(__name__)
-
 
 class MetaDataManager():
 
@@ -73,7 +72,7 @@ class MetaDataManager():
         """
         audio = mutagen.easyid3.EasyID3(path)
         for data in metaDataDict:
-            if data == "playlist_index":
+            if data == "playlist_index" and len(str(metaDataDict[data])) > 0:
                 audio['tracknumber'] = str(metaDataDict[data])
                 continue
             audio[data] = metaDataDict[data]
