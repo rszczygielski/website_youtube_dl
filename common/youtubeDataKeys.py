@@ -5,6 +5,7 @@ class MetaDataType(Enum):
     ALBUM = "album"
     ARTIST = "artist"
     PLAYLIST_INDEX = "playlist_index"
+    TRACK_NUMBER = "tracknumber"
 
 class PlaylistInfo(Enum):
     PLAYLIST_NAME = "playlist_name"

@@ -3,7 +3,7 @@ import configparser
 import os
 import argparse
 from common.youtubeConfigManager import ConfigParserManager
-from common.metaDataManager import MetaDataManager
+from common.metaDataManager import MetaDataManager, EasyID3SingleMedia
 import logging
 from common.myLogger import Logger
 from common.youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
@@ -276,7 +276,8 @@ class YoutubeDL():
             logger.error(f"Download video info error: {errorMsg}")
             return resultOfYoutube
         metaData = resultOfYoutube.getData()
-        self._metaDataMenager.setMetaDataSingleFile(metaData, self._savePath)
+        easyID3Media = EasyID3SingleMedia.initFromMatadata(metaData)
+        self._metaDataMenager.setMetaDataSingleFile(easyID3Media, self._savePath)
         singleMedia = self._getSingleMediaResult(metaData)
         return ResultOfYoutube(singleMedia)
 
@@ -293,7 +294,12 @@ class YoutubeDL():
         playlistHash = self._getPlaylistHash(youtubeURL)
         resultOfYoutube = self._downloadFile(playlistHash)
         metaData = resultOfYoutube.getData()
-        self._metaDataMenager.setMetaDataPlaylist(metaData, self._savePath)
+        entriesKey = PlaylistInfo.PLAYLIST_TRACKS.value
+        if entriesKey not in metaData:
+            logger.error("Playlist dosn't have track list - no entries key in meta data")
+            return False
+        self._metaDataMenager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
+                                                  metaData[entriesKey], self._savePath)
         return resultOfYoutube
 
     def downoladConfigPlaylistVideo(self, type):
