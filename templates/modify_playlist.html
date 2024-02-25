@@ -9,6 +9,10 @@
 	<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
 	<link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="../static/style.css" type="text/css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" charset="utf-8" src="static/modify_playlist.js"></script>
 </head>
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -49,6 +53,12 @@
         <br>
         <br>
         <button class="neon-button" type="submit" value="DeletePlaylist" name="DeletePlaylistButton">Delete playlist</button>
+    </form>
+    <form id="downloadConfigPlaylist">
+        <center>
+            <br>
+            <button class="neon-button"  type="submit">Download Config Playlist</button>
+        </center>
     </form>
 </center>
 </body>
