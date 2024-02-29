@@ -12,6 +12,23 @@ hashTable = {}
 def index_test():
     return "TEST"
 
+def emitDownloadErrorMessage(error_msg, mediaType):
+    emit_download_finish = DownloadMediaFinishEmit()
+    socketio.emit(emit_download_finish.emit_msg,
+                    emit_download_finish.convert_error_to_message(error_msg))
+    logger.error(f"Download {mediaType} info error: {error_msg}")
+
+def emitDownloadInfo(metaDataInfo, playlistName=None):
+    emit_media_info = MediaInfoEmit()
+    print(metaDataInfo)
+    if not playlistName:
+        socketio.emit(emit_media_info.emit_msg,
+        emit_media_info.convert_data_to_message(metaDataInfo))
+    else:
+        socketio.emit(emit_media_info.emit_msg,
+                emit_media_info.convert_playlist_data_to_message(metaDataInfo,
+                                                                playlistName))
+
 def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
     # do utilsa leci
     zipFileFullPath = os.path.join(direcoryPath, playlistName)
@@ -25,16 +42,10 @@ def downloadSingleInfoAndMedia(youtubeURL, type=False):
     logger.debug(f"Download single video")
     singleMediaInfoResult = youtubeDownloder.getSingleMediaInfo(youtubeURL)
     if singleMediaInfoResult.isError():
-        emit_download_finish = DownloadMediaFinishEmit()
-        error_msg = singleMediaInfoResult.getErrorInfo()
-        socketio.emit(emit_download_finish.emit_msg,
-                      emit_download_finish.convert_error_to_message(error_msg))
-        logger.error(f"Download media info error: {singleMediaInfoResult.getErrorInfo()}")
+        emitDownloadErrorMessage(singleMediaInfoResult.getErrorInfo(), "single media")
         return False
     mediaInfo = singleMediaInfoResult.getData()
-    emit_media_info = MediaInfoEmit()
-    socketio.emit(emit_media_info.emit_msg,
-                  emit_media_info.convert_data_to_message(mediaInfo))
+    emitDownloadInfo(mediaInfo)
     fullPath = downloadSingleMedia(mediaInfo.url, mediaInfo.title, type)
     return fullPath
 
@@ -50,11 +61,7 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
         trackInfo = singleMediaInfoResult.getData()
         fileName = f"{trackTitle}.mp3"
     if singleMediaInfoResult.isError():
-        emit_download_finish = DownloadMediaFinishEmit()
-        error_msg = singleMediaInfoResult.getErrorInfo()
-        socketio.emit(emit_download_finish.emit_msg,
-                      emit_download_finish.convert_error_to_message(error_msg))
-        logger.error(f"Download media error: {trackInfo}")
+        emitDownloadErrorMessage(singleMediaInfoResult.getErrorInfo(), "single media")
         return False
     logger.info(f"Video file {MediaInfo.TITLE.value} donwloaded")
     logger.debug(f"Direcotry path: {direcotryPath}")
@@ -64,18 +71,11 @@ def downloadPlaylist(youtubeURL, type=False):
     logger.debug(f"Download playlist")
     playlistMediaInfoResult = youtubeDownloder.getPlaylistMediaInfo(youtubeURL)
     if playlistMediaInfoResult.isError():
-        emit_download_finish = DownloadMediaFinishEmit()
-        error_msg = playlistMediaInfoResult.getErrorInfo()
-        socketio.emit(emit_download_finish.emit_msg,
-                      emit_download_finish.convert_error_to_message(error_msg))
-        logger.error(f"Download playlist info error: {playlistMediaInfoResult.getErrorInfo()}")
+        emitDownloadErrorMessage(playlistMediaInfoResult.getErrorInfo(), "playlist")
         return False
     playlistInfo = playlistMediaInfoResult.getData()
     playlistName = playlistInfo.playlistName
-    emit_media_info = MediaInfoEmit()
-    socketio.emit(emit_media_info.emit_msg,
-                  emit_media_info.convert_playlist_data_to_message(playlistInfo,
-                                                                   playlistName))
+    emitDownloadInfo(playlistInfo, playlistName)
     direcotryPath = configParserMenager.getSavePath()
     filePaths = []
     for track in playlistInfo.singleMediaList:
@@ -169,7 +169,6 @@ def downloadFile(name):
 
 @socketio.on("downloadFromConfigFile")
 def downloadConfigPlaylist(empty):
-    print("TEST")
     logger.info("Downloading the config playlist")
     youtubeDownloder.downoladConfigPlaylistVideo(type=720)
     flash("All config playlist has been downloaded", category="success")
