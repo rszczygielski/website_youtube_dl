@@ -9,8 +9,10 @@ from common.myLogger import Logger
 from common.youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
 
 if __name__ == "__main__":
-    logging.basicConfig(format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
+    logging.basicConfig(
+        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 class SingleMedia():
     def __init__(self, title, album, artist, ytHash, url, extension, playlistIndex=None):
@@ -22,10 +24,12 @@ class SingleMedia():
         self.extension = extension
         self.playlistIndex = playlistIndex
 
+
 class PlaylistMedia():
-    def __init__(self, playlistName, singleMediaList:list):
+    def __init__(self, playlistName, singleMediaList: list):
         self.playlistName = playlistName
         self.singleMediaList = singleMediaList
+
 
 class ResultOfYoutube():
     _isError = False
@@ -34,7 +38,7 @@ class ResultOfYoutube():
     def __init__(self, data=None) -> None:
         self._data = data
 
-    def setError(self, errorInfo:str):
+    def setError(self, errorInfo: str):
         self._isError = True
         self._errorInfo = errorInfo
 
@@ -52,27 +56,28 @@ class ResultOfYoutube():
         if self._isError:
             return self._errorInfo
 
+
 class YoutubeDL():
-    def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager, ytLogger:Logger=Logger):
+    def __init__(self, configManager: ConfigParserManager, metaDataMenager: MetaDataManager, ytLogger: Logger = Logger):
         self._metaDataMenager = metaDataMenager
         self._configManager = configManager
         self.ytLogger = ytLogger
         self._savePath = self._configManager.getSavePath()
         self._ydl_opts = {
-        YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-        # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
-        YoutubeOptiones.NO_OVERRIDE.value: False,
-        YoutubeOptiones.LOGGER.value: self.ytLogger,
-        YoutubeOptiones.ADD_META_DATA.value: True,
+            YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
+            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            YoutubeOptiones.NO_OVERRIDE.value: False,
+            YoutubeOptiones.LOGGER.value: self.ytLogger,
+            YoutubeOptiones.ADD_META_DATA.value: True,
         }
-        self._ydl_media_info_opts ={
+        self._ydl_media_info_opts = {
             YoutubeOptiones.FORMAT.value: 'best/best',
             YoutubeOptiones.ADD_META_DATA.value: True,
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True
-            }
+        }
 
-    def _downloadFile(self, youtubeMediaHash:str):
+    def _downloadFile(self, youtubeMediaHash: str):
         """Method used to download youtube media based on URL
 
         Args:
@@ -97,11 +102,11 @@ class YoutubeDL():
         """Method returns to the defualt youtubeDL options
         """
         return {
-        YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-        # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
-        YoutubeOptiones.NO_OVERRIDE.value: False,
-        YoutubeOptiones.LOGGER.value: self.ytLogger,
-        YoutubeOptiones.ADD_META_DATA.value: True,
+            YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
+            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            YoutubeOptiones.NO_OVERRIDE.value: False,
+            YoutubeOptiones.LOGGER.value: self.ytLogger,
+            YoutubeOptiones.ADD_META_DATA.value: True,
         }
 
     def _getSingleMediaResult(self, metaData) -> SingleMedia:
@@ -115,7 +120,8 @@ class YoutubeDL():
         """
         title = album = youtube_hash = artist = url = extension = ""
         if MediaInfo.TITLE.value in metaData:
-            title = yt_dlp.utils.sanitize_filename(metaData[MediaInfo.TITLE.value])
+            title = yt_dlp.utils.sanitize_filename(
+                metaData[MediaInfo.TITLE.value])
         if MediaInfo.ALBUM.value in metaData:
             album = metaData[MediaInfo.ALBUM.value]
         if MediaInfo.ARTIST.value in metaData:
@@ -146,7 +152,8 @@ class YoutubeDL():
                 continue
             title = album = youtube_hash = artist = url = extension = playlistIndex = ""
             if PlaylistInfo.TITLE.value in track:
-                title = yt_dlp.utils.sanitize_filename(track[PlaylistInfo.TITLE.value])
+                title = yt_dlp.utils.sanitize_filename(
+                    track[PlaylistInfo.TITLE.value])
             if PlaylistInfo.ALBUM.value in track:
                 album = track[PlaylistInfo.ALBUM.value]
             if PlaylistInfo.ARTIST.value in track:
@@ -159,7 +166,8 @@ class YoutubeDL():
                 playlistIndex = track[PlaylistInfo.PLAYLIST_INDEX.value]
             if PlaylistInfo.EXTENSION.value in track:
                 extension = track[PlaylistInfo.EXTENSION.value]
-            singleMediaStruct = SingleMedia(title, album, artist, youtube_hash, url, extension, playlistIndex)
+            singleMediaStruct = SingleMedia(
+                title, album, artist, youtube_hash, url, extension, playlistIndex)
             mediaInfoList.append(singleMediaStruct)
         return PlaylistMedia(playlistName, mediaInfoList)
 
@@ -205,7 +213,7 @@ class YoutubeDL():
         playlistMedia = self._getPlaylistMediaResult(metaData)
         return ResultOfYoutube(playlistMedia)
 
-    def _setVideoOptions(self, type:str):
+    def _setVideoOptions(self, type: str):
         """Method used to change and set proper
 
         Args:
@@ -213,7 +221,8 @@ class YoutubeDL():
         """
         video_options = self._getDefaultOptions()
         video_options[YoutubeOptiones.FORMAT.value] = f'best[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
-        video_options[YoutubeOptiones.OUT_TEMPLATE.value] = self._savePath + '/%(title)s' + f'_{type}p' + '.%(ext)s'
+        video_options[YoutubeOptiones.OUT_TEMPLATE.value] = self._savePath + \
+            '/%(title)s' + f'_{type}p' + '.%(ext)s'
         self._ydl_opts = video_options
 
     def _setAudioOptions(self):
@@ -225,10 +234,10 @@ class YoutubeDL():
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }]
-        audio_options['outtmpl'] =  self._savePath + '/%(title)s.%(ext)s'
+        audio_options['outtmpl'] = self._savePath + '/%(title)s.%(ext)s'
         self._ydl_opts = audio_options
 
-    def downloadVideo(self, youtubeURL:str, type:str) -> ResultOfYoutube:
+    def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
         """Method uded to download video type from YouTube
 
         Args:
@@ -248,7 +257,7 @@ class YoutubeDL():
         singleMedia = self._getSingleMediaResult(metaData)
         return ResultOfYoutube(singleMedia)
 
-    def fastDownloadVideoPlaylist(self, youtubeURL:str, type:str):
+    def fastDownloadVideoPlaylist(self, youtubeURL: str, type: str):
         """Method uded to download video playlist from YouTube
 
         Args:
@@ -261,7 +270,7 @@ class YoutubeDL():
         playlistHash = self._getPlaylistHash(youtubeURL)
         return self._downloadFile(playlistHash)
 
-    def downloadAudio(self, youtubeURL:str):
+    def downloadAudio(self, youtubeURL: str):
         """Method uded to download audio type from Youtube, convert metadata
         into mp3 format used mutagen.easyid3
 
@@ -277,11 +286,12 @@ class YoutubeDL():
             return resultOfYoutube
         metaData = resultOfYoutube.getData()
         easyID3Media = EasyID3SingleMedia.initFromMatadata(metaData)
-        self._metaDataMenager.setMetaDataSingleFile(easyID3Media, self._savePath)
+        self._metaDataMenager.setMetaDataSingleFile(
+            easyID3Media, self._savePath)
         singleMedia = self._getSingleMediaResult(metaData)
         return ResultOfYoutube(singleMedia)
 
-    def fastDownloadAudioPlaylist(self, youtubeURL:str):
+    def fastDownloadAudioPlaylist(self, youtubeURL: str):
         """Method uded to download audio playlist from YouTube
 
         Args:
@@ -296,13 +306,17 @@ class YoutubeDL():
         metaData = resultOfYoutube.getData()
         entriesKey = PlaylistInfo.PLAYLIST_TRACKS.value
         if entriesKey not in metaData:
-            logger.error("Playlist dosn't have track list - no entries key in meta data")
+            logger.error(
+                "Playlist dosn't have track list - no entries key in meta data")
             return False
         self._metaDataMenager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
                                                   metaData[entriesKey], self._savePath)
         return resultOfYoutube
+    
+    def downloadConfigPlalistVideo(self, playlistName):
+        playlistData = self._configManager.get 
 
-    def downoladConfigPlaylistVideo(self, type):
+    def downoladAllConfigPlaylistsVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
 
         Args:
@@ -317,7 +331,7 @@ class YoutubeDL():
             self.fastDownloadVideoPlaylist(playlistURL, type)
         return True
 
-    def downoladConfigPlaylistAudio(self):
+    def downoladAllConfigPlaylistsAudio(self):
         """Method used to download all playlists added to cofig file - type audo
 
         Returns:
@@ -345,7 +359,8 @@ class YoutubeDL():
         splitedHashes = onlyHashesInLink.split("=")
         if numberOfEqualSign == 1:
             if "list=" in onlyHashesInLink:
-                raise ValueError("This a playlist only - without video hash to download")
+                raise ValueError(
+                    "This a playlist only - without video hash to download")
             else:
                 mediaHash = onlyHashesInLink[2:]
                 return mediaHash
@@ -383,8 +398,9 @@ class YoutubeDL():
             playlistHash = splitedHashes[2]
             return playlistHash
 
-class TerminalUser(YoutubeDL): #pragma: no_cover
-    def __init__(self, configManager:ConfigParserManager, metaDataMenager:MetaDataManager) -> None:
+
+class TerminalUser(YoutubeDL):  # pragma: no_cover
+    def __init__(self, configManager: ConfigParserManager, metaDataMenager: MetaDataManager) -> None:
         super().__init__(configManager, metaDataMenager)
 
     def isPlaylist(self, url):
@@ -414,7 +430,8 @@ class TerminalUser(YoutubeDL): #pragma: no_cover
         elif userResponse == "p":
             self.fastDownloadVideoPlaylist(url, type)
         else:
-            raise ValueError("Please enter 's' for single video or 'p' for playlist")
+            raise ValueError(
+                "Please enter 's' for single video or 'p' for playlist")
 
     def downloadDoubleHashedLinkAudio(self, url):
         userResponse = input("""
@@ -427,14 +444,15 @@ class TerminalUser(YoutubeDL): #pragma: no_cover
         elif userResponse == "p":
             self.fastDownloadAudioPlaylist(url)
         else:
-            raise ValueError("Please enter 's' for single video or 'p' for playlist")
+            raise ValueError(
+                "Please enter 's' for single video or 'p' for playlist")
 
     def downloadTerminal(self, url, type):
         if url == None and type == "mp3":
-            self.downoladConfigPlaylistAudio()
+            self.downoladAllConfigPlaylistsAudio()
             return
         elif url == None and type != "mp3":
-            self.downoladConfigPlaylistVideo(type)
+            self.downoladAllConfigPlaylistsVideo(type)
             return
         isPlaylist = self.isPlaylist(url)
         isDouble = self.ifDoubleHash(url)
@@ -454,19 +472,22 @@ class TerminalUser(YoutubeDL): #pragma: no_cover
             else:
                 self.downloadVideo(url, type)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser("Program downloads mp3 form given youtube URL")
+    parser = argparse.ArgumentParser(
+        "Program downloads mp3 form given youtube URL")
     parser.add_argument("-u", metavar="url", dest="url",
-    help="Link to the youtube video")
-    parser.add_argument("-t", metavar="type", dest="type", choices=['360','480', '720', '1080', '4k', 'mp3'], default="1080",
-    help="Select downolad type --> ['360', '720', '1080', '2160', 'mp3'], default: 1080")
-    parser.add_argument("-c", metavar="config", dest= "config", default="youtube_config.ini",
-    help="Path to the config file --> default youtube_config.ini")
+                        help="Link to the youtube video")
+    parser.add_argument("-t", metavar="type", dest="type", choices=['360', '480', '720', '1080', '4k', 'mp3'], default="1080",
+                        help="Select downolad type --> ['360', '720', '1080', '2160', 'mp3'], default: 1080")
+    parser.add_argument("-c", metavar="config", dest="config", default="youtube_config.ini",
+                        help="Path to the config file --> default youtube_config.ini")
     args = parser.parse_args()
     url = args.url
     type = args.type
-    config= args.config
-    configParserMenager = ConfigParserManager(config, configparser.ConfigParser())
+    config = args.config
+    configParserMenager = ConfigParserManager(
+        config, configparser.ConfigParser())
     metaDataMenager = MetaDataManager()
     terminalUser = TerminalUser(configParserMenager, metaDataMenager)
     terminalUser.downloadTerminal(url, type)

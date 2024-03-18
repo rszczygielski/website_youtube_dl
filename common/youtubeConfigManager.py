@@ -35,13 +35,22 @@ class ConfigParserManager():
             self.createDefaultConfigFile()
         return self.configParser["global"]["path"]
 
+    def getPlaylistUrl(self, playlistName):
+        self.configParser.read(self.configFilePath)
+        if len(self.configParser.sections()) == 0:
+            self.createDefaultConfigFile()
+        for configPlaylistName in self.configParser["playlists"]:
+            if configPlaylistName == playlistName:
+                return self.configParser["playlists"][playlistName]
+        return None
+
     def getPlaylists(self):
         playlistsFromConfig = {}
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
-        for key in self.configParser["playlists"]:
-            playlistsFromConfig[key] = self.configParser["playlists"][key]
+        for playlistName in self.configParser["playlists"]:
+            playlistsFromConfig[playlistName] = self.configParser["playlists"][playlistName]
         return playlistsFromConfig
 
     def getUrlOfPlaylists(self):
@@ -50,8 +59,8 @@ class ConfigParserManager():
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
-        for key in self.configParser["playlists"]:
-            playlistList.append(self.configParser["playlists"][key])
+        for playlistName in self.configParser["playlists"]:
+            playlistList.append(self.configParser["playlists"][playlistName])
         return playlistList
 
     def saveConfig(self): #pragma: no_cover

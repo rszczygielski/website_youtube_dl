@@ -16,7 +16,7 @@ font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, O
 background-position: top;
 background-attachment: fixed;
 background-size: cover;
-background-color: var(--clr-bg);
+background: linear-gradient(to right, rgb(1, 27, 41), #247cce);
 }
 
 

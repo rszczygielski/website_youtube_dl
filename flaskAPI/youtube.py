@@ -6,7 +6,7 @@ import os
 import random
 import string
 import yt_dlp
-from flask import flash, send_file, render_template
+from flask import send_file, render_template
 
 hashTable = {}
 
@@ -28,7 +28,8 @@ def downloadSingleInfoAndMedia(youtubeURL, type=False):
         downloadMediaFinishEmit = DownloadMediaFinishEmit()
         errorMsg = singleMediaInfoResult.getErrorInfo()
         downloadMediaFinishEmit.sendEmitError(errorMsg)
-        logger.error(f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+        logger.error(
+            f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
         return False
     mediaInfo = singleMediaInfoResult.getData()
     mediaInfoEmit = MediaInfoEmit()
@@ -41,7 +42,8 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
     direcotryPath = configParserMenager.getSavePath()
     trackTitle = singleMediaTitle
     if type:
-        singleMediaInfoResult = youtubeDownloder.downloadVideo(singleMediaURL, type)
+        singleMediaInfoResult = youtubeDownloder.downloadVideo(
+            singleMediaURL, type)
         trackInfo = singleMediaInfoResult.getData()
         print(trackInfo)
         fileName = f"{trackTitle}_{type}p.{trackInfo.extension}"
@@ -53,7 +55,8 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
         downloadMediaFinishEmit = DownloadMediaFinishEmit()
         errorMsg = singleMediaInfoResult.getErrorInfo()
         downloadMediaFinishEmit.sendEmitError(errorMsg)
-        logger.error(f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+        logger.error(
+            f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
         return False
     logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {fileName}")
     logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {direcotryPath}")
@@ -67,7 +70,8 @@ def downloadPlaylist(youtubeURL, type=False):
         downloadMediaFinishEmit = DownloadMediaFinishEmit()
         errorMsg = singleMediaInfoResult.getErrorInfo()
         downloadMediaFinishEmit.sendEmitError(errorMsg)
-        logger.error(f"{YoutubeLogs.PLAYLIST_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+        logger.error(
+            f"{YoutubeLogs.PLAYLIST_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
         return False
     playlistInfo = singleMediaInfoResult.getData()
     playlistName = playlistInfo.playlistName
@@ -89,9 +93,10 @@ def emitHashWithDownloadedFile(fullFilePath):
     splitedFilePath = fullFilePath.split("/")
     fileName = splitedFilePath[-1]
     direcotryPath = "/".join(splitedFilePath[:-1])
-    generatedHash = ''.join(random.sample(string.ascii_letters + string.digits, 6))
+    generatedHash = ''.join(random.sample(
+        string.ascii_letters + string.digits, 6))
     hashTable[generatedHash] = {YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
-                       YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
+                                YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
     downloadMediaFinishEmit = DownloadMediaFinishEmit()
     downloadMediaFinishEmit.sendEmitWithData(generatedHash)
 
@@ -142,10 +147,35 @@ def downloadFile(name):
 
 
 @socketio.on("downloadFromConfigFile")
-def downloadConfigPlaylist(empty):
-    youtubeDownloder.downoladConfigPlaylistVideo(type=720)
-    flash(YoutubeLogs.FLASH_CONFIG_PALYLIST.value, category="success")
-    logger.info(YoutubeLogs.PLAYLIST_DOWNLAODED_CONFIG.value)
+def downloadConfigPlaylist(formData):
+    print(formData)
+    playlistName = formData["playlistToDownload"]
+    logger.info(f"Selected playlist form config {playlistName}")
+    playlistURL = configParserMenager.getPlaylistUrl(playlistName)
+    print(playlistURL, "test")
+    fullFilePath = downloadPlaylist(playlistURL)
+    if not fullFilePath:
+        return False
+    emitHashWithDownloadedFile(fullFilePath)
+
+
+@socketio.on("addPlaylist")
+def addPlalistConfig(formData):
+    print(formData)
+    playlistName = formData["playlistName"]
+    playlistURL = formData["playlistURL"]
+    print(playlistName, playlistURL)
+    configParserMenager.addPlaylist(playlistName, playlistURL)
+    playlistList = list(configParserMenager.getPlaylists().keys())
+    socketio.emit("uploadPlalists", {"data": {"plalistList": playlistList}})
+
+
+@socketio.on("deletePlaylist")
+def addPlalistConfig(formData):
+    playlistName = formData["playlistToDelete"]
+    configParserMenager.deletePlaylist(playlistName)
+    playlistList = list(configParserMenager.getPlaylists().keys())
+    socketio.emit("uploadPlalists", {"data": {"plalistList": playlistList}})
 
 
 @app.route("/modify_playlist.html")
