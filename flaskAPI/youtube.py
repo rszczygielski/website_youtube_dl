@@ -11,32 +11,32 @@ from flask import send_file, render_template
 
 hashTable = {}
 
+
 class FlaskSingleMedia():
-    def __init__(self, title, artist, url) -> None:
+    def __init__(self, title: str, artist: str, url: str) -> None:
         self.title = title
         self.artist = artist
         self.url = url
 
-def emitDownloadErrorMessage(error_msg, mediaType):
-    emit_download_finish = DownloadMediaFinishEmit()
-    socketio.emit(emit_download_finish.emit_msg,
-                    emit_download_finish.convert_error_to_message(error_msg))
-    logger.error(f"Download {mediaType} info error: {error_msg}")
 
-def emitDownloadInfo(metaDataInfo, playlistName=None):
-    emit_media_info = MediaInfoEmit()
-    print(metaDataInfo)
-    if not playlistName:
-        socketio.emit(emit_media_info.emit_msg,
-        emit_media_info.convert_data_to_message(metaDataInfo))
-    else:
-        socketio.emit(emit_media_info.emit_msg,
-                emit_media_info.convert_playlist_data_to_message(metaDataInfo,
-                                                                playlistName))
+class FlaskPlaylistMedia():
+    def __init__(self, plyalistName: str, trackList: list) -> None:
+        self.playlistName = plyalistName
+        self.trackList = trackList
+
+    @classmethod
+    def initFromPlaylistMedia(cls, playlistName, trackList):
+        trackList = []
+        for track in trackList:
+            trackList.append(FlaskSingleMedia(track.title,
+                                              track.artist,
+                                              track.url))
+        return cls(playlistName, trackList)
+
 
 def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
     # do utilsa leci
-    zipFileFullPath = os.path.join(direcoryPath, 
+    zipFileFullPath = os.path.join(direcoryPath,
                                    playlistName)
     print(zipFileFullPath)
     with zipfile.ZipFile(f"{zipFileFullPath}.zip", "w") as zipInstance:
@@ -45,22 +45,29 @@ def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
     return f"{zipFileFullPath.split('/')[-1]}.zip"
 
 
+def handleError(errorMsg):
+    downloadMediaFinishEmit = DownloadMediaFinishEmit()
+    downloadMediaFinishEmit.sendEmitError(errorMsg)
+    logger.error(
+        f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+
+
 def downloadSingleInfoAndMedia(youtubeURL, type=False):
     logger.debug(YoutubeLogs.DOWNLOAD_SINGLE_VIDEO.value)
     singleMediaInfoResult = youtubeDownloder.getSingleMediaInfo(youtubeURL)
     if singleMediaInfoResult.isError():
-        downloadMediaFinishEmit = DownloadMediaFinishEmit()
         errorMsg = singleMediaInfoResult.getErrorInfo()
-        downloadMediaFinishEmit.sendEmitError(errorMsg)
-        logger.error(
-            f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+        handleError(errorMsg)
         return False
     mediaInfo = singleMediaInfoResult.getData()
     flaskSingleMedia = FlaskSingleMedia(mediaInfo.title,
-                                        mediaInfo.artist, mediaInfo.url)
+                                        mediaInfo.artist,
+                                        mediaInfo.url)
     mediaInfoEmit = MediaInfoEmit()
-    mediaInfoEmit.sendEmitSingleMedia(flaskSingleMedia)
-    fullPath = downloadSingleMedia(mediaInfo.url, mediaInfo.title, type)
+    mediaInfoEmit.sendEmit(flaskSingleMedia)
+    fullPath = downloadSingleMedia(mediaInfo.url,
+                                   mediaInfo.title,
+                                   type)
     return fullPath
 
 
@@ -71,43 +78,44 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
         singleMediaInfoResult = youtubeDownloder.downloadVideo(
             singleMediaURL, type)
         trackInfo = singleMediaInfoResult.getData()
-        print(trackInfo)
         fileName = f"{trackTitle}_{type}p.{trackInfo.extension}"
     else:
         singleMediaInfoResult = youtubeDownloder.downloadAudio(singleMediaURL)
         trackInfo = singleMediaInfoResult.getData()
         fileName = f"{trackTitle}.{YoutubeVariables.MP3.value}"
     if singleMediaInfoResult.isError():
-        downloadMediaFinishEmit = DownloadMediaFinishEmit()
         errorMsg = singleMediaInfoResult.getErrorInfo()
-        downloadMediaFinishEmit.send_emit_error(errorMsg)
-        logger.error(
-            f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+        handleError(errorMsg)
         return False
     logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {fileName}")
     logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {direcotryPath}")
     return os.path.join(direcotryPath, fileName)
 
 
+def downloadAllPlaylistTracks(playlistTracks, type):
+    filePaths = []
+    for track in playlistTracks:
+        fullPath = downloadSingleMedia(track.url, track.title, type)
+        filePaths.append(fullPath)
+    return filePaths
+
+
 def downloadPlaylist(youtubeURL, type=False):
     logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
     singleMediaInfoResult = youtubeDownloder.getPlaylistMediaInfo(youtubeURL)
     if singleMediaInfoResult.isError():
-        downloadMediaFinishEmit = DownloadMediaFinishEmit()
         errorMsg = singleMediaInfoResult.getErrorInfo()
-        downloadMediaFinishEmit.send_emit_error(errorMsg)
-        logger.error(
-            f"{YoutubeLogs.PLAYLIST_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
+        handleError(errorMsg)
         return False
     playlistInfo = singleMediaInfoResult.getData()
     playlistName = playlistInfo.playlistName
+    flaskPlaylistMedia = FlaskPlaylistMedia(playlistName,
+                                            playlistInfo.singleMediaList)
     playlistInfoEmit = PlaylistMediaInfoEmit()
-    playlistInfoEmit.send_emit(playlistInfo, playlistName)
+    playlistInfoEmit.sendEmit(flaskPlaylistMedia)
     direcotryPath = configParserMenager.getSavePath()
-    filePaths = []
-    for track in playlistInfo.singleMediaList:
-        fullPath = downloadSingleMedia(track.url, track.title, type)
-        filePaths.append(fullPath)
+    filePaths = downloadAllPlaylistTracks(playlistInfo.singleMediaList,
+                                          type)
     zipNameFile = zipAllFilesInList(direcotryPath, playlistName, filePaths)
     logger.info(f"{YoutubeLogs.PLAYLIST_DOWNLAODED.value}: {playlistName}")
     logger.debug(f"{YoutubeLogs.DIRECTORY_PATH}: {direcotryPath}")
@@ -122,9 +130,21 @@ def emitHashWithDownloadedFile(fullFilePath):
     generatedHash = ''.join(random.sample(
         string.ascii_letters + string.digits, 6))
     hashTable[generatedHash] = {YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
-                      YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
+                                YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
     downloadMediaFinishEmit = DownloadMediaFinishEmit()
     downloadMediaFinishEmit.sendEmitWithData(generatedHash)
+
+
+def downloadCorrectData(youtubeURL, type, isPlaylist):
+    if type == YoutubeVariables.MP3.value and isPlaylist:
+        fullFilePath = downloadPlaylist(youtubeURL)
+    elif type != YoutubeVariables.MP3.value and isPlaylist:
+        fullFilePath = downloadPlaylist(youtubeURL, type)
+    elif type == YoutubeVariables.MP3.value and not isPlaylist:
+        fullFilePath = downloadSingleInfoAndMedia(youtubeURL)
+    elif type != YoutubeVariables.MP3.value and not isPlaylist:
+        fullFilePath = downloadSingleInfoAndMedia(youtubeURL, type)
+    return fullFilePath
 
 
 @socketio.on("FormData")
@@ -148,52 +168,65 @@ def socketDownloadServer(formData):
         return
     elif YoutubeVariables.URL_LIST.value in youtubeURL and YoutubeVariables.URL_VIDEO.value not in youtubeURL:
         isPlaylist = True
-    if type == YoutubeVariables.MP3.value and isPlaylist:
-        fullFilePath = downloadPlaylist(youtubeURL)
-    if type != YoutubeVariables.MP3.value and isPlaylist:
-        fullFilePath = downloadPlaylist(youtubeURL, type)
-    if type == YoutubeVariables.MP3.value and not isPlaylist:
-        fullFilePath = downloadSingleInfoAndMedia(youtubeURL)
-    if type != YoutubeVariables.MP3.value and not isPlaylist:
-        fullFilePath = downloadSingleInfoAndMedia(youtubeURL, type)
+    fullFilePath = downloadCorrectData(youtubeURL, type, isPlaylist)
     if not fullFilePath:
         return False
-    emit_download_finish = DownloadMediaFinishEmit()
-    download_data = emit_download_finish.get_data_dict(fullFilePath)
-    hashTable[emit_download_finish.genereted_hash] = download_data
-    socketio.emit(emit_download_finish.emit_msg,
-                  emit_download_finish.convert_data_to_message())
+    download_data = getDataDict(fullFilePath)
+    genereted_hash = genereteHash()
+    hashTable[genereted_hash] = download_data
+    emitDownloadFinish = DownloadMediaFinishEmit()
+    emitDownloadFinish.sendEmit(genereted_hash)
 
-@app.route("/modify_playlist", methods=["POST", "GET"])
-def modify_playlist():
-    if request.method == "POST":
-        playlistList = configParserMenager.getPlaylists()
-        playlistName = request.form["playlistName"]
-        if "AddPlaylistButton" in request.form:
-            playlistURL = request.form["playlistURL"]
-            if "list=" not in playlistURL:
-                flash("Please enter correct URL of YouTube playlist", category="danger")
-                logger.warning("URL not containing list=")
-                return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
-            configParserMenager.addPlaylist(playlistName, playlistURL)
-            playlistList = configParserMenager.getPlaylists()
-            flash(f"Playlist {playlistName} added to config file", category="success")
-            logger.info(f"Config file updated with new playlist: {playlistName}")
-            return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
-        elif "DeletePlaylistButton" in request.form:
-            if "playlistSelect" in request.form:
-                playlistToRemove = request.form["playlistSelect"]
-                configParserMenager.deletePlaylist(playlistToRemove)
-                playlistList = configParserMenager.getPlaylists()
-                flash(f"Playlist {playlistToRemove} deleted from config file", category="success")
-                logger.info(f"Playlist {playlistName} deleted from config file")
-                return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
-            else:
-                flash("Select a playlist to delete", category="danger")
-                logger.info(f"None playlist was selected to deleted from config file")
-                return render_template("modify_playlist.html", playlistsNames = playlistList.keys())
-        else:
-            raise Exception("Undefined behaviour")
+
+def getDataDict(fullFilePath):
+    splitedFilePath = fullFilePath.split("/")
+    fileName = splitedFilePath[-1]
+    direcotryPath = "/".join(splitedFilePath[:-1])
+    data_dict = {"downloadFileName": fileName,
+                 "downloadDirectoryPath": direcotryPath}
+    return data_dict
+
+
+def genereteHash():
+    return ''.join(random.sample(string.ascii_letters + string.digits, 6))
+
+
+# @app.route("/modify_playlist", methods=["POST", "GET"])
+# def modify_playlist():
+#     if request.method == "POST":
+#         playlistList = configParserMenager.getPlaylists()
+#         playlistName = request.form["playlistName"]
+#         if "AddPlaylistButton" in request.form:
+#             playlistURL = request.form["playlistURL"]
+#             if "list=" not in playlistURL:
+#                 flash("Please enter correct URL of YouTube playlist",
+#                       category="danger")
+#                 logger.warning("URL not containing list=")
+#                 return render_template("modify_playlist.html", playlistsNames=playlistList.keys())
+#             configParserMenager.addPlaylist(playlistName, playlistURL)
+#             playlistList = configParserMenager.getPlaylists()
+#             flash(
+#                 f"Playlist {playlistName} added to config file", category="success")
+#             logger.info(
+#                 f"Config file updated with new playlist: {playlistName}")
+#             return render_template("modify_playlist.html", playlistsNames=playlistList.keys())
+#         elif "DeletePlaylistButton" in request.form:
+#             if "playlistSelect" in request.form:
+#                 playlistToRemove = request.form["playlistSelect"]
+#                 configParserMenager.deletePlaylist(playlistToRemove)
+#                 playlistList = configParserMenager.getPlaylists()
+#                 flash(
+#                     f"Playlist {playlistToRemove} deleted from config file", category="success")
+#                 logger.info(
+#                     f"Playlist {playlistName} deleted from config file")
+#                 return render_template("modify_playlist.html", playlistsNames=playlistList.keys())
+#             else:
+#                 flash("Select a playlist to delete", category="danger")
+#                 logger.info(
+#                     f"None playlist was selected to deleted from config file")
+#                 return render_template("modify_playlist.html", playlistsNames=playlistList.keys())
+#         else:
+#             raise Exception("Undefined behaviour")
 
 
 @app.route("/downloadFile/<name>")
