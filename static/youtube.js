@@ -10,7 +10,7 @@ $(document).ready(function () {
     var socket = io();
     console.log("ready")
     socket.on('connect', function () {
-        console.log("I'm connected");
+        console.log("Connected Youtube");
     });
 
     var allLogs = "";

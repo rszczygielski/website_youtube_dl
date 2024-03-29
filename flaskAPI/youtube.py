@@ -181,7 +181,7 @@ def addPlalistConfig(formData):
 
 
 @socketio.on("deletePlaylist")
-def addPlalistConfig(formData):
+def deletePlalistConfig(formData):
     playlistName = formData["playlistToDelete"]
     configParserMenager.deletePlaylist(playlistName)
     playlistList = list(configParserMenager.getPlaylists().keys())

@@ -1,6 +1,9 @@
 $(document).ready(function () {
     const socket = io();
     console.log("ready")
+    socket.on('connect', function () {
+        console.log("Connected Playlists");
+    });
     const downloadPlaylistButton = document.getElementById("downloadPlaylist");
     const playlistSelect = document.getElementById("playlistSelect")
     const addPlaylistButton = document.getElementById("addPlaylistButton")
