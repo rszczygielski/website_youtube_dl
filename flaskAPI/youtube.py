@@ -10,10 +10,18 @@ from flask import send_file, render_template
 
 hashTable = {}
 
+class FlaskSingleMedia():
+    def __init__(self, title, artist, url) -> None:
+        self.title = title
+        self.artist = artist
+        self.url = url
 
-def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
+
+def zipAllFilesInList(direcoryPath, playlistName, 
+                      listOfFilePaths):
     # do utilsa leci
-    zipFileFullPath = os.path.join(direcoryPath, playlistName)
+    zipFileFullPath = os.path.join(direcoryPath, 
+                                   playlistName)
     print(zipFileFullPath)
     with zipfile.ZipFile(f"{zipFileFullPath}.zip", "w") as zipInstance:
         for filePath in listOfFilePaths:
@@ -32,8 +40,10 @@ def downloadSingleInfoAndMedia(youtubeURL, type=False):
             f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {errorMsg}")
         return False
     mediaInfo = singleMediaInfoResult.getData()
+    flaskSingleMedia = FlaskSingleMedia(mediaInfo.title,
+                                        mediaInfo.artist, mediaInfo.url)
     mediaInfoEmit = MediaInfoEmit()
-    mediaInfoEmit.sendEmitSingleMedia(mediaInfo)
+    mediaInfoEmit.sendEmitSingleMedia(flaskSingleMedia)
     fullPath = downloadSingleMedia(mediaInfo.url, mediaInfo.title, type)
     return fullPath
 
@@ -96,7 +106,7 @@ def emitHashWithDownloadedFile(fullFilePath):
     generatedHash = ''.join(random.sample(
         string.ascii_letters + string.digits, 6))
     hashTable[generatedHash] = {YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
-                                YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
+                      YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
     downloadMediaFinishEmit = DownloadMediaFinishEmit()
     downloadMediaFinishEmit.sendEmitWithData(generatedHash)
 

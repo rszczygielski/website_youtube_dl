@@ -1,3 +1,11 @@
+class SingleMedia {
+    constructor(title, artist, url) {
+        this.title = title;
+        this.artist = artist;
+        this.url = url;
+    }
+}
+
 $(document).ready(function () {
     var socket = io();
     console.log("ready")

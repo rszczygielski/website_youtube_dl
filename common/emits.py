@@ -1,6 +1,7 @@
 from mainWebPage import socketio
 from abc import ABC
 from common.youtubeDataKeys import PlaylistInfo
+# from flaskAPI.youtube import FlaskSingleMedia
 
 
 class SendEmitBase(ABC):
@@ -30,7 +31,7 @@ class DownloadMediaFinishEmit(SendEmitBase):
 class MediaInfoEmit(SendEmitBase):
     _emitType = "mediaInfo"
 
-    def getPlaylistData(self, playlistInfo):
+    def getPlaylistData(self, playlistInfo:PlaylistInfo):
         playlistTrackList = []
         playlistName = playlistInfo.playlistName
         for track in playlistInfo.singleMediaList:
@@ -45,8 +46,8 @@ class MediaInfoEmit(SendEmitBase):
 
     def getSingleMediaData(self, mediaInfo):
         mediaInfoDict = {
-            PlaylistInfo.TITLE.value: mediaInfo.title, PlaylistInfo.ALBUM.value: mediaInfo.album,
-            PlaylistInfo.ARTIST.value: mediaInfo.artist, PlaylistInfo.YOUTUBE_HASH.value: mediaInfo.ytHash,
+            PlaylistInfo.TITLE.value: mediaInfo.title,
+            PlaylistInfo.ARTIST.value: mediaInfo.artist,
             PlaylistInfo.URL.value: mediaInfo.url
         }
         return [mediaInfoDict]
