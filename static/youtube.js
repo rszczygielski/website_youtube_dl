@@ -12,23 +12,14 @@ $(document).ready(function () {
     socket.on('connect', function () {
         console.log("Connected Youtube");
     });
-
-    var allLogs = "";
-    socket.on("log", function (log_data) {
-        console.log(log_data);
-        allLogs += log_data + "\n";
-        var logs = document.getElementById("logArea");
-        logs.value = allLogs;
-    });
-
     var downloadForm = document.getElementById("DownloadForm");
     downloadForm.addEventListener("submit", function (event) {
         event.preventDefault();
-        var downloadSection = document.getElementById("downloadSection")
-        var downloadInfo = document.getElementById("downloadInfo")
-        allLogs = "";
-        downloadSection.innerHTML = "";
-        downloadInfo.innerHTML = "";
+        // allLogs = "";
+        var traks_urls_table = document.getElementById("downloadInfo");
+        traks_urls_table.innerHTML = "";
+        var download_file_button = document.getElementById("downloadSection");
+        download_file_button.innerHTML = "";
         var youtubeURL = document.getElementById("youtubeURL");
         var downloadTypes = document.getElementsByName("qualType");
         for (var i = 0; i < downloadTypes.length; i++) {

@@ -303,6 +303,10 @@ class YoutubeDL():
         self._setAudioOptions()
         playlistHash = self._getPlaylistHash(youtubeURL)
         resultOfYoutube = self._downloadFile(playlistHash)
+        if resultOfYoutube.isError():
+            errorMsg = resultOfYoutube.getErrorInfo()
+            logger.error(f"Download playlist error: {errorMsg}")
+            return resultOfYoutube
         metaData = resultOfYoutube.getData()
         entriesKey = PlaylistInfo.PLAYLIST_TRACKS.value
         if entriesKey not in metaData:

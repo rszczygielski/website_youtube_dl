@@ -9,4 +9,5 @@ gmail_token.json
 results
 # archive song file from youtube
 test_downloaded_songs.txt
+notes.txt
 .coverage

@@ -53,20 +53,8 @@ class TestYoutubeDL(TestCase):
         'id': testId2
     }
     testEntriesList = [songMetaData1, songMetaData2]
-    testPlaylsitUrlsList = [
-        mainPlaylistUrlNoVideoHash1, mainPlaylistUrlNoVideoHash2]
-    # zrobić resztę w ten sposób done
-    # zamienić stringi na zmienne i nie było powtórzeń done
-    # list entries i list entries expected done
-    # dorobic funckję do sprawdznia plylisty almost done extension coś ma problem
-    # w youtubeDL zmienić isinstance na to aby zwracał od razu w _downloadFile result of yt done
-    # nie używac prywatynych zmiennych, isError() zamienić na funkcje done
-    # w metaDataManager żeby nie przyjmowała mata data tylko same informacje typu tytuł i listę trakców (nie pibierać tego z meta data bo za dużo informacji jest przekazywanych) done
-    # jak zostawać przy styrkturach w metaDataMangaer to stworzyć kolejną stuktrunę w metaDataManager done
-    # zweryfikować czy nie ma np. ustawiania None do jakiś warości w easyID3 podczas pobierania done
+    testPlaylsitUrlsList = [mainPlaylistUrlNoVideoHash1, mainPlaylistUrlNoVideoHash2]
 
-    # pozamieniać resztę stringów w tych testach done
-    # result of yourube żeby miał od razu strukturę podczas porbierania
 
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
@@ -237,7 +225,6 @@ class TestYoutubeDL(TestCase):
         checkResult = self.checkFastDownloadResult(metaData)
         self.assertEqual(True, checkResult)
 
-    @patch.object(youtubeDL.MetaDataManager, "setMetaDataPlaylist")
     @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
     def testDownloadPlaylistAudioWithError(self, mockDownloadError, mockSetAudio):
         resultOfYoutube = self.youtubeTest.fastDownloadAudioPlaylist(
@@ -245,21 +232,15 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(resultOfYoutube.isError(), True)
         errorMsg = resultOfYoutube.getErrorInfo()
         mockDownloadError.assert_called_once_with(self.mainPlaylistHash)
-        mockSetAudio.assert_called_once()
         self.assertEqual(errorMsg,  self.mainMediaDownloadError)
 
-    @patch.object(youtubeDL.MetaDataManager, "_saveMetaData")
-    @patch.object(youtubeDL.MetaDataManager, "_showMetaDataInfo")
-    @patch.object(youtubeDL.MetaDataManager, "_saveEasyID3")
-    @patch.object(mutagen.easyid3, "EasyID3", return_value=songMetaData1)
+    @patch.object(youtubeDL.MetaDataManager, "setMetaDataSingleFile")
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
-    def testDownloadAudio(self, mockDownloadFile, mockEasyID3, mockSave, mockShowMetaData, mock):
+    def testDownloadAudio(self, mockDownloadFile, mockSave):
         singleMediaInfoResult = self.youtubeTest.downloadAudio(self.mainURL1)
         metaData = singleMediaInfoResult.getData()
         mockDownloadFile.assert_called_once_with(self.testId1)
-        mockEasyID3.assert_called_once()
         mockSave.assert_called_once()
-        mockShowMetaData.assert_called_once()
         resultCheck = self.checkResultMetaDataSingleDownlaod(metaData)
         self.assertEqual(True, resultCheck)
 
