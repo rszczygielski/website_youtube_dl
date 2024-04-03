@@ -53,7 +53,7 @@ class PlaylistMediaInfoEmit(BaseEmit):
     def convertDataToMessage(self, flaskPlaylistMedia):
         playlistName = flaskPlaylistMedia.playlistName
         playlistTrackList = []
-        for track in flaskPlaylistMedia.singleMediaList:
+        for track in flaskPlaylistMedia.trackList:
             trackInfoDict = {
                 PlaylistInfo.TITLE.value: track.title,
                 PlaylistInfo.ARTIST.value: track.artist,
@@ -63,8 +63,8 @@ class PlaylistMediaInfoEmit(BaseEmit):
             playlistTrackList.append(trackInfoDict)
         return {"data": playlistTrackList}
 
-    def sendEmit(self, playlistData, playlistName):
-        converted_data = self.convertDataToMessage(playlistData, playlistName)
+    def sendEmit(self, playlistData):
+        converted_data = self.convertDataToMessage(playlistData)
         return socketio.emit(self.emit_msg, converted_data)
 
 

@@ -1,7 +1,7 @@
 from mainWebPage import app, logger, youtubeDownloder, socketio, configParserMenager
 from common.youtubeDataKeys import YoutubeLogs, YoutubeVariables
 from flask import flash, send_file, render_template, request
-from common.emits import DownloadMediaFinishEmit, MediaInfoEmit, DownloadErrorEmit, PlaylistMediaInfoEmit
+from common.emits import DownloadMediaFinishEmit, SingleMediaInfoEmit, DownloadErrorEmit, PlaylistMediaInfoEmit
 import zipfile
 import os
 import yt_dlp
@@ -63,7 +63,7 @@ def downloadSingleInfoAndMedia(youtubeURL, type=False):
     flaskSingleMedia = FlaskSingleMedia(mediaInfo.title,
                                         mediaInfo.artist,
                                         mediaInfo.url)
-    mediaInfoEmit = MediaInfoEmit()
+    mediaInfoEmit = SingleMediaInfoEmit()
     mediaInfoEmit.sendEmit(flaskSingleMedia)
     fullPath = downloadSingleMedia(mediaInfo.url,
                                    mediaInfo.title,
@@ -132,7 +132,7 @@ def emitHashWithDownloadedFile(fullFilePath):
     hashTable[generatedHash] = {YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
                                 YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath}
     downloadMediaFinishEmit = DownloadMediaFinishEmit()
-    downloadMediaFinishEmit.sendEmitWithData(generatedHash)
+    downloadMediaFinishEmit.sendEmit(generatedHash)
 
 
 def downloadCorrectData(youtubeURL, type, isPlaylist):
