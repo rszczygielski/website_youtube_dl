@@ -25,6 +25,7 @@ $(document).ready(function () {
     })
 
     socket.on("downloadMediaFinish", function (response) {
+        console.log("DWONOLAD MEDIA FINISH ENTER")
         if ("error" in response) {
             console.log("Error", response["error"])
         }

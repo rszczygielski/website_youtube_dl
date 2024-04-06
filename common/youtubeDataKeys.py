@@ -36,6 +36,9 @@ class YoutubeOptiones(Enum):
     LOGGER = "logger"
     OUT_TEMPLATE = "outtmpl"
 
+
+# w innym pliku enumy do formularzy 
+
 class YoutubeLogs(Enum):
     MEDIA_INFO_DOWNLAOD_ERROR = "Download media info error"
     PLAYLIST_INFO_DOWNLAOD_ERROR = "Download playlist info error"

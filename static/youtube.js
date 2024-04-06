@@ -6,6 +6,38 @@ class SingleMedia {
     }
 }
 
+class PlaylistMedia {
+    constructor(playlistName, trackList){
+        this.playlistName = playlistName;
+        this.trackList = trackList;
+    }
+}
+
+class FlaskResultHash{
+    constructor(hash) {
+        this.hash = hash
+    }
+}
+
+class PlaylistMessageConverter {
+
+    convertMessageToData(requestJson) {
+        var trackList = requestJson["data"]
+        var playlistName = trackList[0]["playlist_name"]
+        var singleMediaArr = []
+        for (var i = 0; i < trackList.length; i++) {
+            track = trackList[i]
+            singleMediaArr.push(SingleMedia(track.title,
+                                            track.artist,
+                                            track.url))
+        return PlaylistMedia(playlistName, singleMediaArr)
+       }
+    }
+}
+// class MessageManager{
+
+// }
+
 $(document).ready(function () {
     var socket = io();
     console.log("ready")
@@ -48,7 +80,9 @@ $(document).ready(function () {
         }
     })
 
-    socket.on("mediaInfo", function (response) {
+    
+
+    socket.on("playlistMediaInfo", function (response) {
         console.log("InProgress", response["data"])
         var table = document.getElementById("downloadInfo")
         for (var i = 0; i < response["data"].length; i++) {
@@ -62,11 +96,5 @@ $(document).ready(function () {
             console.log(response["data"][i]["title"])
             cell3.innerHTML = "<a class=neon-button target='_blank' href=" + response["data"][i]["original_url"] + ">" + "url</a>"
         }
-    })
-
-    var configPlaylist = document.getElementById("downloadConfigPlaylist");
-    configPlaylist.addEventListener("submit", function (event) {
-        event.preventDefault();
-        socket.emit("downloadFromConfigFile", "")
     })
 });

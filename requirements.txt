@@ -5,3 +5,4 @@ mutagen
 pytest
 pytest-html
 coverage
+ffmpeg

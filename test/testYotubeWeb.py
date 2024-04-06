@@ -14,6 +14,7 @@ class testYoutubeWeb(TestCase):
         self.socketIoTestClient = socketio.test_client(app)
 
     def testSocketDownloadServerNoDownloadType(self):
+        # użyj klas z emitów
         self.socketIoTestClient.emit(
             "FormData", {"youtubeURL": "ttest/url.com"})
         pythonEmit = self.socketIoTestClient.get_received()
