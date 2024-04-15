@@ -3,7 +3,6 @@ import yt_dlp
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 import logging
-from common.youtubeDL import SingleMedia
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +39,7 @@ class EasyID3SingleMedia():
         return valuesList
 
     @classmethod
-    def initFromSingleMata(cls, singleData: SingleMedia):
+    def initFromSingleMata(cls, singleData):
         title = singleData.title
         album = singleData.album
         artist = singleData.artist
