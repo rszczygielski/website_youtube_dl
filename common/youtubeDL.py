@@ -76,12 +76,12 @@ class YoutubeDL():
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True
         }
-
-    def _downloadFile(self, youtubeMediaHash: str):
+    
+    def _downloadFile(self, singleMediaHash: str):
         """Method used to download youtube media based on URL
 
         Args:
-            youtubeMediaHash (str): Hash of YouTube media
+            singleMediaHash (str): Hash of YouTube media
             youtubeOptions (dict): YouTube options dict form init
 
         Returns:
@@ -89,27 +89,29 @@ class YoutubeDL():
         """
         with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
             try:
-                metaData = ydl.extract_info(youtubeMediaHash)
+                metaData = ydl.extract_info(singleMediaHash)
             except Exception as exception:
                 errorInfo = str(exception)
                 logger.error(f"Download media info error {errorInfo}")
                 resultOfYoutube = ResultOfYoutube()
                 resultOfYoutube.setError(errorInfo)
                 return resultOfYoutube
-        return ResultOfYoutube(metaData)
+        singleMedia = self._getSingleMedia(metaData)
+        return ResultOfYoutube(singleMedia)
+
 
     def _getDefaultOptions(self):
         """Method returns to the defualt youtubeDL options
         """
         return {
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
             YoutubeOptiones.NO_OVERRIDE.value: False,
             YoutubeOptiones.LOGGER.value: self.ytLogger,
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
 
-    def _getSingleMediaResult(self, metaData) -> SingleMedia:
+    def _getSingleMedia(self, metaData) -> SingleMedia:
         """Method sets and returns SingleMedia instance based on meta data inptu
 
         Args:
@@ -134,7 +136,7 @@ class YoutubeDL():
             extension = metaData[MediaInfo.EXTENSION.value]
         return SingleMedia(title, album, artist, youtube_hash, url, extension)
 
-    def _getPlaylistMediaResult(self, metaData) -> PlaylistMedia:
+    def _getPlaylistMedia(self, metaData) -> PlaylistMedia:
         """Method sets and returns PlaylistMedia instance based on meta data inptu
 
         Args:
@@ -171,7 +173,7 @@ class YoutubeDL():
             mediaInfoList.append(singleMediaStruct)
         return PlaylistMedia(playlistName, mediaInfoList)
 
-    def getSingleMediaInfo(self, youtubeURL) -> ResultOfYoutube:
+    def requestSingleMediaInfo(self, youtubeURL) -> ResultOfYoutube:
         """Method provides youtube media info based on youtube URL without downloading it
 
         Args:
@@ -189,10 +191,10 @@ class YoutubeDL():
                 resultOfYoutube = ResultOfYoutube()
                 resultOfYoutube.setError(errorInfo)
                 return resultOfYoutube
-        singleMedia = self._getSingleMediaResult(metaData)
+        singleMedia = self._getSingleMedia(metaData)
         return ResultOfYoutube(singleMedia)
 
-    def getPlaylistMediaInfo(self, youtubeURL) -> ResultOfYoutube:
+    def requestPlaylistMediaInfo(self, youtubeURL) -> ResultOfYoutube:
         """Method returns meta data based on youtube url
 
         Args:
@@ -210,7 +212,7 @@ class YoutubeDL():
                 resultOfYoutube = ResultOfYoutube()
                 resultOfYoutube.setError(errorInfo)
                 return resultOfYoutube
-        playlistMedia = self._getPlaylistMediaResult(metaData)
+        playlistMedia = self._getPlaylistMedia(metaData)
         return ResultOfYoutube(playlistMedia)
 
     def _setVideoOptions(self, type: str):
@@ -253,9 +255,7 @@ class YoutubeDL():
             errorMsg = resultOfYoutube.getErrorInfo()
             logger.error(f"Download video info error: {errorMsg}")
             return resultOfYoutube
-        metaData = resultOfYoutube.getData()
-        singleMedia = self._getSingleMediaResult(metaData)
-        return ResultOfYoutube(singleMedia)
+        return resultOfYoutube
 
     def fastDownloadVideoPlaylist(self, youtubeURL: str, type: str):
         """Method uded to download video playlist from YouTube
@@ -268,7 +268,14 @@ class YoutubeDL():
         """
         self._setVideoOptions(type)
         playlistHash = self._getPlaylistHash(youtubeURL)
-        return self._downloadFile(playlistHash)
+        with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(playlistHash)
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Download media info error {errorInfo}")
+                return False
+        return metaData
 
     def downloadAudio(self, youtubeURL: str):
         """Method uded to download audio type from Youtube, convert metadata
@@ -284,12 +291,11 @@ class YoutubeDL():
             errorMsg = resultOfYoutube.getErrorInfo()
             logger.error(f"Download video info error: {errorMsg}")
             return resultOfYoutube
-        metaData = resultOfYoutube.getData()
-        easyID3Media = EasyID3SingleMedia.initFromMatadata(metaData)
+        singleMedia = resultOfYoutube.getData()
+        easyID3Media = EasyID3SingleMedia.initFromSingleMata(singleMedia)
         self._metaDataMenager.setMetaDataSingleFile(
             easyID3Media, self._savePath)
-        singleMedia = self._getSingleMediaResult(metaData)
-        return ResultOfYoutube(singleMedia)
+        return resultOfYoutube
 
     def fastDownloadAudioPlaylist(self, youtubeURL: str):
         """Method uded to download audio playlist from YouTube
@@ -302,12 +308,13 @@ class YoutubeDL():
         """
         self._setAudioOptions()
         playlistHash = self._getPlaylistHash(youtubeURL)
-        resultOfYoutube = self._downloadFile(playlistHash)
-        if resultOfYoutube.isError():
-            errorMsg = resultOfYoutube.getErrorInfo()
-            logger.error(f"Download playlist error: {errorMsg}")
-            return resultOfYoutube
-        metaData = resultOfYoutube.getData()
+        with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(playlistHash)
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Download media info error {errorInfo}")
+                return False
         entriesKey = PlaylistInfo.PLAYLIST_TRACKS.value
         if entriesKey not in metaData:
             logger.error(
@@ -315,10 +322,7 @@ class YoutubeDL():
             return False
         self._metaDataMenager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
                                                   metaData[entriesKey], self._savePath)
-        return resultOfYoutube
-    
-    def downloadConfigPlalistVideo(self, playlistName):
-        playlistData = self._configManager.get 
+        return metaData
 
     def downoladAllConfigPlaylistsVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
