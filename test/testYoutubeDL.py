@@ -52,9 +52,14 @@ class TestYoutubeDL(TestCase):
         'original_url': testOriginalUrl2,
         'id': testId2
     }
-    testEntriesList = [songMetaData1, songMetaData2]
+    testEntriesList = [songMetaData1, songMetaData2, None]
     testPlaylsitUrlsList = [
         mainPlaylistUrlNoVideoHash1, mainPlaylistUrlNoVideoHash2]
+
+    plalistMetaData = {
+        "title": testPlaylistName,
+        "entries": testEntriesList
+    }
 
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
@@ -64,7 +69,8 @@ class TestYoutubeDL(TestCase):
         self.youtubeTest._ydl_opts['outtmpl'] = self.testDir + \
             '/%(title)s.%(ext)s'
 
-    def checkResultMetaDataSingleDownlaod(self, singleMedia, playlist_index=None):
+    def checkResultMetaData1(
+            self, singleMedia, playlist_index=None):
         if not singleMedia.title == self.testTitle1:
             return False
         if not singleMedia.album == self.testAlbum1:
@@ -100,12 +106,13 @@ class TestYoutubeDL(TestCase):
         else:
             return True
 
-    def checkResultMetaDataSingleDownlaodPlaylist(self, playlistMedia):
+    def checkResultMetaData1Playlist(self, playlistMedia):
         if not playlistMedia.playlistName == self.testPlaylistName:
             return False
         if not len(playlistMedia.singleMediaList) > 0:
             return False
-        if not self.checkResultMetaDataSingleDownlaod(playlistMedia.singleMediaList[0], 1):
+        if not self.checkResultMetaData1(
+                playlistMedia.singleMediaList[0], 1):
             return False
         if not self.checkResultMetaData2(playlistMedia.singleMediaList[1]):
             return False
@@ -114,7 +121,7 @@ class TestYoutubeDL(TestCase):
 
     def checkFastDownloadResult(self, metaData):
         resultTest = {'title': 'testPlaylist', 'entries': [
-            self.songMetaData1, self.songMetaData2]}
+            self.songMetaData1, self.songMetaData2, None]}
         if metaData != resultTest:
             return False
         else:
@@ -128,7 +135,8 @@ class TestYoutubeDL(TestCase):
         metaData = resultOfYoutube.getData()
         self.assertEqual(metaData, self.songMetaData1)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
     def testDownloadFileWithError(self, mockExtractinfo):
         resultOfYoutube = self.youtubeTest._downloadFile(self.mainURL1)
         self.assertEqual(True, resultOfYoutube.isError())
@@ -144,21 +152,22 @@ class TestYoutubeDL(TestCase):
             self.assertNotEqual(formatBeforeChange,
                                 self.youtubeTest._ydl_opts["format"])
             self.assertEqual(
-                f'best[height={format_type}][ext=mp4]+bestaudio/bestvideo+bestaudio', self.youtubeTest._ydl_opts["format"])
+                f'best[height={format_type}][ext=mp4]+bestaudio/bestvideo+bestaudio',
+                self.youtubeTest._ydl_opts["format"])
 
     def testGetVideoHash(self):
         correctVideoHash = self.testId1
-        testVideoHash1 = self.youtubeTest._getSingleMediaHash(self.mainURL1)
-        testVideoHash2 = self.youtubeTest._getSingleMediaHash(
+        testVideoHash1 = self.youtubeTest._getSingleMediaResultHash(self.mainURL1)
+        testVideoHash2 = self.youtubeTest._getSingleMediaResultHash(
             self.mainPlaylistUrlWithVideoHash1)
-        testVideoHash3 = self.youtubeTest._getSingleMediaHash(
+        testVideoHash3 = self.youtubeTest._getSingleMediaResultHash(
             self.mainPlaylistUrlWithIndex1)
         wrong_link_with_video = self.mainPlaylistUrlNoVideoHash1
         self.assertEqual(testVideoHash1, correctVideoHash)
         self.assertEqual(testVideoHash2, correctVideoHash)
         self.assertEqual(testVideoHash3, correctVideoHash)
         with self.assertRaises(ValueError) as context:
-            self.youtubeTest._getSingleMediaHash(wrong_link_with_video)
+            self.youtubeTest._getSingleMediaResultHash(wrong_link_with_video)
         self.assertTrue(
             self.mainPlaylistWithoutVideoError in str(context.exception))
 
@@ -178,15 +187,17 @@ class TestYoutubeDL(TestCase):
             self.youtubeTest._getPlaylistHash(wrong_link_with_video)
         self.assertTrue('This is not a playlist' in str(context.exception))
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  return_value=songMetaData1)
     def testDownloadVideo(self, mockDownloadFile):
         youtubeResult = self.youtubeTest.downloadVideo(self.mainURL1, "480")
         singleMedia = youtubeResult.getData()
         mockDownloadFile.assert_called_once_with(self.testId1)
-        resultCheck = self.checkResultMetaDataSingleDownlaod(singleMedia)
+        resultCheck = self.checkResultMetaData1(singleMedia)
         self.assertEqual(True, resultCheck)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
     def testDownloadVideoWithError(self, mockDownloadFile,):
         youtubeResult = self.youtubeTest.downloadVideo(self.mainURL1, "480")
         mockDownloadFile.assert_any_call(self.testId1)
@@ -195,7 +206,9 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(youtubeResult.getErrorInfo(),
                          self.mainMediaDownloadError)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value={"title": testPlaylistName, "entries": testEntriesList})
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  return_value={"title": testPlaylistName,
+                                "entries": testEntriesList})
     def testFastDownloadVideoPlaylist(self, mockExtractinfo):
         resultOfYoutube = self.youtubeTest.fastDownloadVideoPlaylist(
             self.mainPlaylistUrlNoVideoHash1, "480")
@@ -204,16 +217,19 @@ class TestYoutubeDL(TestCase):
         checkResult = self.checkFastDownloadResult(metaData)
         self.assertEqual(True, checkResult)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
     def testDownloadVideoPlaylistWithError(self, mockDownloadError):
         resultOfYoutube = self.youtubeTest.fastDownloadVideoPlaylist(
             self.mainPlaylistUrlNoVideoHash1, "480")
         self.assertEqual(resultOfYoutube.isError(), True)
         errorMsg = resultOfYoutube.getErrorInfo()
         mockDownloadError.assert_called_once_with(self.mainPlaylistHash)
-        self.assertEqual(errorMsg,  self.mainMediaDownloadError)
+        self.assertEqual(errorMsg, self.mainMediaDownloadError)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value={"title": testPlaylistName, "entries": testEntriesList})
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  return_value={"title": testPlaylistName,
+                                "entries": testEntriesList})
     @patch.object(youtubeDL.MetaDataManager, "setMetaDataPlaylist")
     def testFastDownloadPlaylistAudio(self, mockSetMetaData, mockExtractinfo):
         resultOfYoutube = self.youtubeTest.fastDownloadAudioPlaylist(
@@ -225,14 +241,23 @@ class TestYoutubeDL(TestCase):
         checkResult = self.checkFastDownloadResult(metaData)
         self.assertEqual(True, checkResult)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
-    def testDownloadPlaylistAudioWithError(self, mockDownloadError, mockSetAudio):
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  return_value={"title": testPlaylistName})
+    def testFastDownloadPlaylistAudioNoEntries(self, mockExtractinfo):
+        functionResult = self.youtubeTest.fastDownloadAudioPlaylist(
+            self.mainPlaylistUrlNoVideoHash1)
+        mockExtractinfo.assert_called_once_with(self.mainPlaylistHash)
+        self.assertEqual(False, functionResult)
+
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
+    def testFastDownloadPlaylistAudioWithError(self, mockDownloadError):
         resultOfYoutube = self.youtubeTest.fastDownloadAudioPlaylist(
             self.mainPlaylistUrlNoVideoHash1)
         self.assertEqual(resultOfYoutube.isError(), True)
         errorMsg = resultOfYoutube.getErrorInfo()
         mockDownloadError.assert_called_once_with(self.mainPlaylistHash)
-        self.assertEqual(errorMsg,  self.mainMediaDownloadError)
+        self.assertEqual(errorMsg, self.mainMediaDownloadError)
 
     @patch.object(youtubeDL.MetaDataManager, "setMetaDataSingleFile")
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
@@ -241,10 +266,11 @@ class TestYoutubeDL(TestCase):
         metaData = singleMediaInfoResult.getData()
         mockDownloadFile.assert_called_once_with(self.testId1)
         mockSave.assert_called_once()
-        resultCheck = self.checkResultMetaDataSingleDownlaod(metaData)
+        resultCheck = self.checkResultMetaData1(metaData)
         self.assertEqual(True, resultCheck)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
     def testDownloadAudioWithError(self, mockDownloadFile):
         youtubeResult = self.youtubeTest.downloadAudio(self.mainURL1)
         self.assertEqual(youtubeResult.isError(), True)
@@ -253,16 +279,21 @@ class TestYoutubeDL(TestCase):
                          self.mainMediaDownloadError)
 
     @patch.object(youtubeDL.YoutubeDL, "fastDownloadAudioPlaylist")
-    @patch.object(youtubeDL.ConfigParserManager, "getUrlOfPlaylists", return_value=testPlaylsitUrlsList)
-    def testDownloadAudioFromConfigTwoPlaylists(self, mockGetPlaylists, mockDownloadAudio):
+    @patch.object(youtubeDL.ConfigParserManager,
+                  "getUrlOfPlaylists",
+                  return_value=testPlaylsitUrlsList)
+    def testDownloadAudioFromConfigTwoPlaylists(
+            self, mockGetPlaylists, mockDownloadAudio):
         metaData = self.youtubeTest.downoladAllConfigPlaylistsAudio()
         mockGetPlaylists.assert_called_once()
         self.assertEqual(mockDownloadAudio.call_count, 2)
         self.assertEqual(metaData, True)
 
     @patch.object(youtubeDL.YoutubeDL, "fastDownloadAudioPlaylist")
-    @patch.object(youtubeDL.ConfigParserManager, "getUrlOfPlaylists", return_value=[])
-    def testDownloadAudioFromConfigZeroPlaylists(self, mockGetPlaylists, mockDownloadAudio):
+    @patch.object(youtubeDL.ConfigParserManager,
+                  "getUrlOfPlaylists", return_value=[])
+    def testDownloadAudioFromConfigZeroPlaylists(
+            self, mockGetPlaylists, mockDownloadAudio):
         metaData = self.youtubeTest.downoladAllConfigPlaylistsAudio()
         mockGetPlaylists.assert_called_once()
         self.assertEqual(mockDownloadAudio.call_count, 0)
@@ -270,8 +301,11 @@ class TestYoutubeDL(TestCase):
 
     @patch.object(youtubeDL.YoutubeDL, "_setVideoOptions")
     @patch.object(youtubeDL.YoutubeDL, "fastDownloadVideoPlaylist")
-    @patch.object(youtubeDL.ConfigParserManager, "getUrlOfPlaylists", return_value=[mainPlaylistUrlNoVideoHash1])
-    def testDownloadVideoFromConfigOnePlaylists(self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
+    @patch.object(youtubeDL.ConfigParserManager,
+                  "getUrlOfPlaylists",
+                  return_value=[mainPlaylistUrlNoVideoHash1])
+    def testDownloadVideoFromConfigOnePlaylists(
+            self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
         type = "720"
         metaData = self.youtubeTest.downoladAllConfigPlaylistsVideo(type)
         mockGetPlaylists.assert_called_once()
@@ -282,8 +316,11 @@ class TestYoutubeDL(TestCase):
 
     @patch.object(youtubeDL.YoutubeDL, "_setVideoOptions")
     @patch.object(youtubeDL.YoutubeDL, "fastDownloadVideoPlaylist")
-    @patch.object(youtubeDL.ConfigParserManager, "getUrlOfPlaylists", return_value=testPlaylsitUrlsList)
-    def testDownloadVideoFromConfigTwoPlaylists(self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
+    @patch.object(youtubeDL.ConfigParserManager,
+                  "getUrlOfPlaylists",
+                  return_value=testPlaylsitUrlsList)
+    def testDownloadVideoFromConfigTwoPlaylists(
+            self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
         type = "720"
         metaData = self.youtubeTest.downoladAllConfigPlaylistsVideo(type)
         mockGetPlaylists.assert_called_once()
@@ -301,39 +338,57 @@ class TestYoutubeDL(TestCase):
         mockExtractInfo.assert_called_once()
         self.assertEqual(False, resultOfYoutube.isError())
         resultMetaData = resultOfYoutube.getData()
-        resultCheck = self.checkResultMetaDataSingleDownlaod(resultMetaData)
+        resultCheck = self.checkResultMetaData1(resultMetaData)
         self.assertEqual(True, resultCheck)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
-    def testrequestSingleMediaInfoWithError(self, mockExtractInfo):
-        resultOfYoutube = self.youtubeTest.requestSingleMediaInfo(
-            self.mainURL1)
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
+    def testgetSingleMediaInfoWithError(self, mockExtractInfo):
+        resultOfYoutube = self.youtubeTest.getSingleMediaInfo(self.mainURL1)
         mockExtractInfo.assert_called_once()
         self.assertEqual(True, resultOfYoutube.isError())
         errorMsg = resultOfYoutube.getErrorInfo()
-        self.assertTrue(errorMsg,  self.mainMediaDownloadError)
+        self.assertTrue(errorMsg, self.mainMediaDownloadError)
         self.assertFalse(resultOfYoutube.getData())
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value={"title": testPlaylistName, "entries": testEntriesList})
-    def testrequestPlaylistMediaInfo(self, mockDownloadFile):
-        resultOfYoutube = self.youtubeTest.requestPlaylistMediaInfo(
+    @patch.object(yt_dlp.YoutubeDL,
+                  "extract_info",
+                  return_value={"title": testPlaylistName,
+                                "entries": testEntriesList})
+    def testgetPlaylistMediaInfo(self, mockDownloadFile):
+        resultOfYoutube = self.youtubeTest.getPlaylistMediaInfo(
             self.mainPlaylistUrlNoVideoHash1)
         mockDownloadFile.assert_called_once()
         self.assertEqual(False, resultOfYoutube.isError())
         palylistMedia = resultOfYoutube.getData()
-        resultCheck = self.checkResultMetaDataSingleDownlaodPlaylist(
+        resultCheck = self.checkResultMetaData1Playlist(
             palylistMedia)
         self.assertEqual(True, resultCheck)
 
-    @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
-    def testrequestPlaylistMediaInfoWithError(self, mockExtractInfo):
-        resultOfYoutube = self.youtubeTest.requestPlaylistMediaInfo(
+    @patch.object(yt_dlp.YoutubeDL, "extract_info",
+                  side_effect=ValueError(mainMediaDownloadError))
+    def testgetPlaylistMediaInfoWithError(self, mockExtractInfo):
+        resultOfYoutube = self.youtubeTest.getPlaylistMediaInfo(
             self.mainPlaylistUrlNoVideoHash1)
         mockExtractInfo.assert_called_once()
         self.assertEqual(True, resultOfYoutube.isError())
         errorMsg = resultOfYoutube.getErrorInfo()
-        self.assertTrue(errorMsg,  self.mainMediaDownloadError)
+        self.assertTrue(errorMsg, self.mainMediaDownloadError)
         self.assertFalse(resultOfYoutube.getData())
+
+    def testGetPlaylistMediaResult(self):
+        playlistMedia = self.youtubeTest._getPlaylistMediaResult(
+            self.plalistMetaData)
+        resultCheck = self.checkResultMetaData1Playlist(
+            playlistMedia)
+        self.assertTrue(resultCheck)
+
+    def testGetSingleMediaResult(self):
+        singleMedia = self.youtubeTest._getSingleMediaResult(
+            self.songMetaData1)
+        resultCheck = self.checkResultMetaData1(
+            singleMedia)
+        self.assertTrue(resultCheck)
 
 
 if __name__ == "__main__":
