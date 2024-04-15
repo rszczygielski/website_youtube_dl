@@ -34,9 +34,10 @@ class PlaylistMedia():
 class ResultOfYoutube():
     _isError = False
     _errorInfo = None
+    data = None
 
     def __init__(self, data=None) -> None:
-        self._data = data
+        self.setData(data)
 
     def setError(self, errorInfo: str):
         self._isError = True
@@ -247,7 +248,7 @@ class YoutubeDL():
             dict: dict with YouTube video meta data
         """
         self._setVideoOptions(type)
-        mediaHash = self._getSingleMediaHash(youtubeURL)
+        mediaHash = self._getSingleMediaResultHash(youtubeURL)
         resultOfYoutube = self._downloadFile(mediaHash)
         if resultOfYoutube.isError():
             errorMsg = resultOfYoutube.getErrorInfo()
@@ -278,7 +279,7 @@ class YoutubeDL():
             youtubeURL (str): YouTube URL
         """
         self._setAudioOptions()
-        mediaHash = self._getSingleMediaHash(youtubeURL)
+        mediaHash = self._getSingleMediaResultHash(youtubeURL)
         resultOfYoutube = self._downloadFile(mediaHash)
         if resultOfYoutube.isError():
             errorMsg = resultOfYoutube.getErrorInfo()
@@ -316,9 +317,6 @@ class YoutubeDL():
         self._metaDataMenager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
                                                   metaData[entriesKey], self._savePath)
         return resultOfYoutube
-    
-    def downloadConfigPlalistVideo(self, playlistName):
-        playlistData = self._configManager.get 
 
     def downoladAllConfigPlaylistsVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
@@ -346,7 +344,7 @@ class YoutubeDL():
             self.fastDownloadAudioPlaylist(playlistURL)
         return True
 
-    def _getSingleMediaHash(self, url):
+    def _getSingleMediaResultHash(self, url):
         """Method extracts single video hash from full url
 
         Args:
