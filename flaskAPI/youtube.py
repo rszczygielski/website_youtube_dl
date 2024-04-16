@@ -1,5 +1,5 @@
 from mainWebPage import app, logger, youtubeDownloder, socketio, configParserMenager
-from common.youtubeDataKeys import YoutubeLogs, YoutubeVariables
+from common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
 from flask import send_file, render_template
 from common.emits import DownloadMediaFinishEmit, SingleMediaInfoEmit, PlaylistMediaInfoEmit
 import zipfile
@@ -13,14 +13,14 @@ from flask import send_file, render_template
 hashTable = {}
 
 
-class FlaskSingleMedia():
+class FlaskSingleMedia(): #pragma: no_cover
     def __init__(self, title: str, artist: str, url: str) -> None:
         self.title = title
         self.artist = artist
         self.url = url
 
 
-class FlaskPlaylistMedia():
+class FlaskPlaylistMedia(): #pragma: no_cover
     def __init__(self, plyalistName: str, trackList: List[FlaskSingleMedia]) -> None:
         self.playlistName = plyalistName
         self.trackList = trackList
@@ -35,8 +35,7 @@ class FlaskPlaylistMedia():
         return cls(playlistName, trackList)
 
 
-def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
-    # do utilsa leci
+def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths): #pragma: no_cover
     zipFileFullPath = os.path.join(direcoryPath,
                                    playlistName)
     print(zipFileFullPath)
@@ -46,7 +45,7 @@ def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):
     return f"{zipFileFullPath.split('/')[-1]}.zip"
 
 
-def handleError(errorMsg):
+def handleError(errorMsg): #pragma: no_cover
     downloadMediaFinishEmit = DownloadMediaFinishEmit()
     downloadMediaFinishEmit.sendEmitError(errorMsg)
     logger.error(
@@ -168,10 +167,13 @@ def socketDownloadServer(formData):
     if youtubeURL == "":
         logger.warning(YoutubeLogs.NO_URL.value)
         downloadErrorEmit.sendEmitError(YoutubeLogs.NO_URL.value)
+        return False
     elif YoutubeVariables.URL_LIST.value in youtubeURL\
             and YoutubeVariables.URL_VIDEO.value in youtubeURL:
         logger.warning(YoutubeLogs.PLAYLIST_AND_VIDEO_HASH_IN_URL.value)
-        return
+        downloadErrorEmit.sendEmitError(
+            YoutubeLogs.PLAYLIST_AND_VIDEO_HASH_IN_URL.value)
+        return False
     elif YoutubeVariables.URL_LIST.value in youtubeURL \
             and YoutubeVariables.URL_VIDEO.value not in youtubeURL:
         isPlaylist = True
