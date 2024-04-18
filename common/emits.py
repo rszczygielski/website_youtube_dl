@@ -11,7 +11,7 @@ class BaseEmit(ABC):
         convertedData = self.convertDataToMessage(data)
         print(convertedData)
         print(self.emit_msg)
-        socketio.emit(self.emit_msg, convertedData)
+        socketio.emit(self.emit_msg, {"data": convertedData})
 
     @abstractmethod
     def convertDataToMessage(self):
@@ -24,7 +24,7 @@ class DownloadMediaFinishEmit(BaseEmit):
         super().__init__(emit_msg)
 
     def convertDataToMessage(self, genereted_hash):
-        return {"data": {"HASH": genereted_hash}}
+        return {"HASH": genereted_hash}
 
     def sendEmitError(self, error_msg):
         socketio.emit(self.emit_msg, {"error": error_msg})
@@ -42,7 +42,7 @@ class SingleMediaInfoEmit(BaseEmit):
             MediaInfo.ARTIST.value: flaskSingleMedia.artist,
             MediaInfo.URL.value: flaskSingleMedia.url
         }
-        return {"data": [mediaInfoDict]}
+        return mediaInfoDict
 
 
 class PlaylistMediaInfoEmit(BaseEmit):
@@ -59,7 +59,7 @@ class PlaylistMediaInfoEmit(BaseEmit):
                 PlaylistInfo.TITLE.value: track.title,
                 PlaylistInfo.ARTIST.value: track.artist,
                 PlaylistInfo.URL.value: track.url,
-                PlaylistInfo.PLAYLIST_NAME.value: playlistName
             }
             playlistTrackList.append(trackInfoDict)
-        return {"data": playlistTrackList}
+        return {"playlistName": playlistName,
+                "trackList": playlistTrackList}
