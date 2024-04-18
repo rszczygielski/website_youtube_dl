@@ -226,7 +226,7 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(True, checkResult)
 
     @patch.object(yt_dlp.YoutubeDL, "extract_info", side_effect=ValueError(mainMediaDownloadError))
-    def testDownloadPlaylistAudioWithError(self, mockDownloadError, mockSetAudio):
+    def testDownloadPlaylistAudioWithError(self, mockDownloadError):
         resultOfYoutube = self.youtubeTest.fastDownloadAudioPlaylist(
             self.mainPlaylistUrlNoVideoHash1)
         self.assertEqual(resultOfYoutube.isError(), True)

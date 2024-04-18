@@ -102,7 +102,6 @@ def downloadAllPlaylistTracks(playlistTracks, type):
 
 def downloadPlaylist(youtubeURL, type=False):
     playlistInfoEmit = DownloadMediaFinishEmit()
-    playlistInfoEmit.sendEmitError("TESTTTTTT")
     logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
     playlistMediaInfoResult = youtubeDownloder.getPlaylistMediaInfo(youtubeURL)
     if playlistMediaInfoResult.isError():

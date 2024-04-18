@@ -41,10 +41,26 @@ class testYoutubeWeb(TestCase):
                                ytHash=testId1,
                                url=testOriginalUrl1,
                                extension=testExt1)
-    resultOfYoutube = ResultOfYoutube(singleMedia1)
-    resultOfYoutubeWithError = ResultOfYoutube()
-    resultOfYoutubeWithError.setError(
+
+    singleMedia2 = SingleMedia(title=testTitle2,
+                               album=testAlbum1,
+                               artist=testArtist2,
+                               ytHash=testId2,
+                               url=testOriginalUrl2,
+                               extension=testExt2)
+
+    playlistMedia = PlaylistMedia(playlistName=testPlaylistName,
+                                  singleMediaList=[singleMedia1, singleMedia2])
+
+    resultOfYoutubeSingle = ResultOfYoutube(singleMedia1)
+    resultOfYoutubeSingleWithError1 = ResultOfYoutube()
+    resultOfYoutubeSingleWithError1.setError(
         YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value)
+
+    resultOfYoutubePlaylist = ResultOfYoutube(playlistMedia)
+    resultOfYoutubeSingleWithError2 = ResultOfYoutube()
+    resultOfYoutubeSingleWithError2.setError(
+        YoutubeLogs.PLAYLIST_INFO_DOWNLAOD_ERROR.value)
 
     def setUp(self):
         app.config["TESTING"] = True
@@ -165,7 +181,7 @@ class testYoutubeWeb(TestCase):
         self.assertFalse(pythonEmit)
 
     @patch.object(youtube, "downloadSingleMedia", return_value="path_test")
-    @patch.object(YoutubeDL, "getSingleMediaInfo", return_value=resultOfYoutube)
+    @patch.object(YoutubeDL, "getSingleMediaInfo", return_value=resultOfYoutubeSingle)
     def testDownloadSingleInfoAndMedia(self, mockGetSigleMedia,
                                        mockDownloadSingleMedia):
         result = youtube.downloadSingleInfoAndMedia(self.testOriginalUrl1)
@@ -185,7 +201,7 @@ class testYoutubeWeb(TestCase):
                          emitName)
 
     @patch.object(YoutubeDL, "getSingleMediaInfo",
-                  return_value=resultOfYoutubeWithError)
+                  return_value=resultOfYoutubeSingleWithError1)
     def testDownloadSingleInfoAndMediaWithError(self, mockGetSigleMedia):
         result = youtube.downloadSingleInfoAndMedia(self.testOriginalUrl1)
         self.assertFalse(result)
@@ -199,7 +215,7 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(
             error, {"error": YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value})
 
-    @patch.object(YoutubeDL, "downloadVideo", return_value=resultOfYoutube)
+    @patch.object(YoutubeDL, "downloadVideo", return_value=resultOfYoutubeSingle)
     @patch.object(ConfigParserManager, "getSavePath", return_value="/home/test_path/")
     def testDownloadSingleMediaVideo(self, mockGetSavePath, mockDownloadVideo):
         result = youtube.downloadSingleMedia(self.actualYoutubeURL1,
@@ -212,7 +228,7 @@ class testYoutubeWeb(TestCase):
                                     f"{self.testTitle1}_720p.{self.testExt1}")
         self.assertEqual(expected_result, result)
 
-    @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutube)
+    @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutubeSingle)
     @patch.object(ConfigParserManager, "getSavePath", return_value="/home/test_path/")
     def testDownloadSingleMediaAudio(self, mockGetSavePath, mockDownloadAudio):
         result = youtube.downloadSingleMedia(self.actualYoutubeURL1,
@@ -224,7 +240,7 @@ class testYoutubeWeb(TestCase):
                                     f"{self.testTitle1}.{YoutubeVariables.MP3.value}")
         self.assertEqual(expected_result, result)
 
-    @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutubeWithError)
+    @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutubeSingleWithError1)
     @patch.object(ConfigParserManager, "getSavePath", return_value="/home/test_path/")
     def testDownloadSingleMediaAudioWithError(self, mockGetSavePath, mockDownloadAudio):
         result = youtube.downloadSingleMedia(self.actualYoutubeURL1,
@@ -251,9 +267,44 @@ class testYoutubeWeb(TestCase):
             self.assertEqual(call(self.testOriginalUrl1, self.testTitle1, '720'),
                              mockCall)
         self.assertEqual(3, mockDownloadSingleMedia.call_count)
-        self.assertEqual(result,["full_path_test",
-                                 "full_path_test",
-                                 "full_path_test"])
+        self.assertEqual(result, ["full_path_test",
+                                  "full_path_test",
+                                  "full_path_test"])
+
+    @patch.object(youtube, "zipAllFilesInList",
+                  return_value=f"/home/test_path/{testPlaylistName}")
+    @patch.object(youtube, "downloadAllPlaylistTracks", return_value=["full_path_test1",
+                                                                      "full_path_test2"])
+    @patch.object(ConfigParserManager, "getSavePath", return_value="/home/test_path/")
+    @patch.object(YoutubeDL, "getPlaylistMediaInfo",
+                  return_value=resultOfYoutubePlaylist)
+    def testDonwnloadPlaylist(self, mockGetPlaylistMedia,
+                              mockGetSavePath,
+                              mockDownloadAllTracks,
+                              mockZipFiles):
+        result = youtube.downloadPlaylist(self.actualYoutubePlaylistURL1, "720")
+        pythonEmit = self.socketIoTestClient.get_received()
+        receivedMsg = pythonEmit[0]
+        data = receivedMsg[YoutubeVariables.ARGS.value][0]
+        emitName = receivedMsg[YoutubeVariables.NAME.value]
+        mockGetPlaylistMedia.assert_called_once_with(
+            self.actualYoutubePlaylistURL1)
+        mockDownloadAllTracks.assert_called_once_with(self.playlistMedia.singleMediaList,
+                                                      "720")
+        mockGetSavePath.assert_called_once()
+        mockZipFiles.assert_called_once_with("/home/test_path/",
+                                             self.playlistMedia.playlistName,
+                                             ["full_path_test1",
+                                              "full_path_test2"])
+        self.assertEqual(result,
+                         path.join("/home/test_path/", self.playlistMedia.playlistName))
+        self.assertEqual(data, self.playlistMediaInfoEmit.convertDataToMessage(
+            self.playlistMedia))
+        print(emitName)
+        self.assertEqual(self.playlistMediaInfoEmit.emit_msg,
+                         emitName)
+        print(data)
+        print(emitName)
 
 
 #     @patch.object(YoutubeDL, "downloadVideo", return_value={"ext": "mp4", "title": "testTitle"})
