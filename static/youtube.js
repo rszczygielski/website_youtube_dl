@@ -19,24 +19,76 @@ class FlaskResultHash{
     }
 }
 
-class PlaylistMessageConverter {
+class MessageManager{
+    constructor (requestJson){
+        this.requestJson = requestJson;
+    }
 
-    convertMessageToData(requestJson) {
-        var trackList = requestJson["data"]
-        var playlistName = trackList[0]["playlist_name"]
+    isError(){
+        if ("error" in this.requestJson){
+            return true
+        }
+        return false
+    }
+
+    getError(){
+        if ("error" in this.requestJson){
+            return this.requestJson["error"]
+        }
+    }
+
+    convertMessageToData(){
+        
+    }
+    
+    getData(){
+        if ("data" in this.requestJson){
+            return this.convertMessageToData(this.requestJson["data"])
+        }
+    }
+}
+
+class PlaylistMediaEmit extends MessageManager {
+    static emitMsg = "playlistMediaInfo"
+
+    constructor(requestJson){
+        super(requestJson)
+    }
+    
+
+    convertMessageToData(data) {
+        var playlistName = data["playlist_name"]
+        var trackList = data["trackList"]
         var singleMediaArr = []
-        for (var i = 0; i < trackList.length; i++) {
-            track = trackList[i]
-            singleMediaArr.push(SingleMedia(track.title,
-                                            track.artist,
-                                            track.url))
-        return PlaylistMedia(playlistName, singleMediaArr)
+        console.log(trackList)
+        console.log(typeof(trackList))
+        for (track of trackList) {
+            console.log(track)
+            singleMediaArr.push(new SingleMedia(track["title"],
+                                            track["artist"],
+                                            track["url"]))
+        return new PlaylistMedia(playlistName, singleMediaArr)
        }
     }
 }
-// class MessageManager{
 
-// }
+class SingleMediaEmit extends MessageManager {
+    static emitMsg = "mediaInfo"
+
+    constructor(requestJson){
+        super(requestJson)
+    }
+    
+    convertMessageToData(requestJson) {
+        var singleMediaData = requestJson["data"]
+        return new SingleMedia(singleMediaData["title"],
+                           singleMediaData["artist"],
+                           singleMediaData["url"])
+    }
+}
+
+
+
 
 $(document).ready(function () {
     var socket = io();
@@ -82,19 +134,27 @@ $(document).ready(function () {
 
     
 
-    socket.on("playlistMediaInfo", function (response) {
-        console.log("InProgress", response["data"])
+    socket.on(PlaylistMediaEmit.emitMsg, function (response) {
+        // console.log("InProgress", response["data"])
         var table = document.getElementById("downloadInfo")
-        for (var i = 0; i < response["data"].length; i++) {
+        var playlistMediaEmit = new PlaylistMediaEmit(response)
+        console.log(playlistMediaEmit)
+        if (playlistMediaEmit.isError()){
+            console.log(playlistMediaEmit.getError())
+            return
+        }
+        var playlistMedia = playlistMediaEmit.getData()
+        console.log(playlistMedia.trackList)
+        for (singleMedia of playlistMedia.trackList) {
             var row = table.insertRow()
             var cell = row.insertCell()
             var cell2 = row.insertCell()
             var cell3 = row.insertCell()
-            cell.innerHTML = response["data"][i]["artist"]
-            cell2.innerHTML = response["data"][i]["title"]
-            console.log(response["data"][i]["artist"])
-            console.log(response["data"][i]["title"])
-            cell3.innerHTML = "<a class=neon-button target='_blank' href=" + response["data"][i]["original_url"] + ">" + "url</a>"
+            cell.innerHTML = singleMedia.artist
+            cell2.innerHTML = singleMedia.title
+            console.log(singleMedia.artist)
+            console.log(singleMedia.title)
+            cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
         }
     })
 });
