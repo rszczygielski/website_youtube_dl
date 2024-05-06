@@ -27,18 +27,17 @@ class FlaskPlaylistMedia(): #pragma: no_cover
 
     @classmethod
     def initFromPlaylistMedia(cls, playlistName, trackList):
-        trackList = []
+        flaskSingleMediaList = []
         for track in trackList:
-            trackList.append(FlaskSingleMedia(track.title,
+            flaskSingleMediaList.append(FlaskSingleMedia(track.title,
                                               track.artist,
                                               track.url))
-        return cls(playlistName, trackList)
+        return cls(playlistName, flaskSingleMediaList)
 
 
 def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths): #pragma: no_cover
     zipFileFullPath = os.path.join(direcoryPath,
                                    playlistName)
-    print(zipFileFullPath)
     with zipfile.ZipFile(f"{zipFileFullPath}.zip", "w") as zipInstance:
         for filePath in listOfFilePaths:
             zipInstance.write(filePath, filePath.split("/")[-1])
@@ -123,13 +122,15 @@ def downloadPlaylist(youtubeURL, type=False):
     fullZipPath = os.path.join(direcotryPath, zipNameFile)
     return fullZipPath
 
+def generateHash():
+    return ''.join(random.sample(
+        string.ascii_letters + string.digits, 6))
 
 def emitHashWithDownloadedFile(fullFilePath):
     splitedFilePath = fullFilePath.split("/")
     fileName = splitedFilePath[-1]
     direcotryPath = "/".join(splitedFilePath[:-1])
-    generatedHash = ''.join(random.sample(
-        string.ascii_letters + string.digits, 6))
+    generatedHash = generateHash()
     hashTable[generatedHash] = {
         YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
         YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath

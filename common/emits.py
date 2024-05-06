@@ -10,8 +10,6 @@ class BaseEmit(ABC):
 
     def sendEmit(self, data):
         convertedData = self.convertDataToMessage(data)
-        print(convertedData)
-        print(self.emit_msg)
         socketio.emit(self.emit_msg, convertedData)
 
     @abstractmethod
@@ -63,4 +61,6 @@ class PlaylistMediaInfoEmit(BaseEmit):
                 PlaylistInfo.PLAYLIST_NAME.value: playlistName
             }
             playlistTrackList.append(trackInfoDict)
+            # print(playlistTrackList)
+        # print(playlistTrackList)
         return {"data": playlistTrackList}
