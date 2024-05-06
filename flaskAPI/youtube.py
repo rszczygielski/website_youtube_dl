@@ -53,7 +53,7 @@ def handleError(errorMsg): #pragma: no_cover
 
 def downloadSingleInfoAndMedia(youtubeURL, type=False):
     logger.debug(YoutubeLogs.DOWNLOAD_SINGLE_VIDEO.value)
-    singleMediaInfoResult = youtubeDownloder.getSingleMediaInfo(youtubeURL)
+    singleMediaInfoResult = youtubeDownloder.requestSingleMediaInfo(youtubeURL)
     if singleMediaInfoResult.isError():
         errorMsg = singleMediaInfoResult.getErrorInfo()
         handleError(errorMsg)
@@ -102,7 +102,8 @@ def downloadAllPlaylistTracks(playlistTracks, type):
 def downloadPlaylist(youtubeURL, type=False):
     playlistInfoEmit = DownloadMediaFinishEmit()
     logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
-    playlistMediaInfoResult = youtubeDownloder.getPlaylistMediaInfo(youtubeURL)
+    playlistMediaInfoResult = youtubeDownloder.requestPlaylistMediaInfo(
+        youtubeURL)
     if playlistMediaInfoResult.isError():
         errorMsg = playlistMediaInfoResult.getErrorInfo()
         handleError(errorMsg)

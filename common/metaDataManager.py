@@ -6,6 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class EasyID3SingleMedia():
     filePath = ""
     playlistName = ""
@@ -38,17 +39,13 @@ class EasyID3SingleMedia():
         return valuesList
 
     @classmethod
-    def initFromMatadata(cls, metaData):
-        title = album = artist = playlistIndex = ""
-        if MetaDataType.TITLE.value in metaData:
-            title = yt_dlp.utils.sanitize_filename(metaData[MetaDataType.TITLE.value])
-        if MetaDataType.ALBUM.value in metaData:
-            album = metaData[MetaDataType.ALBUM.value]
-        if MetaDataType.ARTIST.value in metaData:
-            artist = metaData[MetaDataType.ARTIST.value]
-        if MetaDataType.PLAYLIST_INDEX.value in metaData:
-            playlistIndex = metaData[MetaDataType.PLAYLIST_INDEX.value]
+    def initFromSingleMata(cls, singleData):
+        title = singleData.title
+        album = singleData.album
+        artist = singleData.artist
+        playlistIndex = singleData.playlistIndex
         return cls(title, album, artist, playlistIndex)
+
 
 class MetaDataManager():
 
@@ -60,7 +57,7 @@ class MetaDataManager():
             trackList (list): list of dicts with trucks meta data
         """
         for trackMetaData in trackList:
-            easyID3Media = EasyID3SingleMedia.initFromMatadata(trackMetaData)
+            easyID3Media = EasyID3SingleMedia.initFromSingleMata(trackMetaData)
             easyID3Media.setFilePath(directoryPath)
             easyID3Media.setPlaylistName(playlistName)
             self._saveMetaData(easyID3Media)
@@ -71,10 +68,10 @@ class MetaDataManager():
         self._saveMetaData(easyID3Media)
         self._showMetaDataInfo(easyID3Media.filePath)
 
-    def _saveEasyID3(self, easyid3Instance): #pragma: no_cover
+    def _saveEasyID3(self, easyid3Instance):  # pragma: no_cover
         easyid3Instance.save()
 
-    def _saveMetaData(self, easyID3Media:EasyID3SingleMedia):
+    def _saveMetaData(self, easyID3Media: EasyID3SingleMedia):
         print(easyID3Media.filePath)
         audio = EasyID3(easyID3Media.filePath)
         if easyID3Media.title:
@@ -91,7 +88,7 @@ class MetaDataManager():
             audio[MetaDataType.TRACK_NUMBER.value] = easyID3Media.trackNumber
         self._saveEasyID3(audio)
 
-    def _showMetaDataInfo(self, path): #pragma: no_cover
+    def _showMetaDataInfo(self, path):  # pragma: no_cover
         """Method used to show Metadata info
 
         Args:
