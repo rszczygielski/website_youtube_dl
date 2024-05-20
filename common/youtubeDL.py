@@ -15,20 +15,25 @@ logger = logging.getLogger(__name__)
 
 
 class SingleMedia():
-    def __init__(self, title, album, artist, ytHash, url, extension, playlistIndex=None):
+    def __init__(self, title, album, artist, ytHash, url, extension):
         self.title = title
         self.album = album
         self.artist = artist
         self.ytHash = ytHash
         self.url = url
         self.extension = extension
+
+
+class MediaFromPlaylist(SingleMedia):
+    def __init__(self, title, album, artist, ytHash, url, extension, playlistIndex):
+        super().__init__(title, album, artist, ytHash, url, extension)
         self.playlistIndex = playlistIndex
 
 
 class PlaylistMedia():
-    def __init__(self, playlistName, singleMediaList: list):
+    def __init__(self, playlistName, MediaFromPlaylistList: list):
         self.playlistName = playlistName
-        self.singleMediaList = singleMediaList
+        self.MediaFromPlaylistList = MediaFromPlaylistList
 
 
 class ResultOfYoutube():
@@ -77,7 +82,7 @@ class YoutubeDL():
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True
         }
-    
+
     def _downloadFile(self, singleMediaHash: str):
         """Method used to download youtube media based on URL
 
@@ -97,9 +102,8 @@ class YoutubeDL():
                 resultOfYoutube = ResultOfYoutube()
                 resultOfYoutube.setError(errorInfo)
                 return resultOfYoutube
-        singleMedia = self._getSingleMedia(metaData)
+        singleMedia = self._getMedia(metaData)
         return ResultOfYoutube(singleMedia)
-
 
     def _getDefaultOptions(self):
         """Method returns to the defualt youtubeDL options
@@ -112,7 +116,7 @@ class YoutubeDL():
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
 
-    def _getSingleMedia(self, metaData) -> SingleMedia:
+    def _getMedia(self, metaData):
         """Method sets and returns SingleMedia instance based on meta data inptu
 
         Args:
@@ -121,7 +125,7 @@ class YoutubeDL():
         Returns:
             SingleMedia : SingleMedia instance with all the info set up
         """
-        title = album = youtube_hash = artist = url = extension = ""
+        title = album = youtube_hash = artist = url = extension = playlistIndex = ""
         if MediaInfo.TITLE.value in metaData:
             title = yt_dlp.utils.sanitize_filename(
                 metaData[MediaInfo.TITLE.value])
@@ -135,7 +139,13 @@ class YoutubeDL():
             url = metaData[MediaInfo.URL.value]
         if MediaInfo.EXTENSION.value in metaData:
             extension = metaData[MediaInfo.EXTENSION.value]
-        return SingleMedia(title, album, artist, youtube_hash, url, extension)
+        if PlaylistInfo.PLAYLIST_INDEX.value in metaData:
+            playlistIndex = metaData[MediaInfo.EXTENSION.value]
+            return MediaFromPlaylist(title, album, artist,
+                                     youtube_hash, url,
+                                     extension, playlistIndex)
+        return SingleMedia(title, album, artist,
+                           youtube_hash, url, extension)
 
     def _getPlaylistMedia(self, metaData) -> PlaylistMedia:
         """Method sets and returns PlaylistMedia instance based on meta data inptu
@@ -169,9 +179,10 @@ class YoutubeDL():
                 playlistIndex = track[PlaylistInfo.PLAYLIST_INDEX.value]
             if PlaylistInfo.EXTENSION.value in track:
                 extension = track[PlaylistInfo.EXTENSION.value]
-            singleMediaStruct = SingleMedia(
-                title, album, artist, youtube_hash, url, extension, playlistIndex)
-            mediaInfoList.append(singleMediaStruct)
+            mediaFromPlaylistStruct = MediaFromPlaylist(
+                title, album, artist, youtube_hash,
+                url, extension, playlistIndex)
+            mediaInfoList.append(mediaFromPlaylistStruct)
         return PlaylistMedia(playlistName, mediaInfoList)
 
     def requestSingleMediaInfo(self, youtubeURL) -> ResultOfYoutube:
@@ -192,7 +203,7 @@ class YoutubeDL():
                 resultOfYoutube = ResultOfYoutube()
                 resultOfYoutube.setError(errorInfo)
                 return resultOfYoutube
-        singleMedia = self._getSingleMedia(metaData)
+        singleMedia = self._getMedia(metaData)
         return ResultOfYoutube(singleMedia)
 
     def requestPlaylistMediaInfo(self, youtubeURL) -> ResultOfYoutube:
@@ -250,7 +261,7 @@ class YoutubeDL():
             dict: dict with YouTube video meta data
         """
         self._setVideoOptions(type)
-        mediaHash = self._getSingleMediaResultHash(youtubeURL)
+        mediaHash = self._getMediaResultHash(youtubeURL)
         resultOfYoutube = self._downloadFile(mediaHash)
         if resultOfYoutube.isError():
             errorMsg = resultOfYoutube.getErrorInfo()
@@ -286,16 +297,15 @@ class YoutubeDL():
             youtubeURL (str): YouTube URL
         """
         self._setAudioOptions()
-        mediaHash = self._getSingleMediaResultHash(youtubeURL)
+        mediaHash = self._getMediaResultHash(youtubeURL)
         resultOfYoutube = self._downloadFile(mediaHash)
         if resultOfYoutube.isError():
             errorMsg = resultOfYoutube.getErrorInfo()
             logger.error(f"Download video info error: {errorMsg}")
             return resultOfYoutube
-        singleMedia = resultOfYoutube.getData()
-        easyID3Media = EasyID3SingleMedia.initFromSingleMata(singleMedia)
+        media = resultOfYoutube.getData()
         self._metaDataMenager.setMetaDataSingleFile(
-            easyID3Media, self._savePath)
+            media, self._savePath)
         return resultOfYoutube
 
     def fastDownloadAudioPlaylist(self, youtubeURL: str):
@@ -351,7 +361,7 @@ class YoutubeDL():
             self.fastDownloadAudioPlaylist(playlistURL)
         return True
 
-    def _getSingleMediaResultHash(self, url):
+    def _getMediaResultHash(self, url):
         """Method extracts single video hash from full url
 
         Args:

@@ -1,110 +1,79 @@
+import os
+from unittest.mock import MagicMock, patch, call
+from unittest import TestCase, main
+import mutagen.mp3
+import mutagen.easyid3
+from common.youtubeDataKeys import PlaylistInfo
+from common.metaDataManager import MetaDataManager, EasyID3SingleMedia, EasyID3MediaFromPlaylist
 import sys
 sys.path.append("..")
-from common.metaDataManager import MetaDataManager
-from common.youtubeDataKeys import PlaylistInfo
-import mutagen.easyid3
-import mutagen.mp3
-from unittest import TestCase, main
-from unittest.mock import MagicMock, patch, call
-import os
+
 
 class MetaDataTest(TestCase):
+
+    testTitle = "testTitle"
+    testAlbum = "testAlbum"
+    testArtist = "testArtist"
+    testPlaylistName = "testPlaylistName"
+    testTitle2 = f"{testTitle}2"
+    testAlbum2 = f"{testAlbum}2"
+    testArtist2 = f"{testArtist}2"
+    testPlaylistIndex1 = 1
+    testPlaylistIndex2 = 2
+
+    easyID3SingleMedia = EasyID3SingleMedia(testTitle, testAlbum, testArtist)
+    easyID3MediaFromPlaylist1 = EasyID3MediaFromPlaylist(testTitle, testAlbum,
+                                                         testArtist, testPlaylistIndex1)
+    easyID3MediaFromPlaylist1.setPlaylistName(testPlaylistName)
+
+    easyID3MediaFromPlaylist2 = EasyID3MediaFromPlaylist(testTitle2, testAlbum2,
+                                                         testArtist2, testPlaylistIndex2)
+    easyID3MediaFromPlaylist2.setPlaylistName(testPlaylistName)
+
+    trackList = [easyID3MediaFromPlaylist1]
+    trackListTwoSongs = [easyID3MediaFromPlaylist1, easyID3MediaFromPlaylist2]
 
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.testMetaData = MetaDataManager()
-        self.metaDataPlaylist = {
-            "title": "testPlaylist",
-            "entries": [{
-                PlaylistInfo.TITLE.value: "testTitle",
-                PlaylistInfo.ALBUM.value: "testAlbum",
-                PlaylistInfo.ARTIST.value: "testArtist",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1
-            }]}
-        self.metaData ={
-                PlaylistInfo.TITLE.value: "testTitle",
-                PlaylistInfo.ALBUM.value: "testAlbum",
-                PlaylistInfo.ARTIST.value: "testArtist",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1
-            }
 
-    @patch.object(MetaDataManager, "showMetaDataInfo")
-    @patch.object(MetaDataManager, "saveMetaDataForPlaylist")
-    def testSetMetaDataPlaylist(self, mockSavePlaylist, mockShow):
-        self.testMetaData.setMetaDataPlaylist(self.metaDataPlaylist, self.testDir)
-        mockSavePlaylist.assert_called_once_with({
-                PlaylistInfo.TITLE.value: "testTitle",
-                PlaylistInfo.ALBUM.value: "testAlbum",
-                PlaylistInfo.ARTIST.value: "testArtist",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1
-            }, f"{self.testDir}/testTitle.mp3", "testPlaylist")
-        mockShow.assert_called_once_with(f"{self.testDir}/testTitle.mp3")
+    @patch.object(EasyID3MediaFromPlaylist, "saveMetaData")
+    @patch.object(MetaDataManager, "_showMetaDataInfo")
+    def testSetMetaDataPlaylist(self, mockShow, mockSave):
+        self.testMetaData.setMetaDataPlaylist(self.testPlaylistName,
+                                              self.trackList, self.testDir)
+        mockShow.assert_called_once_with(
+            f"{self.testDir}/{self.testTitle}.mp3")
+        mockSave.assert_called_once_with()
 
-    @patch.object(MetaDataManager, "showMetaDataInfo")
-    @patch.object(MetaDataManager, "saveMetaDataForPlaylist")
-    def testSetMetaDataPlaylistTwoPlaylists(self, mockSavePlaylist, mockShow):
-        metaDataPlaylistTwoArgs = self.metaDataPlaylist
-        metaDataPlaylistTwoArgs["entries"].append({
-                PlaylistInfo.TITLE.value: "testTitle2",
-                PlaylistInfo.ALBUM.value: "testAlbum2",
-                PlaylistInfo.ARTIST.value: "testArtist2",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1
-            })
-        self.testMetaData.setMetaDataPlaylist(metaDataPlaylistTwoArgs, self.testDir)
-        mockSavePlaylist.assert_has_calls([call(metaDataPlaylistTwoArgs["entries"][0], f"{self.testDir}/testTitle.mp3", "testPlaylist"),
-                                           call(metaDataPlaylistTwoArgs["entries"][1], f"{self.testDir}/testTitle2.mp3", "testPlaylist")])
-        mockSavePlaylist.assert_called_with({
-                PlaylistInfo.TITLE.value: "testTitle2",
-                PlaylistInfo.ALBUM.value: "testAlbum2",
-                PlaylistInfo.ARTIST.value: "testArtist2",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1
-            }, f"{self.testDir}/testTitle2.mp3", "testPlaylist")
-        mockShow.assert_called_with(f"{self.testDir}/testTitle2.mp3")
+    @patch.object(EasyID3MediaFromPlaylist, "saveMetaData")
+    @patch.object(MetaDataManager, "_showMetaDataInfo")
+    def testSetMetaDataPlaylistTwoSongs(self, mockShow, mockSave):
+        self.testMetaData.setMetaDataPlaylist(self.testPlaylistName,
+                                              self.trackListTwoSongs, self.testDir)
+        mockShow.assert_has_calls([call(f"{self.testDir}/{self.testTitle}.mp3"),
+                                   call(f"{self.testDir}/{self.testTitle2}.mp3")])
 
-    @patch.object(MetaDataManager, "showMetaDataInfo")
-    @patch.object(MetaDataManager, "saveMetaDataForSingleFile")
-    def testSetMetaDataSingleFile(self, mockSaveFile, mockShow):
-        self.testMetaData.setMetaDataSingleFile(self.metaData, self.testDir)
-        mockSaveFile.assert_called_with({
-                PlaylistInfo.TITLE.value: "testTitle",
-                PlaylistInfo.ALBUM.value: "testAlbum",
-                PlaylistInfo.ARTIST.value: "testArtist",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1
-            }, f"{self.testDir}/testTitle.mp3")
+        self.assertEqual(2, len(mockSave.mock_calls))
+        self.assertEqual(call(), mockSave.mock_calls[0])
+        self.assertEqual(call(), mockSave.mock_calls[1])
+
+    @patch.object(MetaDataManager, "_showMetaDataInfo")
+    @patch.object(EasyID3SingleMedia, "saveMetaData")
+    def testSetMetaDataSingleFileWithSingleMedia(self, mockSaveFile, mockShow):
+        self.testMetaData.setMetaDataSingleFile(
+            self.easyID3SingleMedia, self.testDir)
+        mockSaveFile.sel
         mockShow.assert_called_with(f"{self.testDir}/testTitle.mp3")
+        mockSaveFile.assert_called_once_with()
 
-    def testGetMetaDataDict(self):
-        metaData = {
-                PlaylistInfo.TITLE.value: "testTitle",
-                "testDictKey": "testDictValue",
-                PlaylistInfo.ALBUM.value: "testAlbum",
-                "testDictKey": "testDictValue2",
-                PlaylistInfo.ARTIST.value: "testArtist",
-                PlaylistInfo.PLAYLIST_INDEX.value: 1,
-                "testDictKey": "testDictValue3",
-                "testDictKey": "testDictValue4"
-            }
-        metaDataDict = self.testMetaData.getMetaDataDict(metaData)
-        self.assertEqual(metaDataDict, {
-            PlaylistInfo.TITLE.value: "testTitle",
-            PlaylistInfo.ALBUM.value: "testAlbum",
-            PlaylistInfo.ARTIST.value: "testArtist",
-            PlaylistInfo.PLAYLIST_INDEX.value: 1
-            })
-
-    @patch.object(MetaDataManager, "saveEasyID3")
-    @patch.object(mutagen.easyid3, "EasyID3")
-    def testSaveMetaDataForPlaylist(self, mockEasyID3, mockSaveEasyID3):
-        mockSaveEasyID3.confiugure_mock(return_value=self.metaData)
-        self.testMetaData.saveMetaDataForPlaylist(self.metaData, f"{self.testDir}/testTitle.mp3", "testPlaylist")
-        mockEasyID3.assert_called_once_with(f"{self.testDir}/testTitle.mp3")
-
-    @patch.object(MetaDataManager, "saveEasyID3")
-    @patch.object(mutagen.easyid3, "EasyID3")
-    def testSaveMetaDataForSingleFile(self, mockEasyID3, mockSaveEasyID3):
-        mockSaveEasyID3.confiugure_mock(return_value=self.metaData)
-        self.testMetaData.saveMetaDataForSingleFile(self.metaData, f"{self.testDir}/testTitle.mp3")
-        mockEasyID3.assert_called_once_with(f"{self.testDir}/testTitle.mp3")
+    @patch.object(MetaDataManager, "_showMetaDataInfo")
+    @patch.object(EasyID3MediaFromPlaylist, "saveMetaData")
+    def testSetMetaDataSingleFileWithMediaFromPlaylist(self, mockSaveFile, mockShow):
+        self.testMetaData.setMetaDataSingleFile(
+            self.easyID3MediaFromPlaylist1, self.testDir)
+        mockShow.assert_called_with(f"{self.testDir}/testTitle.mp3")
+        mockSaveFile.assert_called_once_with()
 
 if __name__ == "__main__":
     main()

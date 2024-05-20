@@ -43,6 +43,7 @@ class MessageManager{
     
     getData(){
         if ("data" in this.requestJson){
+            console.log("TEEEST")
             return this.convertMessageToData(this.requestJson["data"])
         }
     }
@@ -62,13 +63,14 @@ class PlaylistMediaEmit extends MessageManager {
         var singleMediaArr = []
         console.log(trackList)
         console.log(typeof(trackList))
-        for (track of trackList) {
+        console.log(Array.isArray(trackList))
+        for (var track of trackList) {
             console.log(track)
             singleMediaArr.push(new SingleMedia(track["title"],
                                             track["artist"],
-                                            track["url"]))
+                                            track["original_url"]))
+        }
         return new PlaylistMedia(playlistName, singleMediaArr)
-       }
     }
 }
 
@@ -79,11 +81,11 @@ class SingleMediaEmit extends MessageManager {
         super(requestJson)
     }
     
-    convertMessageToData(requestJson) {
-        var singleMediaData = requestJson["data"]
-        return new SingleMedia(singleMediaData["title"],
-                           singleMediaData["artist"],
-                           singleMediaData["url"])
+    convertMessageToData(data) {
+        console.log(data)
+        return new SingleMedia(data["title"],
+                           data["artist"],
+                           data["original_url"])
     }
 }
 
@@ -156,5 +158,25 @@ $(document).ready(function () {
             console.log(singleMedia.title)
             cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
         }
+    })
+
+    socket.on(SingleMediaEmit.emitMsg, function (response) {
+        var table = document.getElementById("downloadInfo")
+        var singleMediaEmit = new SingleMediaEmit(response)
+        console.log(singleMediaEmit)
+        if (singleMediaEmit.isError()){
+            console.log(singleMediaEmit.getError())
+            return
+        }
+        var singleMedia = singleMediaEmit.getData()
+        var row = table.insertRow()
+        var cell = row.insertCell()
+        var cell2 = row.insertCell()
+        var cell3 = row.insertCell()
+        cell.innerHTML = singleMedia.artist
+        cell2.innerHTML = singleMedia.title
+        console.log(singleMedia.artist)
+        console.log(singleMedia.title)
+        cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
     })
 });
