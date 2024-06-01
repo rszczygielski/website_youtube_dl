@@ -1,4 +1,3 @@
-import flaskAPI.youtube
 from flask import Flask, render_template, Blueprint
 from common.mailManager import Mail
 from common.youtubeDL import YoutubeDL
@@ -26,6 +25,7 @@ app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 socketio = SocketIO(app)
 
+import flaskAPI.youtube
 
 @app.route("/")
 @app.route("/index.html")
