@@ -28,62 +28,48 @@
 
 <body id="background">
     {% include "headers.html"%}
-    <div>
-        <center>
+    <div class="menu">
             <form id="DownloadForm" action="#" method="post">
-                <h1>
-                    <div>
-                        <center>
-                            <td><label class="neon-label">
-                                    Enter YouTube URL</label></td>
-                            </dir>
-                            <center>
-                                <table>
-                                    <tr>
-                                        <td>
-                                            <input id="youtubeURL" class="input-text" type="url" name="youtubeURL"
-                                                placeholder="YouTube URL" size="50"></input>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <center>
-                                                <input type="radio" name="qualType" id="360p" value="360">
-                                                <label class="radio-buttons-label">360p</label>
-                                                <input type="radio" name="qualType" id="720p" value="720">
-                                                <label class="radio-buttons-label">720p</label>
-                                                <input type="radio" name="qualType" id="1080p" value="1080">
-                                                <label class="radio-buttons-label">1080p</label>
-                                                <input type="radio" name="qualType" id="2160p" value="2160">
-                                                <label class="radio-buttons-label">2160p</label>
-                                                <input type="radio" name="qualType" id="mp3" value="mp3">
-                                                <label class="radio-buttons-label">mp3</label>
-                                        </td>
-                                    </tr>
-                                </table>
-                </h1>
                 <div>
-                    <br>
-                    <center>
-                        <button class="neon-button" type="submit" id="DownloadButton">Download</button>
-                    </center>
-                </div>
+                    <td><label class="youtube-label">Enter YouTube URL</label></td>
+                </div >
+                <table>
+                    <tr>
+                        <td>
+                            <input id="youtubeURL" class="input-text" type="url" name="youtubeURL"
+                                placeholder="YouTube URL" size="50"></input>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="qualType" id="360p" value="360">
+                            <label class="radio-buttons-label">360p</label>
+                            <input type="radio" name="qualType" id="720p" value="720">
+                            <label class="radio-buttons-label">720p</label>
+                            <input type="radio" name="qualType" id="1080p" value="1080">
+                            <label class="radio-buttons-label">1080p</label>
+                            <input type="radio" name="qualType" id="2160p" value="2160">
+                            <label class="radio-buttons-label">2160p</label>
+                            <input type="radio" name="qualType" id="mp3" value="mp3">
+                            <label class="radio-buttons-label">mp3</label>
+                        </td>
+                    </tr>
+                </table>
+          
+                <br>
+                <button class="neon-button" type="submit" id="DownloadButton">Download</button>
+                <br>
+                <br>
+                <a class="neon-button" href="/modify_playlist.html" >Add playlist to config file</a>
             </form>
-            <form action="/modify_playlist.html">
-                <center>
-                    <br>
-                    <button class="neon-button" type="submit">Add playlist to config file</button>
-                </center>
-            </form>
-            <br>
-            <!-- <textarea id="logArea" size="10" style="width: 800px; height: 500px;", class="input-text" readonly>
-            </textarea> -->
-            <br>
-            <table id="downloadInfo" class="neon-label-small">
-            </table>
-            <br>
-            <div id="downloadSection">
+        </div>
+        <br>
+            <div class="download-info-area">
+                <label class="youtube-label">Download Info Section</label>
+                <table id="downloadInfo" class="table-download-info"></table>
             </div>
+            <br>
+            <div class="download-file-area" id="downloadSection"></div>
 </body>
 
 </html>

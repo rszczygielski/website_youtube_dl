@@ -1,9 +1,10 @@
+import common.myLogger as myLogger
 import yt_dlp
 import configparser
 import os
 import argparse
 from common.youtubeConfigManager import ConfigParserManager
-from common.metaDataManager import MetaDataManager, EasyID3SingleMedia
+from common.metaDataManager import EasyID3Manager
 import logging
 from common.myLogger import Logger
 from common.youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
@@ -12,6 +13,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 
 class SingleMedia():
@@ -24,16 +26,16 @@ class SingleMedia():
         self.extension = extension
 
 
-class MediaFromPlaylist(SingleMedia):
-    def __init__(self, title, album, artist, ytHash, url, extension, playlistIndex):
-        super().__init__(title, album, artist, ytHash, url, extension)
-        self.playlistIndex = playlistIndex
+class MediaFromPlaylist():
+    def __init__(self, title, ytHash):
+        self.title = title
+        self.ytHash = ytHash
 
 
 class PlaylistMedia():
-    def __init__(self, playlistName, MediaFromPlaylistList: list):
+    def __init__(self, playlistName, mediaFromPlaylistList: list):
         self.playlistName = playlistName
-        self.MediaFromPlaylistList = MediaFromPlaylistList
+        self.mediaFromPlaylistList = mediaFromPlaylistList
 
 
 class ResultOfYoutube():
@@ -64,8 +66,8 @@ class ResultOfYoutube():
 
 
 class YoutubeDL():
-    def __init__(self, configManager: ConfigParserManager, metaDataMenager: MetaDataManager, ytLogger: Logger = Logger):
-        self._metaDataMenager = metaDataMenager
+    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager, ytLogger: Logger = Logger):
+        self._easyID3Manager = easyID3Manager
         self._configManager = configManager
         self.ytLogger = ytLogger
         self._savePath = self._configManager.getSavePath()
@@ -81,6 +83,13 @@ class YoutubeDL():
             YoutubeOptiones.ADD_META_DATA.value: True,
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True
+        }
+
+        self._fast_info_opts = {
+            'extract_flat': 'in_playlist',
+            'addmetadata': True,
+            'ignoreerrors': False,
+            'quiet': True
         }
 
     def _downloadFile(self, singleMediaHash: str):
@@ -139,11 +148,6 @@ class YoutubeDL():
             url = metaData[MediaInfo.URL.value]
         if MediaInfo.EXTENSION.value in metaData:
             extension = metaData[MediaInfo.EXTENSION.value]
-        if PlaylistInfo.PLAYLIST_INDEX.value in metaData:
-            playlistIndex = metaData[MediaInfo.EXTENSION.value]
-            return MediaFromPlaylist(title, album, artist,
-                                     youtube_hash, url,
-                                     extension, playlistIndex)
         return SingleMedia(title, album, artist,
                            youtube_hash, url, extension)
 
@@ -163,25 +167,14 @@ class YoutubeDL():
         for track in metaData[PlaylistInfo.PLAYLIST_TRACKS.value]:
             if track is None:
                 continue
-            title = album = youtube_hash = artist = url = extension = playlistIndex = ""
+            title = youtube_hash = ""
             if PlaylistInfo.TITLE.value in track:
                 title = yt_dlp.utils.sanitize_filename(
                     track[PlaylistInfo.TITLE.value])
-            if PlaylistInfo.ALBUM.value in track:
-                album = track[PlaylistInfo.ALBUM.value]
-            if PlaylistInfo.ARTIST.value in track:
-                artist = track[PlaylistInfo.ARTIST.value]
             if PlaylistInfo.YOUTUBE_HASH.value in track:
                 youtube_hash = track[PlaylistInfo.YOUTUBE_HASH.value]
-            if PlaylistInfo.URL.value in track:
-                url = track[MediaInfo.URL.value]
-            if PlaylistInfo.PLAYLIST_INDEX.value in track:
-                playlistIndex = track[PlaylistInfo.PLAYLIST_INDEX.value]
-            if PlaylistInfo.EXTENSION.value in track:
-                extension = track[PlaylistInfo.EXTENSION.value]
             mediaFromPlaylistStruct = MediaFromPlaylist(
-                title, album, artist, youtube_hash,
-                url, extension, playlistIndex)
+                title, youtube_hash)
             mediaInfoList.append(mediaFromPlaylistStruct)
         return PlaylistMedia(playlistName, mediaInfoList)
 
@@ -215,7 +208,7 @@ class YoutubeDL():
         Returns:
             ResultOfYoutube: result of youtube with metadata
         """
-        with yt_dlp.YoutubeDL(self._ydl_media_info_opts) as ydl:
+        with yt_dlp.YoutubeDL(self._fast_info_opts) as ydl:
             try:
                 metaData = ydl.extract_info(youtubeURL, download=False)
             except Exception as exception:
@@ -303,9 +296,6 @@ class YoutubeDL():
             errorMsg = resultOfYoutube.getErrorInfo()
             logger.error(f"Download video info error: {errorMsg}")
             return resultOfYoutube
-        media = resultOfYoutube.getData()
-        self._metaDataMenager.setMetaDataSingleFile(
-            media, self._savePath)
         return resultOfYoutube
 
     def fastDownloadAudioPlaylist(self, youtubeURL: str):
@@ -331,8 +321,8 @@ class YoutubeDL():
             logger.error(
                 "Playlist dosn't have track list - no entries key in meta data")
             return False
-        self._metaDataMenager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
-                                                  metaData[entriesKey], self._savePath)
+        self._easyID3Manager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
+                                                 metaData[entriesKey], self._savePath)
         return metaData
 
     def downoladAllConfigPlaylistsVideo(self, type):
@@ -419,8 +409,8 @@ class YoutubeDL():
 
 
 class TerminalUser(YoutubeDL):  # pragma: no_cover
-    def __init__(self, configManager: ConfigParserManager, metaDataMenager: MetaDataManager) -> None:
-        super().__init__(configManager, metaDataMenager)
+    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager) -> None:
+        super().__init__(configManager, easyID3Manager)
 
     def isPlaylist(self, url):
         if url == None:
@@ -492,7 +482,7 @@ class TerminalUser(YoutubeDL):  # pragma: no_cover
                 self.downloadVideo(url, type)
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         "Program downloads mp3 form given youtube URL")
     parser.add_argument("-u", metavar="url", dest="url",
@@ -507,6 +497,26 @@ if __name__ == "__main__":
     config = args.config
     configParserMenager = ConfigParserManager(
         config, configparser.ConfigParser())
-    metaDataMenager = MetaDataManager()
-    terminalUser = TerminalUser(configParserMenager, metaDataMenager)
+    easyID3Manager = EasyID3Manager()
+    terminalUser = TerminalUser(configParserMenager, easyID3Manager)
     terminalUser.downloadTerminal(url, type)
+
+
+if __name__ == "__main__":
+
+    config = "youtube_config.ini"
+    easyID3Manager = EasyID3Manager()
+    configParserMenager = ConfigParserManager(config)
+    youtubeLogger = myLogger.LoggerClass()
+    youtubeLogger.settings(isEmit=True, emitSkip=[
+                           "minicurses.py: 111", "API", " Downloading player Downloading player"])
+    youtubeDownloder = YoutubeDL(
+        configParserMenager, easyID3Manager, youtubeLogger)
+
+    result = youtubeDownloder.requestPlaylistMediaInfo(
+        "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO")
+    dataPlaylist: PlaylistMedia = result.getData()
+
+    for song in dataPlaylist.mediaFromPlaylistList:
+        print(song.title)
+        print(song.ytHash)

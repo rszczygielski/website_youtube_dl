@@ -1,14 +1,15 @@
 from mainWebPage import app, logger, youtubeDownloder, socketio, configParserMenager
 from common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
-from flask import send_file, render_template
+from common.metaDataManager import EasyID3Manager
+from common.youtubeDL import SingleMedia, PlaylistMedia, MediaFromPlaylist
 from common.emits import DownloadMediaFinishEmit, SingleMediaInfoEmit, PlaylistMediaInfoEmit
+from flask import send_file, render_template, Blueprint
+from typing import List
 import zipfile
 import os
 import yt_dlp
 import random
 import string
-from typing import List
-from flask import send_file, render_template
 
 hashTable = {}
 
@@ -72,7 +73,7 @@ def downloadSingleInfoAndMedia(youtubeURL, type=False):
 
 
 def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
-    direcotryPath = configParserMenager.getSavePath()
+    directoryPath = configParserMenager.getSavePath()
     trackTitle = singleMediaTitle
     if type:
         singleMediaInfoResult = youtubeDownloder.downloadVideo(
@@ -87,19 +88,88 @@ def downloadSingleMedia(singleMediaURL, singleMediaTitle, type):
         handleError(errorMsg)
         return False
     logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {fileName}")
-    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {direcotryPath}")
-    return os.path.join(direcotryPath, fileName)
+    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directoryPath}")
+    return os.path.join(directoryPath, fileName)
 
 
-def downloadAllPlaylistTracks(playlistTracks, type):
+def downloadSingleVideo(singleMediaURL, singleMediaTitle, type):
+    directoryPath = configParserMenager.getSavePath()
+    trackTitle = singleMediaTitle
+    singleMediaInfoResult = youtubeDownloder.downloadVideo(
+            singleMediaURL, type)
+    trackInfo = singleMediaInfoResult.getData()
+    fileName = f"{trackTitle}_{type}p.{trackInfo.extension}"
+    if singleMediaInfoResult.isError():
+        errorMsg = singleMediaInfoResult.getErrorInfo()
+        handleError(errorMsg)
+        return False
+    logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {fileName}")
+    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directoryPath}")
+    return os.path.join(directoryPath, fileName)
+
+
+def downloadSingleAudio(singleMediaURL, singleMediaTitle):
+    directoryPath = configParserMenager.getSavePath()
+    trackTitle = singleMediaTitle
+    singleMediaInfoResult = youtubeDownloder.downloadAudio(singleMediaURL)
+    fileName = f"{trackTitle}.{YoutubeVariables.MP3.value}"
+    if singleMediaInfoResult.isError():
+        errorMsg = singleMediaInfoResult.getErrorInfo()
+        handleError(errorMsg)
+        return False
+    singleMedia: SingleMedia = singleMediaInfoResult.getData()
+    easyID3Manager = EasyID3Manager(title=singleMedia.title, album=singleMedia.album,
+                                    artist=singleMedia.artist)
+    easyID3Manager.setFilePath(directoryPath)
+    easyID3Manager.saveMetaData()
+    logger.info(f"{YoutubeLogs.AUDIO_DOWNLOADED.value}: {fileName}")
+    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directoryPath}")
+    return os.path.join(directoryPath, fileName)
+
+
+def downloadAudioFromPlaylist(singleMediaURL, singleMediaTitle,
+                                     playlistName, index):
+    directoryPath = configParserMenager.getSavePath()
+    trackTitle = singleMediaTitle
+    singleMediaInfoResult = youtubeDownloder.downloadAudio(singleMediaURL)
+    fileName = f"{trackTitle}.{YoutubeVariables.MP3.value}"
+    if singleMediaInfoResult.isError():
+        errorMsg = singleMediaInfoResult.getErrorInfo()
+        handleError(errorMsg)
+        return False
+    singleMedia: SingleMedia = singleMediaInfoResult.getData()
+    easyID3Manager = EasyID3Manager(title=singleMedia.title, album=singleMedia.album,
+                                    artist=singleMedia.artist, playlistName=playlistName,
+                                    trackNumber=index)
+    easyID3Manager.setFilePath(directoryPath)
+    easyID3Manager.saveMetaData()
+    logger.info(f"{YoutubeLogs.AUDIO_DOWNLOADED.value}: {fileName}")
+    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directoryPath}")
+    return os.path.join(directoryPath, fileName)
+
+def downloadTracksFromPlaylistAudio(playlistMedia:PlaylistMedia):
+    playlistName = playlistMedia.playlistName
     filePaths = []
-    for track in playlistTracks:
-        fullPath = downloadSingleMedia(track.url, track.title, type)
+    playlistTrack: MediaFromPlaylist
+    for playlistTrack, index in enumerate(playlistMedia.mediaFromPlaylistList):
+        fullPath = downloadAudioFromPlaylist(singleMediaURL=playlistTrack.ytHash,
+                                  singleMediaTitle=playlistTrack.title,
+                                  playlistName=playlistName,
+                                  index=index)
+        filePaths.append(fullPath)
+    return filePaths
+    
+def downloadTracksFromPlaylistVideo(playlistMedia:PlaylistMedia, type):
+    filePaths = []
+    playlistTrack: MediaFromPlaylist
+    for playlistTrack in playlistMedia.mediaFromPlaylistList:
+        fullPath = downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
+                                       singleMediaTitle=playlistTrack.ytHash,
+                                       type=type)
         filePaths.append(fullPath)
     return filePaths
 
-
-def downloadPlaylist(youtubeURL, type=False):
+def downloadPlaylist(youtubeURL, type="mp3"):
     playlistInfoEmit = DownloadMediaFinishEmit()
     logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
     playlistMediaInfoResult = youtubeDownloder.requestPlaylistMediaInfo(
@@ -108,19 +178,22 @@ def downloadPlaylist(youtubeURL, type=False):
         errorMsg = playlistMediaInfoResult.getErrorInfo()
         handleError(errorMsg)
         return False
-    playlistInfo = playlistMediaInfoResult.getData()
-    playlistName = playlistInfo.playlistName
+    playlistMedia: PlaylistMedia = playlistMediaInfoResult.getData()
+    playlistName = playlistMedia.playlistName
     flaskPlaylistMedia = FlaskPlaylistMedia(playlistName,
-                                            playlistInfo.MediaFromPlaylistList)
+                                            playlistMedia.MediaFromPlaylistList)
     playlistInfoEmit = PlaylistMediaInfoEmit()
     playlistInfoEmit.sendEmit(flaskPlaylistMedia)
-    direcotryPath = configParserMenager.getSavePath()
-    filePaths = downloadAllPlaylistTracks(playlistInfo.MediaFromPlaylistList,
-                                          type)
-    zipNameFile = zipAllFilesInList(direcotryPath, playlistName, filePaths)
+    if type == YoutubeVariables.MP3.value:
+        filePaths = downloadTracksFromPlaylistAudio(playlistMedia=playlistMedia)
+    else:
+        filePaths = downloadTracksFromPlaylistVideo(playlistMedia=playlistMedia,
+                                                type=type)
+    directoryPath = configParserMenager.getSavePath()
+    zipNameFile = zipAllFilesInList(directoryPath, playlistName, filePaths)
     logger.info(f"{YoutubeLogs.PLAYLIST_DOWNLAODED.value}: {playlistName}")
-    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH}: {direcotryPath}")
-    fullZipPath = os.path.join(direcotryPath, zipNameFile)
+    logger.debug(f"{YoutubeLogs.DIRECTORY_PATH}: {directoryPath}")
+    fullZipPath = os.path.join(directoryPath, zipNameFile)
     return fullZipPath
 
 
@@ -132,20 +205,18 @@ def generateHash():
 def emitHashWithDownloadedFile(fullFilePath):
     splitedFilePath = fullFilePath.split("/")
     fileName = splitedFilePath[-1]
-    direcotryPath = "/".join(splitedFilePath[:-1])
+    directoryPath = "/".join(splitedFilePath[:-1])
     generatedHash = generateHash()
     hashTable[generatedHash] = {
         YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
-        YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: direcotryPath
+        YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: directoryPath
     }
     downloadMediaFinishEmit = DownloadMediaFinishEmit()
     downloadMediaFinishEmit.sendEmit(generatedHash)
 
 
 def downloadCorrectData(youtubeURL, type, isPlaylist):
-    if type == YoutubeVariables.MP3.value and isPlaylist:
-        fullFilePath = downloadPlaylist(youtubeURL)
-    elif type != YoutubeVariables.MP3.value and isPlaylist:
+    if isPlaylist:
         fullFilePath = downloadPlaylist(youtubeURL, type)
     elif type == YoutubeVariables.MP3.value and not isPlaylist:
         fullFilePath = downloadSingleInfoAndMedia(youtubeURL)
@@ -165,7 +236,7 @@ def socketDownloadServer(formData):
         return False
     type = formData[YoutubeVariables.DOWNLOAD_TYP.value]
     logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {type}")
-    if youtubeURL == "":
+    if not youtubeURL:
         logger.warning(YoutubeLogs.NO_URL.value)
         downloadErrorEmit.sendEmitError(YoutubeLogs.NO_URL.value)
         return False
@@ -176,7 +247,7 @@ def socketDownloadServer(formData):
             YoutubeLogs.PLAYLIST_AND_VIDEO_HASH_IN_URL.value)
         return False
     isPlaylist = YoutubeVariables.URL_LIST.value in youtubeURL \
-            and YoutubeVariables.URL_VIDEO.value not in youtubeURL
+        and YoutubeVariables.URL_VIDEO.value not in youtubeURL
     fullFilePath = downloadCorrectData(youtubeURL, type,
                                        isPlaylist)
     if not fullFilePath:
@@ -191,9 +262,9 @@ def socketDownloadServer(formData):
 def getDataDict(fullFilePath):
     splitedFilePath = fullFilePath.split("/")
     fileName = splitedFilePath[-1]
-    direcotryPath = "/".join(splitedFilePath[:-1])
+    directoryPath = "/".join(splitedFilePath[:-1])
     data_dict = {"downloadFileName": fileName,
-                 "downloadDirectoryPath": direcotryPath}
+                 "downloadDirectoryPath": directoryPath}
     return data_dict
 
 

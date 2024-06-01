@@ -7,6 +7,7 @@ class YoutubeLogs(Enum):
     DOWNLAOD_PLAYLIST = "Download playlist"
     DOWNLOAD_SINGLE_VIDEO = "Download single video"
     VIDEO_DOWNLOADED = "Video file donwloaded"
+    AUDIO_DOWNLOADED = "Audio file donwloaded"
     PLAYLIST_DOWNLAODED = "Playlist donwloaded"
     PLAYLIST_DOWNLAODED_CONFIG = "Config playlist downloaded"
     NO_FORMAT = "Format not specified"

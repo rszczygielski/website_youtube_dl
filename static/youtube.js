@@ -152,11 +152,11 @@ $(document).ready(function () {
             var cell = row.insertCell()
             var cell2 = row.insertCell()
             var cell3 = row.insertCell()
-            cell.innerHTML = singleMedia.artist
+            cell.innerHTML = "<section class=trak-info>" + singleMedia.artist
             cell2.innerHTML = singleMedia.title
             console.log(singleMedia.artist)
             console.log(singleMedia.title)
-            cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
+            cell3.innerHTML = "<br><a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a></section>"
         }
     })
 
@@ -170,13 +170,23 @@ $(document).ready(function () {
         }
         var singleMedia = singleMediaEmit.getData()
         var row = table.insertRow()
-        var cell = row.insertCell()
-        var cell2 = row.insertCell()
-        var cell3 = row.insertCell()
-        cell.innerHTML = singleMedia.artist
-        cell2.innerHTML = singleMedia.title
-        console.log(singleMedia.artist)
-        console.log(singleMedia.title)
-        cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
+        var full_row_html = `
+        <td class=row-download-info>
+            <label class=trak-info>
+            ${singleMedia.artist} ${singleMedia.title}
+            </label>
+            <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
+        </td>
+        `
+        row.innerHTML = full_row_html
+        
+        // var cell = row.insertCell()
+        // var cell2 = row.insertCell()
+        // var cell3 = row.insertCell()
+        // cell.innerHTML = "<div class='trak-info'>" + singleMedia.artist
+        // cell2.innerHTML = "<div class='trak-info'>" + singleMedia.title + "</div>"
+        // console.log(singleMedia.artist)
+        // console.log(singleMedia.title)
+        // cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
     })
 });
