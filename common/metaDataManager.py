@@ -7,8 +7,27 @@ import logging
 logger = logging.getLogger(__name__)
 
 class EasyID3Manager(): # pragma: no_cover
+    title = None
+    album = None
+    artist = None
+    playlistName = None
+    trackNumber = None
+
+    def __init__(self, fileFullPath):
+        # sprawdzić czy istnieje taki plik
+        self.filePath = fileFullPath
+
+    # odzielna funkcja do set_parameters a konstruktor ma ścieżkę do pliku
+    # zweryfikować czy istnieje 
+    # na odwrót niż tak jak jest teraz
     
-    def __init__(self, title=None, album=None,
+    def changeFilePath(self, fileFullPath):
+        # niech tutaj już będzie całkowita ścieżka, towrzymy ją w youtube i tu leci ścieżka
+        # żeby nie było zależności
+        
+        self.filePath = fileFullPath
+
+    def setParams(self, title=None, album=None,
                  artist=None, trackNumber=None,
                  playlistName=None):
         self.title = title
@@ -16,11 +35,6 @@ class EasyID3Manager(): # pragma: no_cover
         self.artist = artist
         self.playlistName = playlistName
         self.trackNumber = trackNumber
-
-    
-    def setFilePath(self, directoryPath):
-        self.filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(self.title)}.mp3'
-
 
     def saveMetaData(self):
         audio = EasyID3(self.filePath)
@@ -31,7 +45,7 @@ class EasyID3Manager(): # pragma: no_cover
         if self.artist:
             audio[MetaDataType.ARTIST.value] = self.artist
         if self.playlistName:
-            audio[MetaDataType.PLAYLIST_NAME.value] = self.playlistName
+            audio[MetaDataType.ALBUM.value] = self.playlistName
         if self.trackNumber:
             audio[MetaDataType.TRACK_NUMBER.value] = self.trackNumber
         audio.save()

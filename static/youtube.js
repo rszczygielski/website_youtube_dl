@@ -6,6 +6,13 @@ class SingleMedia {
     }
 }
 
+class SingleMediaFromPlaylist {
+    constructor(title, url) {
+        this.title = title;
+        this.url = url
+    }
+}
+
 class PlaylistMedia {
     constructor(playlistName, trackList){
         this.playlistName = playlistName;
@@ -66,8 +73,7 @@ class PlaylistMediaEmit extends MessageManager {
         console.log(Array.isArray(trackList))
         for (var track of trackList) {
             console.log(track)
-            singleMediaArr.push(new SingleMedia(track["title"],
-                                            track["artist"],
+            singleMediaArr.push(new SingleMediaFromPlaylist(track["title"],
                                             track["original_url"]))
         }
         return new PlaylistMedia(playlistName, singleMediaArr)
@@ -151,12 +157,10 @@ $(document).ready(function () {
             var row = table.insertRow()
             var cell = row.insertCell()
             var cell2 = row.insertCell()
-            var cell3 = row.insertCell()
-            cell.innerHTML = "<section class=trak-info>" + singleMedia.artist
-            cell2.innerHTML = singleMedia.title
-            console.log(singleMedia.artist)
             console.log(singleMedia.title)
-            cell3.innerHTML = "<br><a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a></section>"
+            console.log(singleMedia.url)
+            cell.innerHTML = "<section class=trak-info>" + singleMediasingleMedia.title
+            cell2.innerHTML = "<br><a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a></section>"
         }
     })
 

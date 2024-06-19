@@ -56,9 +56,9 @@ class PlaylistMediaInfoEmit(BaseEmit):
         playlistName = flaskPlaylistMedia.playlistName
         playlistTrackList = []
         for track in flaskPlaylistMedia.trackList:
+            print(type(track))
             trackInfoDict = {
                 PlaylistInfo.TITLE.value: track.title,
-                PlaylistInfo.ARTIST.value: track.artist,
                 PlaylistInfo.URL.value: track.url,
             }
             playlistTrackList.append(trackInfoDict)

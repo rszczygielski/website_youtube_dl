@@ -66,7 +66,7 @@ class ResultOfYoutube():
 
 
 class YoutubeDL():
-    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager, ytLogger: Logger = Logger):
+    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager, ytLogger: myLogger=Logger):
         self._easyID3Manager = easyID3Manager
         self._configManager = configManager
         self.ytLogger = ytLogger
@@ -119,7 +119,7 @@ class YoutubeDL():
         """
         return {
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-            YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
             YoutubeOptiones.NO_OVERRIDE.value: False,
             YoutubeOptiones.LOGGER.value: self.ytLogger,
             YoutubeOptiones.ADD_META_DATA.value: True,
@@ -187,9 +187,11 @@ class YoutubeDL():
         Returns:
             dict: dict with Youtube info
         """
+        youtubeHash = self._getMediaResultHash(youtubeURL)
         with yt_dlp.YoutubeDL(self._ydl_media_info_opts) as ydl:
             try:
-                metaData = ydl.extract_info(youtubeURL, download=False)
+                metaData = ydl.extract_info(youtubeHash, download=False)
+                print(metaData)
             except Exception as exception:
                 errorInfo = str(exception)
                 logger.error(f"Download media info error {errorInfo}")
@@ -363,8 +365,10 @@ class YoutubeDL():
         Returns:
             str: single video hash
         """
-        onlyHashesInLink = url.split("?")[1]
         numberOfEqualSign = url.count("=")
+        if numberOfEqualSign == 0:
+            return url
+        onlyHashesInLink = url.split("?")[1]
         splitedHashes = onlyHashesInLink.split("=")
         if numberOfEqualSign == 1:
             if "list=" in onlyHashesInLink:

@@ -8,7 +8,8 @@ from flask_socketio import SocketIO
 import common.myLogger as myLogger
 
 config = "youtube_config.ini"
-easyID3Manager = EasyID3Manager()
+# do zmieny bo to nie powinno tutaj być
+easyID3Manager = EasyID3Manager("test") 
 configParserMenager = ConfigParserManager(config)
 youtubeLogger = myLogger.LoggerClass()
 youtubeLogger.settings(isEmit=True, emitSkip=[
