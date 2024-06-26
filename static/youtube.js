@@ -50,7 +50,6 @@ class MessageManager{
     
     getData(){
         if ("data" in this.requestJson){
-            console.log("TEEEST")
             return this.convertMessageToData(this.requestJson["data"])
         }
     }
@@ -74,7 +73,7 @@ class PlaylistMediaEmit extends MessageManager {
         for (var track of trackList) {
             console.log(track)
             singleMediaArr.push(new SingleMediaFromPlaylist(track["title"],
-                                            track["original_url"]))
+                                            track["url"]))
         }
         return new PlaylistMedia(playlistName, singleMediaArr)
     }
@@ -91,7 +90,7 @@ class SingleMediaEmit extends MessageManager {
         console.log(data)
         return new SingleMedia(data["title"],
                            data["artist"],
-                           data["original_url"])
+                           data["webpage_url"])
     }
 }
 
@@ -155,12 +154,16 @@ $(document).ready(function () {
         console.log(playlistMedia.trackList)
         for (singleMedia of playlistMedia.trackList) {
             var row = table.insertRow()
-            var cell = row.insertCell()
-            var cell2 = row.insertCell()
-            console.log(singleMedia.title)
-            console.log(singleMedia.url)
-            cell.innerHTML = "<section class=trak-info>" + singleMediasingleMedia.title
-            cell2.innerHTML = "<br><a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a></section>"
+            var full_row_html = `
+            <td class=row-download-info>
+                <label class=trak-info>
+                    ${singleMedia.title}
+                </label>
+                <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
+            </td>
+            <br>
+            `
+            row.innerHTML = full_row_html
         }
     })
 
@@ -181,16 +184,8 @@ $(document).ready(function () {
             </label>
             <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
         </td>
+        <br>
         `
         row.innerHTML = full_row_html
-        
-        // var cell = row.insertCell()
-        // var cell2 = row.insertCell()
-        // var cell3 = row.insertCell()
-        // cell.innerHTML = "<div class='trak-info'>" + singleMedia.artist
-        // cell2.innerHTML = "<div class='trak-info'>" + singleMedia.title + "</div>"
-        // console.log(singleMedia.artist)
-        // console.log(singleMedia.title)
-        // cell3.innerHTML = "<a class=neon-button target='_blank' href=" + singleMedia.url + ">" + "url</a>"
     })
 });

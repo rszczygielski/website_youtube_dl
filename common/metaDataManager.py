@@ -1,8 +1,8 @@
 from common.youtubeDataKeys import MetaDataType
-import yt_dlp
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -14,17 +14,11 @@ class EasyID3Manager(): # pragma: no_cover
     trackNumber = None
 
     def __init__(self, fileFullPath):
-        # sprawdzić czy istnieje taki plik
+        if not os.path.isfile(fileFullPath):
+            raise  FileNotFoundError(f"File {fileFullPath} doesn't exist - provide correct file path")
         self.filePath = fileFullPath
-
-    # odzielna funkcja do set_parameters a konstruktor ma ścieżkę do pliku
-    # zweryfikować czy istnieje 
-    # na odwrót niż tak jak jest teraz
     
-    def changeFilePath(self, fileFullPath):
-        # niech tutaj już będzie całkowita ścieżka, towrzymy ją w youtube i tu leci ścieżka
-        # żeby nie było zależności
-        
+    def changeFilePath(self, fileFullPath): 
         self.filePath = fileFullPath
 
     def setParams(self, title=None, album=None,

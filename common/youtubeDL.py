@@ -66,8 +66,7 @@ class ResultOfYoutube():
 
 
 class YoutubeDL():
-    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager, ytLogger: myLogger=Logger):
-        self._easyID3Manager = easyID3Manager
+    def __init__(self, configManager: ConfigParserManager, ytLogger: myLogger=Logger):
         self._configManager = configManager
         self.ytLogger = ytLogger
         self._savePath = self._configManager.getSavePath()
@@ -134,7 +133,7 @@ class YoutubeDL():
         Returns:
             SingleMedia : SingleMedia instance with all the info set up
         """
-        title = album = youtube_hash = artist = url = extension = playlistIndex = ""
+        title = album = youtube_hash = artist = url = extension = ""
         if MediaInfo.TITLE.value in metaData:
             title = yt_dlp.utils.sanitize_filename(
                 metaData[MediaInfo.TITLE.value])
@@ -171,8 +170,8 @@ class YoutubeDL():
             if PlaylistInfo.TITLE.value in track:
                 title = yt_dlp.utils.sanitize_filename(
                     track[PlaylistInfo.TITLE.value])
-            if PlaylistInfo.YOUTUBE_HASH.value in track:
-                youtube_hash = track[PlaylistInfo.YOUTUBE_HASH.value]
+            if PlaylistInfo.URL.value in track:
+                youtube_hash = track[PlaylistInfo.URL.value]
             mediaFromPlaylistStruct = MediaFromPlaylist(
                 title, youtube_hash)
             mediaInfoList.append(mediaFromPlaylistStruct)
@@ -191,7 +190,6 @@ class YoutubeDL():
         with yt_dlp.YoutubeDL(self._ydl_media_info_opts) as ydl:
             try:
                 metaData = ydl.extract_info(youtubeHash, download=False)
-                print(metaData)
             except Exception as exception:
                 errorInfo = str(exception)
                 logger.error(f"Download media info error {errorInfo}")
@@ -323,8 +321,24 @@ class YoutubeDL():
             logger.error(
                 "Playlist dosn't have track list - no entries key in meta data")
             return False
-        self._easyID3Manager.setMetaDataPlaylist(metaData[PlaylistInfo.TITLE.value],
-                                                 metaData[entriesKey], self._savePath)
+        playlistName = metaData["title"]
+        for playlistTrack in metaData[entriesKey]:
+            directoryPath = self._configParserMenager.getSavePath()
+            fullPath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack.title)}.mp3'
+            easyID3Manager = EasyID3Manager(fileFullPath=fullPath)
+            title = artist = album = index = None
+            if "title" in playlistTrack:
+                title = playlistTrack["title"]
+            if "artist" in playlistTrack:
+                artist = playlistTrack["artist"]
+            if "album" in playlistTrack:
+                album = playlistTrack["album"]
+            if "playlistIndex" in playlistTrack:
+                index = playlistTrack["playlist_index"]
+            easyID3Manager.setParams(title=title, album=album,
+                                    artist=artist, playlistName=playlistName,
+                                    trackNumber=index)
+            easyID3Manager.saveMetaData()
         return metaData
 
     def downoladAllConfigPlaylistsVideo(self, type):

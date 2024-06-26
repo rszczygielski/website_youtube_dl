@@ -8,14 +8,12 @@ from flask_socketio import SocketIO
 import common.myLogger as myLogger
 
 config = "youtube_config.ini"
-# do zmieny bo to nie powinno tutaj być
-easyID3Manager = EasyID3Manager("test") 
 configParserMenager = ConfigParserManager(config)
 youtubeLogger = myLogger.LoggerClass()
 youtubeLogger.settings(isEmit=True, emitSkip=[
                        "minicurses.py: 111", "API", " Downloading player Downloading player"])
 youtubeDownloder = YoutubeDL(
-    configParserMenager, easyID3Manager, youtubeLogger)
+    configParserMenager, youtubeLogger)
 mail = Mail("radek.szczygielski.trash@gmail.com")
 logging.basicConfig(
     format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
