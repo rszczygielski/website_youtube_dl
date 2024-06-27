@@ -6,6 +6,7 @@ from common.youtubeConfigManager import ConfigParserManager
 import logging
 from flask_socketio import SocketIO
 import common.myLogger as myLogger
+from flask_session import Session
 
 config = "youtube_config.ini"
 configParserMenager = ConfigParserManager(config)
@@ -20,11 +21,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-# Obczaić o co chodzi, mogę wpisać dokładnie to co chce i będzie działać
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-socketio = SocketIO(app)
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_PERMANENT"] = True
+socketio = SocketIO(app, manage_session=False)
+Session(app)
 
 import flaskAPI.youtube
+import flaskAPI.mail
+
 
 @app.route("/")
 @app.route("/index.html")

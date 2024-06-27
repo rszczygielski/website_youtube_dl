@@ -103,6 +103,9 @@ $(document).ready(function () {
     socket.on('connect', function () {
         console.log("Connected Youtube");
     });
+    socket.on('disconnect', function () {
+        console.log("Disconnected Youtube");
+    });
     var downloadForm = document.getElementById("DownloadForm");
     downloadForm.addEventListener("submit", function (event) {
         event.preventDefault();

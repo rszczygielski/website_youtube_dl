@@ -24,8 +24,6 @@ class FlaskPlaylistMedia():  # pragma: no_cover
                                                                 track.ytHash))
         return cls(playlistName, flaskSingleMediaList)
 
-
-
 class FileInfo():
     fileName = None
     fileDirectoryPath = None

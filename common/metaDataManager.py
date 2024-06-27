@@ -6,17 +6,17 @@ import os
 
 logger = logging.getLogger(__name__)
 
-class EasyID3Manager(): # pragma: no_cover
-    title = None
-    album = None
-    artist = None
-    playlistName = None
-    trackNumber = None
+class EasyID3Manager(): # pragma: no_cover      
 
     def __init__(self, fileFullPath):
         if not os.path.isfile(fileFullPath):
             raise  FileNotFoundError(f"File {fileFullPath} doesn't exist - provide correct file path")
         self.filePath = fileFullPath
+        self.title = None
+        self.album = None
+        self.artist = None
+        self.playlistName = None
+        self.trackNumber = None
     
     def changeFilePath(self, fileFullPath): 
         self.filePath = fileFullPath
