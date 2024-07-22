@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <title>YouTube</title>
+    <meta name="desctiption" content="template" />
+    <meta http-equiv="X-UA-Compatible" content="template" />
+    <link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="../static/style.css" type="text/css" />
+    <script src="../static/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"
+        integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA=="
+        crossorigin="anonymous"></script>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="static/youtube.js"></script>
+</head>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<body id="background">
+    {% include "headers.html"%}
+    <div class="menu">
+            <form id="DownloadForm" action="#" method="post">
+                <div>
+                    <td><label class="youtube-label">Enter YouTube URL</label></td>
+                </div >
+                <table>
+                    <tr>
+                        <td>
+                            <input id="youtubeURL" class="input-text" type="url" name="youtubeURL"
+                                placeholder="YouTube URL" size="50"></input>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="qualType" id="360p" value="360">
+                            <label class="radio-buttons-label">360p</label>
+                            <input type="radio" name="qualType" id="720p" value="720">
+                            <label class="radio-buttons-label">720p</label>
+                            <input type="radio" name="qualType" id="1080p" value="1080">
+                            <label class="radio-buttons-label">1080p</label>
+                            <input type="radio" name="qualType" id="2160p" value="2160">
+                            <label class="radio-buttons-label">2160p</label>
+                            <input type="radio" name="qualType" id="mp3" value="mp3">
+                            <label class="radio-buttons-label">mp3</label>
+                        </td>
+                    </tr>
+                </table>
+          
+                <br>
+                <button class="neon-button" type="submit" id="DownloadButton">Download</button>
+                <br>
+                <br>
+                <a class="neon-button" href="/modify_playlist.html" >Add playlist to config file</a>
+            </form>
+        </div>
+        <br>
+            <div class="download-info-area">
+                <label class="youtube-label">Download Info Section</label>
+                <table id="downloadInfo" class="table-download-info"></table>
+            </div>
+            <br>
+            <div class="download-file-area" id="downloadSection"></div>
+</body>
+
+</html>

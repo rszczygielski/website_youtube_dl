@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="utf-8"/>
+    <title>Download Page</title>
+    <meta name="desctiption" content="template"/>
+    <meta http-equiv="X-UA-Compatible" content="template"/>
+	<script src="../static/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+	<link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="../static/style.css" type="text/css"/>
+</head>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for  category, message in messages %}
+<div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+	{{ message }}
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<body id="background">
+{% include "headers.html"%}
+<div>
+    <form action="/downloadFile" method="post">
+    <label class="neon-label">{{downloadFileName}}</label>
+    <input type="hidden" name="fileName" value="{{downloadFileName}}"></input>
+    <input type="hidden" name="directoryPath" value="{{downloadDirectoryPath}}"></input>
+    <br>
+    <br>
+    <br>
+    <button class="neon-button" type="submit" value="Download">Download</button>
+    </form>
+</center>
+</div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+﻿<!DOCTYPE HTML>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<title>Mail</title>
+<meta name="description" content="template" />
+	<meta name="keywords" content="template"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<script src="../static/bootstrap-5.0.2-dist/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+	<link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
+	<link rel="stylesheet" href="../static/style.css" type="text/css" />	
+</head>
+<body id="background">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for  category, message in messages %}
+<div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+	{{ message }}
+	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+{% include "headers.html"%}
+<form action="/sendMail" method="post">
+	<center>
+	<table class="table-form" border="1">
+	<tr><td><h1>
+	<label class="neon-label">>email adress</label>
+	<input class="input-text" type="email" placeholder="example@gmail.com"
+	name="senderInput" size="40"/>
+	</h1></td></tr>
+	<tr><td>
+	<textarea class="input-text" name="messageText" rows="15" cols="70" placeholder="Enter text here"></textarea>
+	</td></tr>	
+	</table>
+	<input class="neon-button" name="buttonSubmit" type="submit" value="Send"/>
+	</center>
+</form>
+</body>
+</html>
