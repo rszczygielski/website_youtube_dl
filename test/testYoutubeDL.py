@@ -4,9 +4,9 @@ import mutagen.easyid3
 import mutagen.mp3
 from unittest import TestCase, main
 from unittest.mock import patch, call
-from common.youtubeConfigManager import ConfigParserManager
-from common.metaDataManager import MetaDataManager
-import common.youtubeDL as youtubeDL
+from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.easyID3Manager import EasyID3Manager
+import website_youtube_dl.common.youtubeDL as youtubeDL
 
 
 class TestYoutubeDL(TestCase):
@@ -67,15 +67,9 @@ class TestYoutubeDL(TestCase):
                                             testArtist1, testId1,
                                             testOriginalUrl1, testExt1)
 
-    mediaFromPlaylistTest1 = youtubeDL.MediaFromPlaylist(testTitle1, testAlbum1,
-                                                         testArtist1, testId1,
-                                                         testOriginalUrl1, testExt1,
-                                                         testPlaylistIndex1)
+    mediaFromPlaylistTest1 = youtubeDL.MediaFromPlaylist(testTitle1,testId1)
 
-    mediaFromPlaylistTest2 = youtubeDL.MediaFromPlaylist(testTitle2, testAlbum1,
-                                                         testArtist2, testId2,
-                                                         testOriginalUrl2, testExt2,
-                                                         testPlaylistIndex2)
+    mediaFromPlaylistTest2 = youtubeDL.MediaFromPlaylist(testTitle2, testId2)
 
     # pisz tak zmienne testowe MEDIA_FROM_PLAYLIST2
 
@@ -85,7 +79,7 @@ class TestYoutubeDL(TestCase):
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtubeDL.YoutubeDL(ConfigParserManager(
-            f'{self.testDir}/test_youtube_config.ini'), MetaDataManager())
+            f'{self.testDir}/test_youtube_config.ini'))
         self.youtubeTest._savePath = self.testDir
         self.youtubeTest._ydl_opts['outtmpl'] = self.testDir + \
             '/%(title)s.%(ext)s'
@@ -217,7 +211,7 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value={"title": testPlaylistName,
                                 "entries": testEntriesList})
-    @patch.object(youtubeDL.MetaDataManager, "setMetaDataPlaylist")
+    @patch.object(youtubeDL.EasyID3Manager, "setMetaDataPlaylist")
     def testFastDownloadPlaylistAudio(self, mockSetMetaData, mockExtractinfo):
         metaData = self.youtubeTest.fastDownloadAudioPlaylist(
             self.mainPlaylistUrlNoVideoHash1)
@@ -243,7 +237,7 @@ class TestYoutubeDL(TestCase):
         mockDownloadError.assert_called_once_with(self.mainPlaylistHash)
         self.assertFalse(errorMsg)
 
-    @patch.object(youtubeDL.MetaDataManager, "setMetaDataSingleFile")
+    @patch.object(youtubeDL.EasyID3Manager, "setMetaDataSingleFile")
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
     def testDownloadAudio(self, mockDownloadFile, mockSave):
         singleMediaInfoResult = self.youtubeTest.downloadAudio(self.mainURL1)

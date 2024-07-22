@@ -1,16 +1,30 @@
-import flask
 from os import path
-from common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
-from yt_dlp import utils
-from common.youtubeConfigManager import ConfigParserManager
-from common.youtubeDL import YoutubeDL, SingleMedia, PlaylistMedia, ResultOfYoutube
+from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
+from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 from unittest import TestCase, main
 from unittest.mock import patch, call
-from mainWebPage import socketio, app
-from flaskAPI import youtube
-from flaskAPI.youtube import FlaskSingleMedia, FlaskPlaylistMedia
-from common.emits import DownloadMediaFinishEmit, SingleMediaInfoEmit, PlaylistMediaInfoEmit
+# from website_youtube_dl.mainWebPage import (YoutubeDL,
+#                                             socketio,
+#                                             app,
+#                                             SingleMedia,
+#                                             PlaylistMedia,
+#                                             MediaFromPlaylist,
+#                                             ResultOfYoutube)
 
+# import website_youtube_dl.mainWebPage as mainWebPage
+from website_youtube_dl.flaskAPI import youtube
+from website_youtube_dl.flaskAPI.youtube import (FlaskSingleMedia,
+                                                 FlaskPlaylistMedia,
+                                                 socketio,
+                                                 app)
+from website_youtube_dl.common.youtubeDL import (YoutubeDL,
+                                                SingleMedia,
+                                                PlaylistMedia,
+                                                MediaFromPlaylist,
+                                                ResultOfYoutube)
+from website_youtube_dl.common.emits import (DownloadMediaFinishEmit,
+                                             SingleMediaInfoEmit,
+                                             PlaylistMediaInfoEmit)
 
 class testYoutubeWeb(TestCase):
     downloadMediaFinishEmit = DownloadMediaFinishEmit()

@@ -1,10 +1,8 @@
 import configparser
 import os
-import sys
-sys.path.append("..")
 from unittest import TestCase, main
-from unittest.mock import MagicMock, patch, call
-from common.youtubeConfigManager import ConfigParserManager
+from unittest.mock import patch
+from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 
 class ConfigParserMock(configparser.ConfigParser):
 
