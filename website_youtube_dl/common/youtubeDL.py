@@ -63,7 +63,7 @@ class ResultOfYoutube():
 
 
 class YoutubeDL():
-    def __init__(self, configManager: ConfigParserManager, ytLogger: Logger = Logger):
+    def __init__(self, configManager: ConfigParserManager, ytLogger: LoggerClass = Logger):
         self._configManager = configManager
         self.ytLogger = ytLogger
         self._savePath = self._configManager.getSavePath()
@@ -320,8 +320,8 @@ class YoutubeDL():
             return False
         playlistName = metaData["title"]
         for playlistTrack in metaData[entriesKey]:
-            directoryPath = self._configParserMenager.getSavePath()
-            fullPath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack.title)}.mp3'
+            directoryPath = self._configManager.getSavePath()
+            fullPath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack["title"])}.mp3'
             easyID3Manager = EasyID3Manager(fileFullPath=fullPath)
             title = artist = album = index = None
             if "title" in playlistTrack:
