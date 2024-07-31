@@ -14,6 +14,10 @@ socketio = SocketIO()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    # app.config["SECRET_KEY"] =b'_5#y2L"F4Q8z\n\xec]/'
+    # app.config["SESSION_TYPE"] ="filesystem"
+    # app.config["SESSION_PERMANENT"] =True
+
     Session(app)
 
     @app.route("/")

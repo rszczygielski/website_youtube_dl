@@ -75,7 +75,6 @@ class YoutubeDL():
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
         self._ydl_media_info_opts = {
-            YoutubeOptiones.FORMAT.value: 'best/best',
             YoutubeOptiones.ADD_META_DATA.value: True,
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True
