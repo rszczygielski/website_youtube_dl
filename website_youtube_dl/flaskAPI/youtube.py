@@ -23,12 +23,14 @@ from flask import Blueprint
 from .. import (socketio,
                 init_youtubeDL,
                 init_configPareser,
-                init_logger)
+                init_logger,
+                YoutubeDL,
+                ConfigParserManager)
 
 youtube = Blueprint("youtube", __name__)
 
-configParserMenager = init_configPareser()
-youtubeDownloder = init_youtubeDL(configParserMenager)
+configParserMenager:ConfigParserManager = init_configPareser()
+youtubeDownloder:YoutubeDL = init_youtubeDL(configParserMenager)
 logger = init_logger()
 
 # pwa poczytać, zorganizuj folder aby tak jak w yt_dlp

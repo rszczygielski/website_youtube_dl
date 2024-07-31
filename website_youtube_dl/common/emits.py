@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from common.youtubeDataKeys import PlaylistInfo, MediaInfo
+from ..common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from .. import socketio
 # from flaskAPI.youtube import FlaskSingleMedia
 
