@@ -131,6 +131,7 @@ $(document).ready(function () {
     })
 
     socket.on("downloadMediaFinish", function (response) {
+        console.log("TEST_SOCKET")
         if ("error" in response) {
             console.log("Error", response["error"])
         }

@@ -11,3 +11,6 @@ results
 test_downloaded_songs.txt
 notes.txt
 .coverage
+flask_session
+.pytest_cache
+yt_web
