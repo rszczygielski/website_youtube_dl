@@ -10,7 +10,7 @@ click==8.1.7
 coverage==7.5.4
 exceptiongroup==1.2.1
 Flask==3.0.3
-Flask-Session==0.8.0
+Flask-Session==0.5.0
 Flask-SocketIO==5.3.6
 google-api-core==2.19.1
 google-api-python-client==2.137.0
@@ -52,4 +52,4 @@ urllib3==2.2.2
 websockets==12.0
 Werkzeug==3.0.3
 wsproto==1.2.0
-yt-dlp==2024.7.9
+yt-dlp== 2024.07.25

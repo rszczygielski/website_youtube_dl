@@ -13,4 +13,6 @@ flask_session
 notes.txt
 .coverage
 youtube_config.ini
+flask_session
+.pytest_cache
 yt_web

@@ -1,15 +1,14 @@
-from mainWebPage import (app, 
-                         logger,
-                         youtubeDownloder,
-                         socketio,
-                         configParserMenager,
-                         SingleMedia,
+from ..common.youtubeDL import (SingleMedia,
                          PlaylistMedia,
                          MediaFromPlaylist,
                          ResultOfYoutube)
-from common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
+from ..common.youtubeLogKeys import (YoutubeLogs, 
+                                     YoutubeVariables)
+from ..common.easyID3Manager import EasyID3Manager
 from flask import send_file, render_template, session
-from common.emits import DownloadMediaFinishEmit, SingleMediaInfoEmit, PlaylistMediaInfoEmit
+from ..common.emits import (DownloadMediaFinishEmit, 
+                            SingleMediaInfoEmit, 
+                            PlaylistMediaInfoEmit)
 from .flaskMedia import (
     FlaskMediaFromPlaylist,
     FlaskPlaylistMedia,
@@ -20,6 +19,19 @@ import os
 import yt_dlp
 import random
 import string
+from flask import Blueprint
+from .. import (socketio,
+                init_youtubeDL,
+                init_configPareser,
+                init_logger,
+                YoutubeDL,
+                ConfigParserManager)
+
+youtube = Blueprint("youtube", __name__)
+
+configParserMenager:ConfigParserManager = init_configPareser()
+youtubeDownloder:YoutubeDL = init_youtubeDL(configParserMenager)
+logger = init_logger()
 
 # pwa poczytać, zorganizuj folder aby tak jak w yt_dlp
 
@@ -51,16 +63,12 @@ def socketDownloadServer(formData):
     fileInfo = FileInfo(fullFilePath)
     genereted_hash = generateHash()
     session[genereted_hash] = fileInfo
-    print(session.keys())
-    print(session["_permanent"])
     emitDownloadFinish = DownloadMediaFinishEmit()
     emitDownloadFinish.sendEmit(genereted_hash)
 
 
-@app.route("/downloadFile/<name>")
+@youtube.route("/downloadFile/<name>")
 def downloadFile(name):
-    print(session.keys())
-    print(session["_permanent"])
     if name not in session.keys():
         logger.error(f"Session doesn't have a key: {name}")
         return
@@ -101,13 +109,13 @@ def deletePlalistConfig(formData):
     socketio.emit("uploadPlalists", {"data": {"plalistList": playlistList}})
 
 
-@app.route("/modify_playlist.html")
+@youtube.route("/modify_playlist.html")
 def modify_playlist_html():
     playlistList = configParserMenager.getPlaylists()
     return render_template("modify_playlist.html", playlistsNames=playlistList.keys())
 
 
-@app.route("/youtube.html")
+@youtube.route("/youtube.html")
 def youtube_html():
     return render_template("youtube.html")
 
