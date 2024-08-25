@@ -53,6 +53,12 @@ $(document).ready(function () {
         }
     })
 
+    socket.on("playlistUrl", function(response){
+        const playlistUrl = response["data"]["playlistUrl"]
+        const urlInput = document.getElementById("playlistURL")
+        urlInput.value = playlistUrl
+    })
+
     addPlaylistButton.addEventListener("click", function (event) {
         const playlistName = document.getElementById("playlistName").value
         const playlistURL = document.getElementById("playlistURL").value
@@ -61,6 +67,13 @@ $(document).ready(function () {
             "playlistName": playlistName,
             "playlistURL": playlistURL
         })
+    });
+
+    playlistSelect.addEventListener("click", function(event) {
+        const playlistName =  playlistSelect.value;
+        const playlistNameInput = document.getElementById("playlistName");
+        playlistNameInput.value = playlistName;
+        socket.emit("playlistName", {"playlistName": playlistName})
     });
 
     deletePlalistButton.addEventListener("click", function (event) {

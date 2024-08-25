@@ -14,9 +14,9 @@ socketio = SocketIO()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    # app.config["SECRET_KEY"] =b'_5#y2L"F4Q8z\n\xec]/'
-    # app.config["SESSION_TYPE"] ="filesystem"
-    # app.config["SESSION_PERMANENT"] =True
+    app.configParserManager = init_configPareser()
+    app.youtubeDownloder = init_youtubeDL(app.configParserManager)
+    app.logger = init_logger()
 
     Session(app)
 
@@ -27,14 +27,17 @@ def create_app(config_class=Config):
         return render_template('index.html')
 
     from .flaskAPI.youtube import youtube
+    from .flaskAPI.youtubeModifyPlaylist import youtube_playlist
 
     app.register_blueprint(youtube)
+    app.register_blueprint(youtube_playlist)
     socketio.init_app(app, manage_session=False)
     return app
 
+
 def init_logger():
     logging.basicConfig(
-    format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
+        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
     logger = logging.getLogger(__name__)
     return logger
 
@@ -42,13 +45,12 @@ def init_logger():
 def init_configPareser(config=config):
     return ConfigParserManager(config)
 
-def init_youtubeDL(configParserMenager:ConfigParserManager):
+
+def init_youtubeDL(configParserManager: ConfigParserManager):
     youtubeLogger = LoggerClass()
     youtubeLogger.settings(isEmit=True, emitSkip=[
-                        "minicurses.py: 111", "API",
-                        " Downloading player Downloading player"])
+        "minicurses.py: 111", "API",
+        " Downloading player Downloading player"])
     youtubeDownloder = YoutubeDL(
-        configParserMenager, youtubeLogger)
+        configParserManager, youtubeLogger)
     return youtubeDownloder
-
-

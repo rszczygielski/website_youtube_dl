@@ -1,22 +1,14 @@
-from os import path
+from  website_youtube_dl import create_app
+import os
 from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
 from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 from unittest import TestCase, main
 from unittest.mock import patch, call
-# from website_youtube_dl.mainWebPage import (YoutubeDL,
-#                                             socketio,
-#                                             app,
-#                                             SingleMedia,
-#                                             PlaylistMedia,
-#                                             MediaFromPlaylist,
-#                                             ResultOfYoutube)
-
-# import website_youtube_dl.mainWebPage as mainWebPage
+from website_youtube_dl.config import TestingConfig
 from website_youtube_dl.flaskAPI import youtube
 from website_youtube_dl.flaskAPI.youtube import (FlaskSingleMedia,
                                                  FlaskPlaylistMedia,
-                                                 socketio,
-                                                 app)
+                                                 socketio)
 from website_youtube_dl.common.youtubeDL import (YoutubeDL,
                                                 SingleMedia,
                                                 PlaylistMedia,
@@ -65,7 +57,7 @@ class testYoutubeWeb(TestCase):
                                extension=testExt2)
 
     playlistMedia = PlaylistMedia(playlistName=testPlaylistName,
-                                  MediaFromPlaylistList=[singleMedia1, singleMedia2])
+                                  mediaFromPlaylistList=[singleMedia1, singleMedia2])
 
     resultOfYoutubeSingle = ResultOfYoutube(singleMedia1)
     resultOfYoutubeSingleWithError1 = ResultOfYoutube()
@@ -78,6 +70,7 @@ class testYoutubeWeb(TestCase):
         YoutubeLogs.PLAYLIST_INFO_DOWNLAOD_ERROR.value)
 
     def setUp(self):
+        app = create_app(TestingConfig)
         app.config["TESTING"] = True
         self.socketIoTestClient = socketio.test_client(app)
         self.flask = app.test_client()
@@ -94,12 +87,13 @@ class testYoutubeWeb(TestCase):
             flaskSingleMediaList.append(self.createFlaskSingleMedia(track))
         return FlaskPlaylistMedia.initFromPlaylistMedia(data["playlistName"], flaskSingleMediaList)
 
+    @patch.object(os.path, "isfile", return_value=True)
     @patch.object(youtube, "downloadCorrectData")
-    def testSocketDownloadServerSuccess(self, mockDownloadData):
+    def testSocketDownloadServerSuccess(self, mockDownloadData, isFile):
         self.socketIoTestClient.emit(
             YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubeURL1,
-                YoutubeVariables.DOWNLOAD_TYP.value: YoutubeVariables.MP3.value
+            YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubeURL1,
+            YoutubeVariables.DOWNLOAD_TYP.value: YoutubeVariables.MP3.value
             }
         )
         pythonEmit = self.socketIoTestClient.get_received()
@@ -253,7 +247,7 @@ class testYoutubeWeb(TestCase):
         mockGetSavePath.assert_called_once()
         mockDownloadVideo.assert_called_once_with(
             self.actualYoutubeURL1, "720")
-        expected_result = path.join("/home/test_path/",
+        expected_result = os.path.join("/home/test_path/",
                                     f"{self.testTitle1}_720p.{self.testExt1}")
         self.assertEqual(expected_result, result)
 
@@ -265,7 +259,7 @@ class testYoutubeWeb(TestCase):
                                              False)
         mockGetSavePath.assert_called_once()
         mockDownloadAudio.assert_called_once_with(self.actualYoutubeURL1)
-        expected_result = path.join("/home/test_path/",
+        expected_result = os.path.join("/home/test_path/",
                                     f"{self.testTitle1}.{YoutubeVariables.MP3.value}")
         self.assertEqual(expected_result, result)
 
@@ -327,7 +321,7 @@ class testYoutubeWeb(TestCase):
                                              ["full_path_test1",
                                               "full_path_test2"])
         self.assertEqual(result,
-                         path.join("/home/test_path/", self.playlistMedia.playlistName))
+                         os.path.join("/home/test_path/", self.playlistMedia.playlistName))
         flaskPlaylistMedia = self.createFlaskPlaylistMedia(data)
         self.assertEqual(data, self.playlistMediaInfoEmit.convertDataToMessage(
             flaskPlaylistMedia))

@@ -4,31 +4,36 @@ from unittest import TestCase, main
 from unittest.mock import patch
 from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 
+
 class ConfigParserMock(configparser.ConfigParser):
 
     def read(self, file_path):
         self.read_string("[global]\npath = /home/rszczygielski/pythonVSC/youtube_files\n[playlists]\ntest_playlist = https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO\nnowy_swiat = https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU")
+
 
 class ConfigParserMockWithEmptyData(configparser.ConfigParser):
 
     def read(self, file_path):
         self.read_string("")
 
-class TestConfigParserMenagerWithMockConfigClass(TestCase):
+
+class TestconfigParserManagerWithMockConfigClass(TestCase):
     def setUp(self):
         self.configParserMock = ConfigParserMock()
-        self.config = ConfigParserManager("/test/config_file.ini", self.configParserMock)
+        self.config = ConfigParserManager(
+            "/test/config_file.ini", self.configParserMock)
 
     @patch.object(configparser.ConfigParser, "clear")
     def testGetSavePath(self, mockClear):
         save_path = self.config.getSavePath()
-        self.assertEqual(save_path, "/home/rszczygielski/pythonVSC/youtube_files")
+        self.assertEqual(
+            save_path, "/home/rszczygielski/pythonVSC/youtube_files")
         mockClear.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
     def testGetUrlOfPlaylists(self, mockClear):
         testPlaylistLists = self.config.getUrlOfPlaylists()
-        self.assertEqual(["https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO",\
+        self.assertEqual(["https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO",
                           "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"], testPlaylistLists)
         mockClear.assert_called_once()
 
@@ -39,7 +44,8 @@ class TestConfigParserMenagerWithMockConfigClass(TestCase):
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 2)
         self.config.addPlaylist("testPlaylist", "testURL")
-        self.assertEqual(self.configParserMock["playlists"]["testPlaylist"], "testURL")
+        self.assertEqual(
+            self.configParserMock["playlists"]["testPlaylist"], "testURL")
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 3)
         mockSave.assert_called_once()
@@ -52,9 +58,11 @@ class TestConfigParserMenagerWithMockConfigClass(TestCase):
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 2)
         self.config.addPlaylist("testPlaylist", "testURL")
-        self.assertEqual(self.configParserMock["playlists"]["testPlaylist"], "testURL")
+        self.assertEqual(
+            self.configParserMock["playlists"]["testPlaylist"], "testURL")
         self.config.addPlaylist("testPlaylist", "newURL")
-        self.assertEqual(self.configParserMock["playlists"]["testPlaylist"], "newURL")
+        self.assertEqual(
+            self.configParserMock["playlists"]["testPlaylist"], "newURL")
         plalistsListCount = len(self.configParserMock["playlists"])
         self.assertEqual(plalistsListCount, 3)
         self.assertEqual(mockSave.call_count, 2)
@@ -89,13 +97,15 @@ class TestConfigParserMenagerWithMockConfigClass(TestCase):
         self.assertEqual({
             "test_playlist": "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO",
             "nowy_swiat": "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"
-            }, testPlaylistDict)
+        }, testPlaylistDict)
+
 
 class TestConfingManagerWithEmptyConfig(TestCase):
 
     def setUp(self):
         self.configParserMock = ConfigParserMockWithEmptyData()
-        self.config = ConfigParserManager("/test/config_file.ini", self.configParserMock)
+        self.config = ConfigParserManager(
+            "/test/config_file.ini", self.configParserMock)
         homePath = os.path.expanduser("~")
         self.musicPath = os.path.join(homePath, "Music")
 
@@ -111,7 +121,8 @@ class TestConfingManagerWithEmptyConfig(TestCase):
     def testGetPlaylists(self, mockSave):
         testPlaylistDict = self.config.getPlaylists()
         self.assertEqual(testPlaylistDict, {})
-        self.assertEqual(self.configParserMock["global"]["path"], self.musicPath)
+        self.assertEqual(
+            self.configParserMock["global"]["path"], self.musicPath)
         mockSave.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
@@ -119,13 +130,15 @@ class TestConfingManagerWithEmptyConfig(TestCase):
     def testGetUrlOfPlaylists(self, mockSave, mockClear):
         testPlaylistUrls = self.config.getUrlOfPlaylists()
         self.assertEqual(testPlaylistUrls, [])
-        self.assertEqual(self.configParserMock["global"]["path"], self.musicPath)
+        self.assertEqual(
+            self.configParserMock["global"]["path"], self.musicPath)
         mockSave.assert_called_once()
         mockClear.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
     def testAddPlaylist(self, mockClear):
-        addPlyalistFlag = self.config.addPlaylist("newTestPlaylist", "testURL.com")
+        addPlyalistFlag = self.config.addPlaylist(
+            "newTestPlaylist", "testURL.com")
         self.assertFalse(addPlyalistFlag)
         mockClear.assert_called_once()
 

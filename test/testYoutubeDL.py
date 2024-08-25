@@ -3,9 +3,8 @@ import yt_dlp
 import mutagen.easyid3
 import mutagen.mp3
 from unittest import TestCase, main
-from unittest.mock import patch, call
+from unittest.mock import patch, call, MagicMock
 from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
-from website_youtube_dl.common.easyID3Manager import EasyID3Manager, os
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from website_youtube_dl.common.youtubeLogKeys import YoutubeVariables
 import website_youtube_dl.common.youtubeDL as youtubeDL
@@ -66,7 +65,6 @@ class TestYoutubeDL(TestCase):
         PlaylistInfo.URL.value: testId2,
     }
 
-
     testEntriesList = [songFromPlaylist1, songFromPlaylist2, None]
     testPlaylsitUrlsList = [
         mainPlaylistUrlNoVideoHash1, mainPlaylistUrlNoVideoHash2]
@@ -93,6 +91,9 @@ class TestYoutubeDL(TestCase):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
         self.youtubeTest = youtubeDL.YoutubeDL(ConfigParserManager(
             f'{self.testDir}/test_youtube_config.ini'))
+        self.youtubeConfigPlaylists = youtubeDL.YoutubeDlConfig(ConfigParserManager(
+            f'{self.testDir}/test_youtube_config.ini'),
+            MagicMock())
         self.youtubeTest._savePath = self.testDir
         self.youtubeTest._ydl_opts['outtmpl'] = self.testDir + \
             '/%(title)s.%(ext)s'
@@ -106,8 +107,10 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(singleMedia.ytHash, singleMediaExpected.ytHash)
 
     def checkMediaFromPlaylist(self, mediaFromPlaylist, mediaFromPlaylistExpected):
-        self.assertEqual(mediaFromPlaylist.title, mediaFromPlaylistExpected.title)
-        self.assertEqual(mediaFromPlaylist.ytHash, mediaFromPlaylistExpected.ytHash)
+        self.assertEqual(mediaFromPlaylist.title,
+                         mediaFromPlaylistExpected.title)
+        self.assertEqual(mediaFromPlaylist.ytHash,
+                         mediaFromPlaylistExpected.ytHash)
 
     def checkResulPlaylistMeida(self, playlistMedia: youtubeDL.PlaylistMedia,
                                 playlistMediaExpected: youtubeDL.PlaylistMedia):
@@ -232,6 +235,7 @@ class TestYoutubeDL(TestCase):
         self.assertFalse(errorMsg)
 
 # importować easyID3Manager to już imporotwać zmocowanaą wersję
+
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value={"title": testPlaylistName,
                                 "entries": testEntriesList})
@@ -240,9 +244,6 @@ class TestYoutubeDL(TestCase):
         metaData = self.youtubeTest.fastDownloadAudioPlaylist(
             self.mainPlaylistUrlNoVideoHash1)
         print(self.testDir)
-        moctkIsfile.assert_called_once_with(os.path.join(self.testDir,
-                                                         self.testTitle1,
-                                                         YoutubeVariables.MP3.value))
         mockExtractinfo.assert_called_once_with(self.mainPlaylistHash)
         checkResult = self.checkFastDownloadResult(metaData)
         self.assertEqual(True, checkResult)

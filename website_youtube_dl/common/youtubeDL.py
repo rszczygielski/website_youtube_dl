@@ -75,6 +75,7 @@ class YoutubeDL():
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
         self._ydl_media_info_opts = {
+            YoutubeOptiones.FORMAT.value: 'best/best',
             YoutubeOptiones.ADD_META_DATA.value: True,
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True
@@ -258,26 +259,6 @@ class YoutubeDL():
             return resultOfYoutube
         return resultOfYoutube
 
-    def fastDownloadVideoPlaylist(self, youtubeURL: str, type: str):
-        """Method uded to download video playlist from YouTube
-
-        Args:
-            youtubeURL (str): YouTube URL
-
-        Returns:
-            dict: dict with YouTube video playlist meta data
-        """
-        self._setVideoOptions(type)
-        playlistHash = self._getPlaylistHash(youtubeURL)
-        with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
-            try:
-                metaData = ydl.extract_info(playlistHash)
-            except Exception as exception:
-                errorInfo = str(exception)
-                logger.error(f"Download media info error {errorInfo}")
-                return False
-        return metaData
-
     def downloadAudio(self, youtubeURL: str):
         """Method uded to download audio type from Youtube, convert metadata
         into mp3 format used mutagen.easyid3
@@ -293,75 +274,6 @@ class YoutubeDL():
             logger.error(f"Download video info error: {errorMsg}")
             return resultOfYoutube
         return resultOfYoutube
-
-    def fastDownloadAudioPlaylist(self, youtubeURL: str):
-        """Method uded to download audio playlist from YouTube
-
-        Args:
-            youtubeURL (str): YouTube URL
-
-        Returns:
-            dict: dict with YouTube audio playlist meta data
-        """
-        self._setAudioOptions()
-        playlistHash = self._getPlaylistHash(youtubeURL)
-        with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
-            try:
-                metaData = ydl.extract_info(playlistHash)
-            except Exception as exception:
-                errorInfo = str(exception)
-                logger.error(f"Download media info error {errorInfo}")
-                return False
-        entriesKey = PlaylistInfo.PLAYLIST_TRACKS.value
-        if entriesKey not in metaData:
-            logger.error(
-                "Playlist dosn't have track list - no entries key in meta data")
-            return False
-        playlistName = metaData["title"]
-        for playlistTrack in metaData[entriesKey]:
-            directoryPath = self._configManager.getSavePath()
-            fullPath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack["title"])}.mp3'
-            easyID3Manager = EasyID3Manager(fileFullPath=fullPath)
-            title = artist = album = index = None
-            if "title" in playlistTrack:
-                title = playlistTrack["title"]
-            if "artist" in playlistTrack:
-                artist = playlistTrack["artist"]
-            if "album" in playlistTrack:
-                album = playlistTrack["album"]
-            if "playlistIndex" in playlistTrack:
-                index = playlistTrack["playlist_index"]
-            easyID3Manager.setParams(title=title, album=album,
-                                     artist=artist, playlistName=playlistName,
-                                     trackNumber=index)
-            easyID3Manager.saveMetaData()
-        return metaData
-
-    def downoladAllConfigPlaylistsVideo(self, type):
-        """Method used to download all playlists added to cofig file - type video
-
-        Args:
-            type (str): type of the video to download, like 480p
-
-        Returns:
-            bool: True if finished successfully
-        """
-        playlistList = self._configManager.getUrlOfPlaylists()
-        self._setVideoOptions(type)
-        for playlistURL in playlistList:
-            self.fastDownloadVideoPlaylist(playlistURL, type)
-        return True
-
-    def downoladAllConfigPlaylistsAudio(self):
-        """Method used to download all playlists added to cofig file - type audo
-
-        Returns:
-            bool: True if finished successfully
-        """
-        playlistList = self._configManager.getUrlOfPlaylists()
-        for playlistURL in playlistList:
-            self.fastDownloadAudioPlaylist(playlistURL)
-        return True
 
     def _getMediaResultHash(self, url):
         """Method extracts single video hash from full url
@@ -420,6 +332,108 @@ class YoutubeDL():
         elif numberOfEqualSign == 2:
             playlistHash = splitedHashes[2]
             return playlistHash
+
+
+class YoutubeDlConfig(YoutubeDL):
+    def __init__(self, configManager: ConfigParserManager,
+                 easyID3Manager: EasyID3Manager,
+                 ytLogger: LoggerClass = Logger):
+        super().__init__(configManager, ytLogger)
+        self.easyID3Manager = easyID3Manager
+
+
+    def fastDownloadAudioPlaylist(self, youtubeURL: str):
+        """Method uded to download audio playlist from YouTube
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with YouTube audio playlist meta data
+        """
+        self._setAudioOptions()
+        playlistHash = self._getPlaylistHash(youtubeURL)
+        with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(playlistHash)
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Download media info error {errorInfo}")
+                return False
+        entriesKey = PlaylistInfo.PLAYLIST_TRACKS.value
+        if entriesKey not in metaData:
+            logger.error(
+                "Playlist dosn't have track list - no entries key in meta data")
+            return False
+        playlistName = metaData["title"]
+        for playlistTrack in metaData[entriesKey]:
+            if playlistTrack is None:
+                logger.info("Track Not Found")
+                continue
+            directoryPath = self._configManager.getSavePath()
+            title = artist = album = index = None
+            if "title" in playlistTrack:
+                title = playlistTrack["title"]
+            if "artist" in playlistTrack:
+                artist = playlistTrack["artist"]
+            if "album" in playlistTrack:
+                album = playlistTrack["album"]
+            if "playlistIndex" in playlistTrack:
+                index = playlistTrack["playlist_index"]
+            filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack["title"])}.mp3'
+            self.easyID3Manager.setParams(filePath=filePath, title=title, album=album,
+                                     artist=artist, playlistName=playlistName,
+                                     trackNumber=index)
+            self.easyID3Manager.saveMetaData()
+        return metaData
+
+    def fastDownloadVideoPlaylist(self, youtubeURL: str, type: str):
+        """Method uded to download video playlist from YouTube
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with YouTube video playlist meta data
+        """
+        self._setVideoOptions(type)
+        playlistHash = self._getPlaylistHash(youtubeURL)
+        with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(playlistHash)
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Download media info error {errorInfo}")
+                return False
+        return metaData
+
+    
+    def downoladAllConfigPlaylistsVideo(self, type):
+        """Method used to download all playlists added to cofig file - type video
+
+        Args:
+            type (str): type of the video to download, like 480p
+
+        Returns:
+            bool: True if finished successfully
+        """
+        playlistList = self._configManager.getUrlOfPlaylists()
+        self._setVideoOptions(type)
+        for playlistURL in playlistList:
+            self.fastDownloadVideoPlaylist(playlistURL, type)
+        return True
+
+    def downoladAllConfigPlaylistsAudio(self):
+        """Method used to download all playlists added to cofig file - type audo
+
+        Returns:
+            bool: True if finished successfully
+        """
+        playlistList = self._configManager.getUrlOfPlaylists()
+        for playlistURL in playlistList:
+            self.fastDownloadAudioPlaylist(playlistURL)
+        return True
+
 
 
 class TerminalUser(YoutubeDL):  # pragma: no_cover
@@ -509,22 +523,22 @@ def main():
     url = args.url
     type = args.type
     config = args.config
-    configParserMenager = ConfigParserManager(
+    configParserManager = ConfigParserManager(
         config, configparser.ConfigParser())
     easyID3Manager = EasyID3Manager()
-    terminalUser = TerminalUser(configParserMenager, easyID3Manager)
+    terminalUser = TerminalUser(configParserManager, easyID3Manager)
     terminalUser.downloadTerminal(url, type)
 
 
 if __name__ == "__main__":
 
     config = "youtube_config.ini"
-    configParserMenager = ConfigParserManager(config)
+    configParserManager = ConfigParserManager(config)
     youtubeLogger = LoggerClass()
     youtubeLogger.settings(isEmit=True, emitSkip=[
                            "minicurses.py: 111", "API", " Downloading player Downloading player"])
     youtubeDownloder = YoutubeDL(
-        configParserMenager, youtubeLogger)
+        configParserManager, youtubeLogger)
 
     result = youtubeDownloder.requestPlaylistMediaInfo(
         "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO")

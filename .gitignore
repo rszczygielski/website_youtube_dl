@@ -16,3 +16,6 @@ youtube_config.ini
 flask_session/
 .pytest_cache
 yt_web
+*-info
+*.ini
+downloaded_songs.txt

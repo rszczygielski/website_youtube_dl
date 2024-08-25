@@ -1,0 +1,2 @@
+recursive-include website_youtube_dl/static *
+recursive-include website_youtube_dl/templates *
