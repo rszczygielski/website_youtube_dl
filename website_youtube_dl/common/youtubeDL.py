@@ -69,7 +69,7 @@ class YoutubeDL():
         self._savePath = self._configManager.getSavePath()
         self._ydl_opts = {
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
             YoutubeOptiones.NO_OVERRIDE.value: False,
             YoutubeOptiones.LOGGER.value: self.ytLogger,
             YoutubeOptiones.ADD_META_DATA.value: True,
@@ -115,7 +115,7 @@ class YoutubeDL():
         """
         return {
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
             YoutubeOptiones.NO_OVERRIDE.value: False,
             YoutubeOptiones.LOGGER.value: self.ytLogger,
             YoutubeOptiones.ADD_META_DATA.value: True,
@@ -535,8 +535,6 @@ if __name__ == "__main__":
     config = "youtube_config.ini"
     configParserManager = ConfigParserManager(config)
     youtubeLogger = LoggerClass()
-    youtubeLogger.settings(isEmit=True, emitSkip=[
-                           "minicurses.py: 111", "API", " Downloading player Downloading player"])
     youtubeDownloder = YoutubeDL(
         configParserManager, youtubeLogger)
 

@@ -29,12 +29,12 @@ class FileInfo():
     fileDirectoryPath = None
 
     def __init__(self, fullFilePath) -> None:
-        if not os.path.isfile(fullFilePath):
-            raise FileNotFoundError(
-                f"File {fullFilePath} doesn't exist - something went wrong")
         self.setFileInfo(fullFilePath)
 
     def setFileInfo(self, fullFilePath):
+        if not os.path.isfile(fullFilePath):
+            raise FileNotFoundError(
+                f"File {fullFilePath} doesn't exist - something went wrong")
         splitedFilePath = fullFilePath.split("/")
         self.fileName = splitedFilePath[-1]
         self.fileDirectoryPath = "/".join(splitedFilePath[:-1])

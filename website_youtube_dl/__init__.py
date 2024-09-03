@@ -20,11 +20,7 @@ def create_app(config_class=Config):
 
     Session(app)
 
-    @app.route("/")
-    @app.route("/index.html")
-    @app.route('/example')
-    def index():
-        return render_template('index.html')
+
 
     from .flaskAPI.youtube import youtube
     from .flaskAPI.youtubeModifyPlaylist import youtube_playlist
@@ -48,9 +44,7 @@ def init_configPareser(config=config):
 
 def init_youtubeDL(configParserManager: ConfigParserManager):
     youtubeLogger = LoggerClass()
-    youtubeLogger.settings(isEmit=True, emitSkip=[
-        "minicurses.py: 111", "API",
-        " Downloading player Downloading player"])
+
     youtubeDownloder = YoutubeDL(
         configParserManager, youtubeLogger)
     return youtubeDownloder

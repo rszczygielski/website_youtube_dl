@@ -7,21 +7,17 @@ class LoggerClass():
     def __init__(self):
         self.settings()
 
-    def settings(self, showLog_level=True, show_date=True, show_file_name=True, isSave=False, path=os.getcwd(), isEmit=False, emitSkip=[]):
+    def settings(self, showLog_level=True,
+                 show_date=True,
+                 show_file_name=True,
+                 isSave=False,
+                 path=os.getcwd()):
         self.date_bool = show_date
         self.log_level_bool = showLog_level
         self.file_name_bool = show_file_name
         self.isSave = isSave
-        self.isEmit = isEmit
-        self.emitSkip = emitSkip
         self.path = path + "/log_file_name.log"
 
-    def emit(self, msg):
-        if self.isEmit:
-            for elem in self.emitSkip:
-                if elem in msg:
-                    return
-            emit("log", msg)
 
     def time(self):
         return datetime.now().strftime("%Y %m %d %H:%M:%S")
@@ -59,18 +55,15 @@ class LoggerClass():
         debug = self.get_log("DEBUG", argument)
         print(self.get_log("DEBUG", argument))
         self.save_to_file(debug)
-        self.emit(debug)
 
     def warning(self, *argument):
         warning = self.get_log("WARNING", argument)
         print("\033[93m" + warning,"\033[0m")
         self.save_to_file(warning)
-        self.emit(warning)
 
     def error(self, *argument):
         error = self.get_log("ERROR", argument)
         print("\033[91m" + error,"\033[0m")
         self.save_to_file(error)
-        self.emit(error)
 
 Logger = LoggerClass()

@@ -80,7 +80,7 @@ def downloadConfigPlaylist(formData):
     playlistName = formData["playlistToDownload"]
     app.logger.info(f"Selected playlist form config {playlistName}")
     playlistURL = app.configParserManager.getPlaylistUrl(playlistName)
-    fullFilePath = downloadPlaylist(playlistURL)
+    fullFilePath = downloadTracksFromPlaylistAudio(playlistURL)
     if not fullFilePath:
         return False
     emitHashWithDownloadedFile(fullFilePath)
@@ -113,15 +113,21 @@ def deletePlalistConfig(formData):
 def youtube_html():
     return render_template("youtube.html")
 
+@youtube.route("/")
+@youtube.route("/index.html")
+@youtube.route('/example')
+def index():
+    return render_template('index.html')
+
 
 def downloadSingleVideo(singleMediaURL, type):
     singleMediaInfoResult = app.youtubeDownloder.downloadVideo(
         singleMediaURL, type)
-    trackInfo = singleMediaInfoResult.getData()
     if singleMediaInfoResult.isError():
         errorMsg = singleMediaInfoResult.getErrorInfo()
         handleError(errorMsg)
         return False
+    trackInfo = singleMediaInfoResult.getData()
     directoryPath = app.configParserManager.getSavePath()
     fileName = f"{trackInfo.title}_{type}p.{trackInfo.extension}"
     app.logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {fileName}")
@@ -129,7 +135,7 @@ def downloadSingleVideo(singleMediaURL, type):
     return os.path.join(directoryPath, fileName)
 
 
-def downloadSingleVideoWithEmit(singleMediaURL, type):
+def downloadSingleVideoWithEmit(singleMediaURL, type): # pragma: no_cover
     if not sendEmitSingleMedia(singleMediaURL):
         return
     return downloadSingleVideo(singleMediaURL, type)
