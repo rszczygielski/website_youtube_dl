@@ -10,7 +10,7 @@ from flask import (send_file,
                    session,
                    Blueprint)
 from flask import current_app as app
-from ..common.emits import (DownloadMediaFinishEmit,
+from .emits import (DownloadMediaFinishEmit,
                             SingleMediaInfoEmit,
                             PlaylistMediaInfoEmit)
 from .flaskMedia import (

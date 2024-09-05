@@ -1,3 +1,4 @@
+import logging.config
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 from flask_session import Session
@@ -7,7 +8,7 @@ from .common.youtubeDL import YoutubeDL
 from .config import Config
 import logging
 
-config = "youtube_config.ini"
+
 socketio = SocketIO()
 
 
@@ -20,8 +21,6 @@ def create_app(config_class=Config):
 
     Session(app)
 
-
-
     from .flaskAPI.youtube import youtube
     from .flaskAPI.youtubeModifyPlaylist import youtube_playlist
 
@@ -32,13 +31,16 @@ def create_app(config_class=Config):
 
 
 def init_logger():
-    logging.basicConfig(
-        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
+    # logging.basicConfig(
+    #     format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.ERROR)
+    logger_werkzeug = logging.getLogger('werkzeug')
+    logger_werkzeug.setLevel(logging.ERROR)
     logger = logging.getLogger(__name__)
     return logger
 
 
-def init_configPareser(config=config):
+def init_configPareser():
+    config = "youtube_config.ini"
     return ConfigParserManager(config)
 
 

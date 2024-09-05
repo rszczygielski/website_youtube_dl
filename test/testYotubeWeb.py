@@ -14,7 +14,7 @@ from website_youtube_dl.common.youtubeDL import (YoutubeDL,
                                                 PlaylistMedia,
                                                 MediaFromPlaylist,
                                                 ResultOfYoutube)
-from website_youtube_dl.common.emits import (DownloadMediaFinishEmit,
+from website_youtube_dl.flaskAPI.emits import (DownloadMediaFinishEmit,
                                              SingleMediaInfoEmit,
                                              PlaylistMediaInfoEmit)
 from website_youtube_dl.common.easyID3Manager import EasyID3Manager

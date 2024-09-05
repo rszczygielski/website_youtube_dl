@@ -6,13 +6,14 @@ class FlaskSingleMedia():  # pragma: no_cover
         self.artist = artist
         self.url = url
 
-class FlaskMediaFromPlaylist():
+class FlaskMediaFromPlaylist(): # pragma: no_cover
     def __init__(self, title, url):
         self.title = title
         self.url = url
 
 class FlaskPlaylistMedia():  # pragma: no_cover
-    def __init__(self, plyalistName: str, trackList: list[FlaskMediaFromPlaylist]) -> None:
+    def __init__(self, plyalistName: str,
+                 trackList: list[FlaskMediaFromPlaylist]) -> None:
         self.playlistName = plyalistName
         self.trackList = trackList
 

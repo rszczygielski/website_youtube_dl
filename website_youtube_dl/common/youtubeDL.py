@@ -7,9 +7,6 @@ from .myLogger import Logger, LoggerClass
 from .youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
 import logging
 
-if __name__ == "__main__":
-    logging.basicConfig(
-        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -71,14 +68,16 @@ class YoutubeDL():
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
             YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
             YoutubeOptiones.NO_OVERRIDE.value: False,
-            YoutubeOptiones.LOGGER.value: self.ytLogger,
+            YoutubeOptiones.LOGGER.value: None,
+            YoutubeOptiones.QUIET.value: True,
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
         self._ydl_media_info_opts = {
             YoutubeOptiones.FORMAT.value: 'best/best',
             YoutubeOptiones.ADD_META_DATA.value: True,
             YoutubeOptiones.IGNORE_ERRORS.value: False,
-            YoutubeOptiones.QUIET.value: True
+            YoutubeOptiones.QUIET.value: True,
+            YoutubeOptiones.LOGGER.value: None,
         }
 
         self._fast_info_opts = {
@@ -117,7 +116,8 @@ class YoutubeDL():
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
             YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
             YoutubeOptiones.NO_OVERRIDE.value: False,
-            YoutubeOptiones.LOGGER.value: self.ytLogger,
+            YoutubeOptiones.LOGGER.value: None,
+            YoutubeOptiones.QUIET.value: True,
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
 
