@@ -15,7 +15,7 @@ class BaseEmit(ABC):
         socketio.emit(self.emit_msg, {"data": convertedData})
 
     @abstractmethod
-    def convertDataToMessage(self):
+    def convertDataToMessage(self): # pragma: no_cover
         pass
 
 

@@ -65,6 +65,12 @@ class TestYoutubeDL(TestCase):
         PlaylistInfo.URL.value: testId2,
     }
 
+    testPlaylistFullEntries = [songMetaData1, songMetaData2, None]
+    playlistMetaDataFull = {
+        PlaylistInfo.TITLE.value: testPlaylistName,
+        PlaylistInfo.PLAYLIST_TRACKS.value: testPlaylistFullEntries
+    }
+
     testEntriesList = [songFromPlaylist1, songFromPlaylist2, None]
     testPlaylsitUrlsList = [
         mainPlaylistUrlNoVideoHash1, mainPlaylistUrlNoVideoHash2]
@@ -175,6 +181,9 @@ class TestYoutubeDL(TestCase):
         testVideoHash3 = self.youtubeTest._getMediaResultHash(
             self.mainPlaylistUrlWithIndex1)
         self.assertEqual(testVideoHash3, correctVideoHash)
+        testVideoHash4 = self.youtubeTest._getMediaResultHash(
+            self.testId1)
+        self.assertEqual(testVideoHash4, self.testId1)
         wrong_link_with_video = self.mainPlaylistUrlNoVideoHash1
         with self.assertRaises(ValueError) as context:
             self.youtubeTest._getMediaResultHash(wrong_link_with_video)
@@ -235,18 +244,15 @@ class TestYoutubeDL(TestCase):
         self.assertFalse(errorMsg)
 
 # importować easyID3Manager to już imporotwać zmocowanaą wersję
-
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value={"title": testPlaylistName,
-                                "entries": testEntriesList})
+                                "entries": testPlaylistFullEntries})
     def testFastDownloadPlaylistAudio(self, mockExtractinfo):
-        print(os.path.join(self.testDir, self.testTitle1))
         metaData = self.youtubeConfigPlaylists.fastDownloadAudioPlaylist(
             self.mainPlaylistUrlNoVideoHash1)
-        print(self.testDir)
         mockExtractinfo.assert_called_once_with(self.mainPlaylistHash)
-        checkResult = self.checkFastDownloadResult(metaData)
-        self.assertEqual(True, checkResult)
+        self.assertEqual(self.playlistMetaDataFull, metaData)
+
 
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value={"title": testPlaylistName})
@@ -309,7 +315,8 @@ class TestYoutubeDL(TestCase):
     def testDownloadVideoFromConfigOnePlaylists(
             self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
         type = "720"
-        metaData = self.youtubeConfigPlaylists.downoladAllConfigPlaylistsVideo(type)
+        metaData = self.youtubeConfigPlaylists.downoladAllConfigPlaylistsVideo(
+            type)
         mockGetPlaylists.assert_called_once()
         mockDownloadVideo.assert_called_once_with(
             self.mainPlaylistUrlNoVideoHash1, type)
@@ -324,7 +331,8 @@ class TestYoutubeDL(TestCase):
     def testDownloadVideoFromConfigTwoPlaylists(
             self, mockGetPlaylists, mockDownloadVideo, mockSetVideo):
         type = "720"
-        metaData = self.youtubeConfigPlaylists.downoladAllConfigPlaylistsVideo(type)
+        metaData = self.youtubeConfigPlaylists.downoladAllConfigPlaylistsVideo(
+            type)
         mockGetPlaylists.assert_called_once()
         self.assertEqual(mockDownloadVideo.call_count, 2)
         mockDownloadVideo.assert_has_calls([call(self.mainPlaylistUrlNoVideoHash1, type),

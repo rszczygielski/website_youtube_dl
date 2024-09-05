@@ -37,6 +37,17 @@ class TestconfigParserManagerWithMockConfigClass(TestCase):
                           "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"], testPlaylistLists)
         mockClear.assert_called_once()
 
+
+    def testGetPlaylistUrl(self):
+        result = self.config.getPlaylistUrl("test_playlist")
+        self.assertEqual(result,
+                         "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO")
+  
+
+    def testGetPlaylistWrongUrl(self):
+        result = self.config.getPlaylistUrl("wrong_url")
+        self.assertEqual(result, None)
+
     @patch.object(configparser.ConfigParser, "clear")
     @patch.object(ConfigParserManager, "saveConfig")
     def testAddPlaylist(self, mockSave, mockClear):
@@ -121,6 +132,14 @@ class TestConfingManagerWithEmptyConfig(TestCase):
     def testGetPlaylists(self, mockSave):
         testPlaylistDict = self.config.getPlaylists()
         self.assertEqual(testPlaylistDict, {})
+        self.assertEqual(
+            self.configParserMock["global"]["path"], self.musicPath)
+        mockSave.assert_called_once()
+    
+    @patch.object(ConfigParserManager, "saveConfig")
+    def testGetPlaylistUrls(self, mockSave):
+        result = self.config.getPlaylistUrl("test_name")
+        self.assertEqual(None, result)
         self.assertEqual(
             self.configParserMock["global"]["path"], self.musicPath)
         mockSave.assert_called_once()

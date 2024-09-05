@@ -378,7 +378,7 @@ class YoutubeDlConfig(YoutubeDL):
                 artist = playlistTrack["artist"]
             if "album" in playlistTrack:
                 album = playlistTrack["album"]
-            if "playlistIndex" in playlistTrack:
+            if "playlist_index" in playlistTrack:
                 index = playlistTrack["playlist_index"]
             filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack["title"])}.mp3'
             self.easyID3Manager.setParams(filePath=filePath, title=title, album=album,
@@ -510,7 +510,7 @@ class TerminalUser(YoutubeDL):  # pragma: no_cover
                 self.downloadVideo(url, type)
 
 
-def main():
+def main(): # pragma: no_cover
     parser = argparse.ArgumentParser(
         "Program downloads mp3 form given youtube URL")
     parser.add_argument("-u", metavar="url", dest="url",
