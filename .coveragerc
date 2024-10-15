@@ -5,7 +5,9 @@ omit =
     *myLogger.py
     test/*
     */dist-packages/*
-[report] =
+    *easyID3Manager.py*
+[report]
 exclude_lines =
     if __name__ == "__main__":
     pragma: no_cover
+skip_empty = true

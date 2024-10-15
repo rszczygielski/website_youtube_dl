@@ -109,6 +109,40 @@ class YoutubeDL():
         singleMedia = self._getMedia(metaData)
         return ResultOfYoutube(singleMedia)
 
+    def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
+        """Method uded to download video type from YouTube
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with YouTube video meta data
+        """
+        self._setVideoOptions(type)
+        mediaHash = self._getMediaResultHash(youtubeURL)
+        resultOfYoutube = self._downloadFile(mediaHash)
+        if resultOfYoutube.isError():
+            errorMsg = resultOfYoutube.getErrorInfo()
+            logger.error(f"Download video info error: {errorMsg}")
+            return resultOfYoutube
+        return resultOfYoutube
+
+    def downloadAudio(self, youtubeURL: str):
+        """Method uded to download audio type from Youtube, convert metadata
+        into mp3 format used mutagen.easyid3
+
+        Args:
+            youtubeURL (str): YouTube URL
+        """
+        self._setAudioOptions()
+        mediaHash = self._getMediaResultHash(youtubeURL)
+        resultOfYoutube = self._downloadFile(mediaHash)
+        if resultOfYoutube.isError():
+            errorMsg = resultOfYoutube.getErrorInfo()
+            logger.error(f"Download video info error: {errorMsg}")
+            return resultOfYoutube
+        return resultOfYoutube
+
     def _getDefaultOptions(self):
         """Method returns to the defualt youtubeDL options
         """
@@ -146,33 +180,6 @@ class YoutubeDL():
             extension = metaData[MediaInfo.EXTENSION.value]
         return SingleMedia(title, album, artist,
                            youtube_hash, url, extension)
-
-    def _getPlaylistMedia(self, metaData) -> PlaylistMedia:
-        """Method sets and returns PlaylistMedia instance based on meta data inptu
-
-        Args:
-            metaData (dict): meta data dict
-
-        Returns:
-            PlaylistMedia: PlaylistMedia instance with all the info set up
-        """
-        mediaInfoList = []
-        playlistName = ""
-        if PlaylistInfo.TITLE.value in metaData:
-            playlistName = metaData[PlaylistInfo.TITLE.value]
-        for track in metaData[PlaylistInfo.PLAYLIST_TRACKS.value]:
-            if track is None:
-                continue
-            title = youtube_hash = ""
-            if PlaylistInfo.TITLE.value in track:
-                title = yt_dlp.utils.sanitize_filename(
-                    track[PlaylistInfo.TITLE.value])
-            if PlaylistInfo.URL.value in track:
-                youtube_hash = track[PlaylistInfo.URL.value]
-            mediaFromPlaylistStruct = MediaFromPlaylist(
-                title, youtube_hash)
-            mediaInfoList.append(mediaFromPlaylistStruct)
-        return PlaylistMedia(playlistName, mediaInfoList)
 
     def requestSingleMediaInfo(self, youtubeURL) -> ResultOfYoutube:
         """Method provides youtube media info based on youtube URL without downloading it
@@ -217,6 +224,33 @@ class YoutubeDL():
         playlistMedia = self._getPlaylistMedia(metaData)
         return ResultOfYoutube(playlistMedia)
 
+    def _getPlaylistMedia(self, metaData) -> PlaylistMedia:
+        """Method sets and returns PlaylistMedia instance based on meta data inptu
+
+        Args:
+            metaData (dict): meta data dict
+
+        Returns:
+            PlaylistMedia: PlaylistMedia instance with all the info set up
+        """
+        mediaInfoList = []
+        playlistName = ""
+        if PlaylistInfo.TITLE.value in metaData:
+            playlistName = metaData[PlaylistInfo.TITLE.value]
+        for track in metaData[PlaylistInfo.PLAYLIST_TRACKS.value]:
+            if track is None:
+                continue
+            title = youtube_hash = ""
+            if PlaylistInfo.TITLE.value in track:
+                title = yt_dlp.utils.sanitize_filename(
+                    track[PlaylistInfo.TITLE.value])
+            if PlaylistInfo.URL.value in track:
+                youtube_hash = track[PlaylistInfo.URL.value]
+            mediaFromPlaylistStruct = MediaFromPlaylist(
+                title, youtube_hash)
+            mediaInfoList.append(mediaFromPlaylistStruct)
+        return PlaylistMedia(playlistName, mediaInfoList)
+
     def _setVideoOptions(self, type: str):
         """Method used to change and set proper
 
@@ -240,40 +274,6 @@ class YoutubeDL():
         }]
         audio_options['outtmpl'] = self._savePath + '/%(title)s.%(ext)s'
         self._ydl_opts = audio_options
-
-    def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
-        """Method uded to download video type from YouTube
-
-        Args:
-            youtubeURL (str): YouTube URL
-
-        Returns:
-            dict: dict with YouTube video meta data
-        """
-        self._setVideoOptions(type)
-        mediaHash = self._getMediaResultHash(youtubeURL)
-        resultOfYoutube = self._downloadFile(mediaHash)
-        if resultOfYoutube.isError():
-            errorMsg = resultOfYoutube.getErrorInfo()
-            logger.error(f"Download video info error: {errorMsg}")
-            return resultOfYoutube
-        return resultOfYoutube
-
-    def downloadAudio(self, youtubeURL: str):
-        """Method uded to download audio type from Youtube, convert metadata
-        into mp3 format used mutagen.easyid3
-
-        Args:
-            youtubeURL (str): YouTube URL
-        """
-        self._setAudioOptions()
-        mediaHash = self._getMediaResultHash(youtubeURL)
-        resultOfYoutube = self._downloadFile(mediaHash)
-        if resultOfYoutube.isError():
-            errorMsg = resultOfYoutube.getErrorInfo()
-            logger.error(f"Download video info error: {errorMsg}")
-            return resultOfYoutube
-        return resultOfYoutube
 
     def _getMediaResultHash(self, url):
         """Method extracts single video hash from full url
@@ -341,7 +341,6 @@ class YoutubeDlConfig(YoutubeDL):
         super().__init__(configManager, ytLogger)
         self.easyID3Manager = easyID3Manager
 
-
     def fastDownloadAudioPlaylist(self, youtubeURL: str):
         """Method uded to download audio playlist from YouTube
 
@@ -382,8 +381,8 @@ class YoutubeDlConfig(YoutubeDL):
                 index = playlistTrack["playlist_index"]
             filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack["title"])}.mp3'
             self.easyID3Manager.setParams(filePath=filePath, title=title, album=album,
-                                     artist=artist, playlistName=playlistName,
-                                     trackNumber=index)
+                                          artist=artist, playlistName=playlistName,
+                                          trackNumber=index)
             self.easyID3Manager.saveMetaData()
         return metaData
 
@@ -407,7 +406,6 @@ class YoutubeDlConfig(YoutubeDL):
                 return False
         return metaData
 
-    
     def downoladAllConfigPlaylistsVideo(self, type):
         """Method used to download all playlists added to cofig file - type video
 
@@ -433,7 +431,6 @@ class YoutubeDlConfig(YoutubeDL):
         for playlistURL in playlistList:
             self.fastDownloadAudioPlaylist(playlistURL)
         return True
-
 
 
 class TerminalUser(YoutubeDL):  # pragma: no_cover
@@ -510,7 +507,7 @@ class TerminalUser(YoutubeDL):  # pragma: no_cover
                 self.downloadVideo(url, type)
 
 
-def main(): # pragma: no_cover
+def main():  # pragma: no_cover
     parser = argparse.ArgumentParser(
         "Program downloads mp3 form given youtube URL")
     parser.add_argument("-u", metavar="url", dest="url",

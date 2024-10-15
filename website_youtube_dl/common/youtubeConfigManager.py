@@ -1,6 +1,7 @@
 import configparser
 import os
 import logging
+from .configKeys import ConfigKeys
 
 logger = logging.getLogger("__main__")
 
@@ -11,11 +12,11 @@ class ConfigParserManager():
         self.configParser = configParser
 
     def createDefaultConfigFile(self):
-        self.configParser.add_section("global")
-        self.configParser.add_section("playlists")
-        homePath = os.path.expanduser("~")
-        musicPath = os.path.join(homePath, "Music")
-        self.configParser["global"]["path"] = musicPath
+        self.configParser.add_section(ConfigKeys.GLOBAL.value)
+        self.configParser.add_section(ConfigKeys.PLAYLISTS.value)
+        homePath = os.path.expanduser(ConfigKeys.SWUNG_DASH.value)
+        musicPath = os.path.join(homePath, ConfigKeys.MUSIC.value)
+        self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value] = musicPath
         self.saveConfig()
 
     def getSavePath(self):
@@ -23,15 +24,15 @@ class ConfigParserManager():
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
-        return self.configParser["global"]["path"]
+        return self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value]
 
     def getPlaylistUrl(self, playlistName):
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
-        for configPlaylistName in self.configParser["playlists"]:
+        for configPlaylistName in self.configParser[ConfigKeys.PLAYLISTS.value]:
             if configPlaylistName == playlistName:
-                return self.configParser["playlists"][playlistName]
+                return self.configParser[ConfigKeys.PLAYLISTS.value][playlistName]
         return None
 
     def getPlaylists(self):
@@ -39,8 +40,8 @@ class ConfigParserManager():
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
-        for playlistName in self.configParser["playlists"]:
-            playlistsFromConfig[playlistName] = self.configParser["playlists"][playlistName]
+        for playlistName in self.configParser[ConfigKeys.PLAYLISTS.value]:
+            playlistsFromConfig[playlistName] = self.configParser[ConfigKeys.PLAYLISTS.value][playlistName]
         return playlistsFromConfig
 
     def getUrlOfPlaylists(self):
@@ -49,21 +50,21 @@ class ConfigParserManager():
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
-        for playlistName in self.configParser["playlists"]:
-            playlistList.append(self.configParser["playlists"][playlistName])
+        for playlistName in self.configParser[ConfigKeys.PLAYLISTS.value]:
+            playlistList.append(self.configParser[ConfigKeys.PLAYLISTS.value][playlistName])
         return playlistList
 
     def saveConfig(self): #pragma: no_cover
-        with open(self.configFilePath, 'w') as configfile:
+        with open(self.configFilePath, ConfigKeys.WRITE.value) as configfile:
             self.configParser.write(configfile)
 
     def addPlaylist(self, playlistName, playlistURL):
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
-        if "playlists" not in self.configParser:
-            logger.error("Config file is not correct")
+        if ConfigKeys.PLAYLISTS.value not in self.configParser:
+            logger.error(ConfigKeys.CONFIG_ERROR.value)
             return False
-        self.configParser["playlists"][playlistName] = playlistURL
+        self.configParser[ConfigKeys.PLAYLISTS.value][playlistName] = playlistURL
         logger.info(f"Playlist {playlistName}: {playlistURL} added")
         self.saveConfig()
 
@@ -71,9 +72,9 @@ class ConfigParserManager():
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
-            logger.error("Config file is not correct")
+            logger.error(ConfigKeys.CONFIG_ERROR.value)
             return False
-        self.configParser.remove_option("playlists", playlistName)
+        self.configParser.remove_option(ConfigKeys.PLAYLISTS.value, playlistName)
         self.saveConfig()
 
 if __name__ == "__main__":

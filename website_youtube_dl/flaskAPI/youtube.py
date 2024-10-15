@@ -11,13 +11,13 @@ from flask import (send_file,
                    Blueprint)
 from flask import current_app as app
 from .emits import (DownloadMediaFinishEmit,
-                            SingleMediaInfoEmit,
-                            PlaylistMediaInfoEmit)
+                    SingleMediaInfoEmit,
+                    PlaylistMediaInfoEmit)
 from .flaskMedia import (
     FlaskMediaFromPlaylist,
     FlaskPlaylistMedia,
     FlaskSingleMedia,
-    FileInfo)
+    SessionDownloadData)
 import zipfile
 import os
 import yt_dlp
@@ -54,9 +54,9 @@ def socketDownloadServer(formData):
     if not fullFilePath:
         app.logger.error("No file path returned")
         return False
-    fileInfo = FileInfo(fullFilePath)
+    sessionDownloadData = SessionDownloadData(fullFilePath)
     genereted_hash = generateHash()
-    session[genereted_hash] = fileInfo
+    session[genereted_hash] = sessionDownloadData
     emitDownloadFinish = DownloadMediaFinishEmit()
     emitDownloadFinish.sendEmit(genereted_hash)
 
@@ -66,11 +66,12 @@ def downloadFile(name):
     if name not in session.keys():
         app.logger.error(f"Session doesn't have a key: {name}")
         return
-    fileInfo: FileInfo = session[name]
-    print(fileInfo.fileDirectoryPath, fileInfo.fileName)
+    sessionDownloadData: SessionDownloadData = session[name]
+    print(sessionDownloadData.fileDirectoryPath, sessionDownloadData.fileName)
     downloadFileName = yt_dlp.utils.sanitize_filename(
-        fileInfo.fileName)
-    fullPath = os.path.join(fileInfo.fileDirectoryPath, downloadFileName)
+        sessionDownloadData.fileName)
+    fullPath = os.path.join(
+        sessionDownloadData.fileDirectoryPath, downloadFileName)
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
     return send_file(fullPath, as_attachment=True)
 
@@ -102,6 +103,7 @@ def deletePlalistConfig(formData):
     playlistList = list(app.configParserManager.getPlaylists().keys())
     socketio.emit("uploadPlalists", {"data": {"plalistList": playlistList}})
 
+
 @socketio.on("playlistName")
 def deletePlalistConfig(formData):
     playlistName = formData["playlistName"]
@@ -112,6 +114,7 @@ def deletePlalistConfig(formData):
 @youtube.route("/youtube.html")
 def youtube_html():
     return render_template("youtube.html")
+
 
 @youtube.route("/")
 @youtube.route("/index.html")
@@ -135,14 +138,14 @@ def downloadSingleVideo(singleMediaURL, type):
     return os.path.join(directoryPath, fileName)
 
 
-def downloadSingleVideoWithEmit(singleMediaURL, type): # pragma: no_cover
-    if not sendEmitSingleMedia(singleMediaURL):
+def downloadSingleVideoWithEmit(singleMediaURL, type):  # pragma: no_cover
+    if not sendEmitSingleMediaInfoFromYoutube(singleMediaURL):
         return
     return downloadSingleVideo(singleMediaURL, type)
 
 
 def downloadSingleAudio(singleMediaURL):
-    if not sendEmitSingleMedia(singleMediaURL):
+    if not sendEmitSingleMediaInfoFromYoutube(singleMediaURL):
         return
     singleMediaInfoResult = app.youtubeDownloder.downloadAudio(singleMediaURL)
     if singleMediaInfoResult.isError():
@@ -154,7 +157,7 @@ def downloadSingleAudio(singleMediaURL):
     filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(singleMedia.title)}.mp3'
     easyID3Manager = EasyID3Manager()
     easyID3Manager.setParams(filePath=filePath,
-                             title=singleMedia.title, 
+                             title=singleMedia.title,
                              album=singleMedia.album,
                              artist=singleMedia.artist)
     easyID3Manager.saveMetaData()
@@ -173,7 +176,7 @@ def downloadAudioFromPlaylist(singleMediaURL, playlistName, index):
     singleMedia: SingleMedia = singleMediaInfoResult.getData()
     directoryPath = app.configParserManager.getSavePath()
     filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(singleMedia.title)}.mp3'
-    easyID3Manager = EasyID3Manager(fileFullPath=filePath)
+    easyID3Manager = EasyID3Manager()
     easyID3Manager.setParams(filePath=filePath,
                              title=singleMedia.title,
                              album=playlistName,
@@ -227,7 +230,7 @@ def downloadTracksFromPlaylistAudio(youtubeURL):
     return fullZipPath
 
 
-def sendEmitSingleMedia(singleMediaURL):
+def sendEmitSingleMediaInfoFromYoutube(singleMediaURL):
     singleMediaInfoResult: ResultOfYoutube = app.youtubeDownloder.requestSingleMediaInfo(
         singleMediaURL)
     if singleMediaInfoResult.isError():
