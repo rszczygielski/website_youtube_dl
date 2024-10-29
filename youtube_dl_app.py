@@ -1,4 +1,4 @@
-from  website_youtube_dl import create_app, socketio
+from website_youtube_dl import create_app, socketio
 from website_youtube_dl.config import DevelopmentConfig
 
 

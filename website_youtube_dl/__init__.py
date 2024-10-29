@@ -1,11 +1,12 @@
 import logging.config
-from flask import Flask, render_template
 from flask_socketio import SocketIO
 from flask_session import Session
 from .common.youtubeConfigManager import ConfigParserManager
 from .common.myLogger import LoggerClass
 from .common.youtubeDL import YoutubeDL
 from .config import Config
+from .flaskAPI.session import SessionClient
+from flask import Flask, session
 import logging
 
 
@@ -27,6 +28,7 @@ def create_app(config_class=Config):
     app.register_blueprint(youtube)
     app.register_blueprint(youtube_playlist)
     socketio.init_app(app, manage_session=False)
+    app.session = init_flask_session()
     return app
 
 
@@ -38,6 +40,8 @@ def init_logger():
     logger = logging.getLogger(__name__)
     return logger
 
+def init_flask_session():
+    return SessionClient(session)
 
 def init_configPareser():
     config = "youtube_config.ini"

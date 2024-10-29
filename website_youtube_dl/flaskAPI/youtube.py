@@ -7,7 +7,6 @@ from ..common.youtubeLogKeys import (YoutubeLogs,
 from ..common.easyID3Manager import EasyID3Manager
 from flask import (send_file,
                    render_template,
-                   session,
                    Blueprint)
 from flask import current_app as app
 from .emits import (DownloadMediaFinishEmit,
@@ -28,8 +27,6 @@ from .. import socketio
 youtube = Blueprint("youtube", __name__)
 
 # pwa poczytać, zorganizuj folder aby tak jak w yt_dlp
-
-hashTable = {}
 
 
 @socketio.on("FormData")
@@ -56,59 +53,25 @@ def socketDownloadServer(formData):
         return False
     sessionDownloadData = SessionDownloadData(fullFilePath)
     genereted_hash = generateHash()
-    session[genereted_hash] = sessionDownloadData
+    app.session.addElemtoSession(genereted_hash, sessionDownloadData)
     emitDownloadFinish = DownloadMediaFinishEmit()
     emitDownloadFinish.sendEmit(genereted_hash)
 
 
 @youtube.route("/downloadFile/<name>")
 def downloadFile(name):
-    if name not in session.keys():
-        app.logger.error(f"Session doesn't have a key: {name}")
-        return
-    sessionDownloadData: SessionDownloadData = session[name]
-    print(sessionDownloadData.fileDirectoryPath, sessionDownloadData.fileName)
+    print("IT WORKS!!!!!!!!!!!!!!!!!")
+    print(name)
+    print(app.session.session.keys())
+    app.session.checkIfElemInSession(name)
+    sessionDownloadData: SessionDownloadData = app.session.getSessionElem(
+        name)
     downloadFileName = yt_dlp.utils.sanitize_filename(
         sessionDownloadData.fileName)
     fullPath = os.path.join(
         sessionDownloadData.fileDirectoryPath, downloadFileName)
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
     return send_file(fullPath, as_attachment=True)
-
-
-@socketio.on("downloadFromConfigFile")
-def downloadConfigPlaylist(formData):
-    playlistName = formData["playlistToDownload"]
-    app.logger.info(f"Selected playlist form config {playlistName}")
-    playlistURL = app.configParserManager.getPlaylistUrl(playlistName)
-    fullFilePath = downloadTracksFromPlaylistAudio(playlistURL)
-    if not fullFilePath:
-        return False
-    emitHashWithDownloadedFile(fullFilePath)
-
-
-@socketio.on("addPlaylist")
-def addPlalistConfig(formData):
-    playlistName = formData["playlistName"]
-    playlistURL = formData["playlistURL"]
-    app.configParserManager.addPlaylist(playlistName, playlistURL)
-    playlistList = list(app.configParserManager.getPlaylists().keys())
-    socketio.emit("uploadPlalists", {"data": {"plalistList": playlistList}})
-
-
-@socketio.on("deletePlaylist")
-def deletePlalistConfig(formData):
-    playlistName = formData["playlistToDelete"]
-    app.configParserManager.deletePlaylist(playlistName)
-    playlistList = list(app.configParserManager.getPlaylists().keys())
-    socketio.emit("uploadPlalists", {"data": {"plalistList": playlistList}})
-
-
-@socketio.on("playlistName")
-def deletePlalistConfig(formData):
-    playlistName = formData["playlistName"]
-    playlistUrl = app.configParserManager.getPlaylistUrl(playlistName)
-    socketio.emit("playlistUrl", {"data": {"playlistUrl": playlistUrl}})
 
 
 @youtube.route("/youtube.html")
@@ -273,19 +236,6 @@ def downloadCorrectData(youtubeURL, type, isPlaylist):
     elif type != YoutubeVariables.MP3.value and not isPlaylist:
         fullFilePath = downloadSingleVideoWithEmit(youtubeURL, type)
     return fullFilePath
-
-
-def emitHashWithDownloadedFile(fullFilePath):
-    splitedFilePath = fullFilePath.split("/")
-    fileName = splitedFilePath[-1]
-    directoryPath = "/".join(splitedFilePath[:-1])
-    generatedHash = generateHash()
-    hashTable[generatedHash] = {
-        YoutubeVariables.DOWNLOAD_FILE_NAME.value: fileName,
-        YoutubeVariables.DOWNLOAD_DIRECOTRY_PATH.value: directoryPath
-    }
-    downloadMediaFinishEmit = DownloadMediaFinishEmit()
-    downloadMediaFinishEmit.sendEmit(generatedHash)
 
 
 def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):  # pragma: no_cover

@@ -143,6 +143,49 @@ class YoutubeDL():
             return resultOfYoutube
         return resultOfYoutube
 
+    def requestPlaylistMediaInfo(self, youtubeURL) -> ResultOfYoutube:
+        """Method returns meta data based on youtube url
+
+        Args:
+            youtubeURL (string): Youtube URL
+
+        Returns:
+            ResultOfYoutube: result of youtube with metadata
+        """
+        with yt_dlp.YoutubeDL(self._fast_info_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(youtubeURL, download=False)
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Download media info error {errorInfo}")
+                resultOfYoutube = ResultOfYoutube()
+                resultOfYoutube.setError(errorInfo)
+                return resultOfYoutube
+        playlistMedia = self._getPlaylistMedia(metaData)
+        return ResultOfYoutube(playlistMedia)
+
+    def requestSingleMediaInfo(self, youtubeURL) -> ResultOfYoutube:
+        """Method provides youtube media info based on youtube URL without downloading it
+
+        Args:
+            youtubeURL (str): YouTube URL
+
+        Returns:
+            dict: dict with Youtube info
+        """
+        youtubeHash = self._getMediaResultHash(youtubeURL)
+        with yt_dlp.YoutubeDL(self._ydl_media_info_opts) as ydl:
+            try:
+                metaData = ydl.extract_info(youtubeHash, download=False)
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Download media info error {errorInfo}")
+                resultOfYoutube = ResultOfYoutube()
+                resultOfYoutube.setError(errorInfo)
+                return resultOfYoutube
+        singleMedia = self._getMedia(metaData)
+        return ResultOfYoutube(singleMedia)
+
     def _getDefaultOptions(self):
         """Method returns to the defualt youtubeDL options
         """
@@ -180,49 +223,6 @@ class YoutubeDL():
             extension = metaData[MediaInfo.EXTENSION.value]
         return SingleMedia(title, album, artist,
                            youtube_hash, url, extension)
-
-    def requestSingleMediaInfo(self, youtubeURL) -> ResultOfYoutube:
-        """Method provides youtube media info based on youtube URL without downloading it
-
-        Args:
-            youtubeURL (str): YouTube URL
-
-        Returns:
-            dict: dict with Youtube info
-        """
-        youtubeHash = self._getMediaResultHash(youtubeURL)
-        with yt_dlp.YoutubeDL(self._ydl_media_info_opts) as ydl:
-            try:
-                metaData = ydl.extract_info(youtubeHash, download=False)
-            except Exception as exception:
-                errorInfo = str(exception)
-                logger.error(f"Download media info error {errorInfo}")
-                resultOfYoutube = ResultOfYoutube()
-                resultOfYoutube.setError(errorInfo)
-                return resultOfYoutube
-        singleMedia = self._getMedia(metaData)
-        return ResultOfYoutube(singleMedia)
-
-    def requestPlaylistMediaInfo(self, youtubeURL) -> ResultOfYoutube:
-        """Method returns meta data based on youtube url
-
-        Args:
-            youtubeURL (string): Youtube URL
-
-        Returns:
-            ResultOfYoutube: result of youtube with metadata
-        """
-        with yt_dlp.YoutubeDL(self._fast_info_opts) as ydl:
-            try:
-                metaData = ydl.extract_info(youtubeURL, download=False)
-            except Exception as exception:
-                errorInfo = str(exception)
-                logger.error(f"Download media info error {errorInfo}")
-                resultOfYoutube = ResultOfYoutube()
-                resultOfYoutube.setError(errorInfo)
-                return resultOfYoutube
-        playlistMedia = self._getPlaylistMedia(metaData)
-        return ResultOfYoutube(playlistMedia)
 
     def _getPlaylistMedia(self, metaData) -> PlaylistMedia:
         """Method sets and returns PlaylistMedia instance based on meta data inptu
@@ -438,17 +438,13 @@ class TerminalUser(YoutubeDL):  # pragma: no_cover
         super().__init__(configManager, easyID3Manager)
 
     def isPlaylist(self, url):
-        if url == None:
-            return False
-        elif "list=" in url:
+        if url != None and "list=" in url:
             return True
         else:
             return False
 
     def ifDoubleHash(self, url):
-        if url == None:
-            return False
-        elif "list=" in url and "v=" in url:
+        if url != None and "list=" in url and "v=" in url:
             return True
         else:
             return False
@@ -525,20 +521,3 @@ def main():  # pragma: no_cover
     easyID3Manager = EasyID3Manager()
     terminalUser = TerminalUser(configParserManager, easyID3Manager)
     terminalUser.downloadTerminal(url, type)
-
-
-if __name__ == "__main__":
-
-    config = "youtube_config.ini"
-    configParserManager = ConfigParserManager(config)
-    youtubeLogger = LoggerClass()
-    youtubeDownloder = YoutubeDL(
-        configParserManager, youtubeLogger)
-
-    result = youtubeDownloder.requestPlaylistMediaInfo(
-        "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO")
-    dataPlaylist: PlaylistMedia = result.getData()
-
-    for song in dataPlaylist.mediaFromPlaylistList:
-        print(song.title)
-        print(song.ytHash)

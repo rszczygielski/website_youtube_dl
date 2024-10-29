@@ -1,12 +1,9 @@
 import os
 import yt_dlp
-import mutagen.easyid3
-import mutagen.mp3
 from unittest import TestCase, main
 from unittest.mock import patch, call, MagicMock
 from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from website_youtube_dl.common.youtubeLogKeys import YoutubeVariables
 import website_youtube_dl.common.youtubeDL as youtubeDL
 
 
@@ -95,10 +92,10 @@ class TestYoutubeDL(TestCase):
 
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
-        self.youtubeTest = youtubeDL.YoutubeDL(ConfigParserManager(
-            f'{self.testDir}/test_youtube_config.ini'))
-        self.youtubeConfigPlaylists = youtubeDL.YoutubeDlConfig(ConfigParserManager(
-            f'{self.testDir}/test_youtube_config.ini'),
+        configParserManager = ConfigParserManager(f'{self.testDir}/test_youtube_config.ini')
+        configParserManager.createDefaultConfigFile = MagicMock()
+        self.youtubeTest = youtubeDL.YoutubeDL(configParserManager)
+        self.youtubeConfigPlaylists = youtubeDL.YoutubeDlConfig(configParserManager,
             MagicMock())
         self.youtubeTest._savePath = self.testDir
         self.youtubeTest._ydl_opts['outtmpl'] = self.testDir + \
@@ -132,7 +129,6 @@ class TestYoutubeDL(TestCase):
     def checkFastDownloadResult(self, metaData):
         resultTest = {'title': 'testPlaylist', 'entries': [
             self.songFromPlaylist1, self.songFromPlaylist2, None]}
-        print("RESULT_TEST", resultTest)
         if metaData != resultTest:
             return False
         else:
@@ -141,10 +137,6 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
     def testDownloadFile(self, mockExtractinfo):
         resultOfYoutube = self.youtubeTest._downloadFile(self.mainURL1)
-        print(self.songMetaData1)
-        print(dir(resultOfYoutube.getData()))
-        print(resultOfYoutube.getData().url)
-
         self.assertEqual(False, resultOfYoutube.isError())
         mockExtractinfo.assert_called_once_with(self.mainURL1)
         singleMedia = resultOfYoutube.getData()
@@ -231,7 +223,6 @@ class TestYoutubeDL(TestCase):
         metaData = self.youtubeConfigPlaylists.fastDownloadVideoPlaylist(
             self.mainPlaylistUrlNoVideoHash1, "480")
         mockExtractinfo.assert_called_once_with(self.mainPlaylistHash)
-        print(metaData)
         checkResult = self.checkFastDownloadResult(metaData)
         self.assertEqual(True, checkResult)
 
