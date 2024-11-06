@@ -5,6 +5,7 @@ from unittest.mock import patch, call, MagicMock
 from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 import website_youtube_dl.common.youtubeDL as youtubeDL
+from test.configParserMock import ConfigParserMock
 
 
 class TestYoutubeDL(TestCase):
@@ -92,8 +93,8 @@ class TestYoutubeDL(TestCase):
 
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
-        configParserManager = ConfigParserManager(f'{self.testDir}/test_youtube_config.ini')
-        configParserManager.createDefaultConfigFile = MagicMock()
+        configParserManager = ConfigParserManager(f'{self.testDir}/test_youtube_config.ini',
+                                                  ConfigParserMock())
         self.youtubeTest = youtubeDL.YoutubeDL(configParserManager)
         self.youtubeConfigPlaylists = youtubeDL.YoutubeDlConfig(configParserManager,
             MagicMock())

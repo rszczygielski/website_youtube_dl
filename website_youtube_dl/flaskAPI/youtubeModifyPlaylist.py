@@ -5,6 +5,7 @@ from .emits import (DownloadMediaFinishEmit,
                     UploadPlaylistToConfigEmit,
                     GetPlaylistUrlEmit)
 from .youtube import generateHash, downloadTracksFromPlaylistAudio
+from .session import SessionDownloadData
 
 
 youtube_playlist = Blueprint("youtube_playlist", __name__)
@@ -24,7 +25,11 @@ def downloadConfigPlaylist(formData):
     fullFilePath = downloadTracksFromPlaylistAudio(playlistURL)
     if not fullFilePath:
         return False
-    emitHashWithDownloadedFile(fullFilePath)
+    sessionDownloadData = SessionDownloadData(fullFilePath)
+    genereted_hash = generateHash()
+    app.session.addElemtoSession(genereted_hash, sessionDownloadData)
+    emitDownloadFinish = DownloadMediaFinishEmit()
+    emitDownloadFinish.sendEmit(genereted_hash)
 
 
 @socketio.on("addPlaylist")
@@ -50,13 +55,5 @@ def deletePlalistConfig(formData):
 def getPlaylistConfigUrl(formData):
     playlistName = formData["playlistName"]
     playlistUrl = app.configParserManager.getPlaylistUrl(playlistName)
-    socketio.emit("playlistUrl", {"data": {"playlistUrl": playlistUrl}})
-
-
-def emitHashWithDownloadedFile(fullFilePath):
-    splitedFilePath = fullFilePath.split("/")
-    fileName = splitedFilePath[-1]
-    directoryPath = "/".join(splitedFilePath[:-1])
-    generatedHash = generateHash()
-    downloadMediaFinishEmit = DownloadMediaFinishEmit()
-    downloadMediaFinishEmit.sendEmit(generatedHash)
+    getPlaylistEmit = GetPlaylistUrlEmit()
+    getPlaylistEmit.sendEmit(playlistUrl)

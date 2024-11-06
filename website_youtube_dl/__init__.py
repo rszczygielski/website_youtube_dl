@@ -33,15 +33,17 @@ def create_app(config_class=Config):
 
 
 def init_logger():
-    # logging.basicConfig(
-    #     format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.ERROR)
+    logging.basicConfig(
+        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
     logger_werkzeug = logging.getLogger('werkzeug')
     logger_werkzeug.setLevel(logging.ERROR)
     logger = logging.getLogger(__name__)
     return logger
 
+
 def init_flask_session():
     return SessionClient(session)
+
 
 def init_configPareser():
     config = "youtube_config.ini"

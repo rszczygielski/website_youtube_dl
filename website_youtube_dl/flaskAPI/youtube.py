@@ -12,11 +12,11 @@ from flask import current_app as app
 from .emits import (DownloadMediaFinishEmit,
                     SingleMediaInfoEmit,
                     PlaylistMediaInfoEmit)
+from .session import SessionDownloadData
 from .flaskMedia import (
     FlaskMediaFromPlaylist,
     FlaskPlaylistMedia,
-    FlaskSingleMedia,
-    SessionDownloadData)
+    FlaskSingleMedia)
 import zipfile
 import os
 import yt_dlp
@@ -60,10 +60,7 @@ def socketDownloadServer(formData):
 
 @youtube.route("/downloadFile/<name>")
 def downloadFile(name):
-    print("IT WORKS!!!!!!!!!!!!!!!!!")
-    print(name)
-    print(app.session.session.keys())
-    app.session.checkIfElemInSession(name)
+    app.session.ifElemInSession(name)
     sessionDownloadData: SessionDownloadData = app.session.getSessionElem(
         name)
     downloadFileName = yt_dlp.utils.sanitize_filename(
@@ -71,6 +68,7 @@ def downloadFile(name):
     fullPath = os.path.join(
         sessionDownloadData.fileDirectoryPath, downloadFileName)
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
+    # app.session.clearSession()
     return send_file(fullPath, as_attachment=True)
 
 

@@ -23,15 +23,17 @@ class EasyID3Manager():  # pragma: no_cover
         if not os.path.isfile(filePath):
             logger.warning(
                 f"File {filePath} doesn't exist - provide correct file path")
+        self.filePath = filePath
         self.title = title
         self.album = album
         self.artist = artist
         self.trackNumber = trackNumber
+        self.playlistName = playlistName
 
     def saveMetaData(self):
         if self.filePath is None:
            raise FileNotFoundError(
-                f"File {self.filePath} doesn't exist - provide correct file path") 
+                f"File {self.filePath} doesn't exist - provide correct file path")
         audio = EasyID3(self.filePath)
         if self.title:
             audio[MetaDataType.TITLE.value] = self.title

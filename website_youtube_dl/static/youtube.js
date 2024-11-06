@@ -45,9 +45,8 @@ class MessageManager{
     }
 
     convertMessageToData(){
-        
     }
-    
+
     getData(){
         if ("data" in this.requestJson){
             return this.convertMessageToData(this.requestJson["data"])
@@ -61,7 +60,6 @@ class PlaylistMediaEmit extends MessageManager {
     constructor(requestJson){
         super(requestJson)
     }
-    
 
     convertMessageToData(data) {
         var playlistName = data["playlist_name"]
@@ -85,7 +83,7 @@ class SingleMediaEmit extends MessageManager {
     constructor(requestJson){
         super(requestJson)
     }
-    
+
     convertMessageToData(data) {
         console.log(data)
         return new SingleMedia(data["title"],
@@ -143,7 +141,6 @@ $(document).ready(function () {
         }
     })
 
-    
 
     socket.on(PlaylistMediaEmit.emitMsg, function (response) {
         // console.log("InProgress", response["data"])
