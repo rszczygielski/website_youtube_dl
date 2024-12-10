@@ -93,8 +93,6 @@ class SingleMediaEmit extends MessageManager {
 }
 
 
-
-
 $(document).ready(function () {
     var socket = io();
     console.log("ready")

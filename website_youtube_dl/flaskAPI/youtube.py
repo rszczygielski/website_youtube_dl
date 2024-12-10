@@ -61,7 +61,7 @@ def socketDownloadServer(formData):
 @youtube.route("/downloadFile/<name>")
 def downloadFile(name):
     app.session.ifElemInSession(name)
-    sessionDownloadData: SessionDownloadData = app.session.getSessionElem(
+    sessionDownloadData = app.session.getSessionElem(
         name)
     downloadFileName = yt_dlp.utils.sanitize_filename(
         sessionDownloadData.fileName)
@@ -90,7 +90,7 @@ def downloadSingleVideo(singleMediaURL, type):
     if singleMediaInfoResult.isError():
         errorMsg = singleMediaInfoResult.getErrorInfo()
         handleError(errorMsg)
-        return False
+        return None
     trackInfo = singleMediaInfoResult.getData()
     directoryPath = app.configParserManager.getSavePath()
     fileName = f"{trackInfo.title}_{type}p.{trackInfo.extension}"
@@ -133,7 +133,7 @@ def downloadAudioFromPlaylist(singleMediaURL, playlistName, index):
     if singleMediaInfoResult.isError():
         errorMsg = singleMediaInfoResult.getErrorInfo()
         handleError(errorMsg)
-        return False
+        return None
     singleMedia: SingleMedia = singleMediaInfoResult.getData()
     directoryPath = app.configParserManager.getSavePath()
     filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(singleMedia.title)}.mp3'
@@ -159,6 +159,8 @@ def downloadTracksFromPlaylistVideo(youtubeURL, type):
     for playlistTrack in playlistMedia.mediaFromPlaylistList:
         fullPath = downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
                                        type=type)
+        if fullPath is None:
+            continue
         filePaths.append(fullPath)
     directoryPath = app.configParserManager.getSavePath()
     zipNameFile = zipAllFilesInList(
@@ -180,6 +182,8 @@ def downloadTracksFromPlaylistAudio(youtubeURL):
         fullPath = downloadAudioFromPlaylist(singleMediaURL=playlistTrack.ytHash,
                                              playlistName=playlistMedia.playlistName,
                                              index=str(index))
+        if fullPath is None: # napisz unittesty pod to
+            continue
         filePaths.append(fullPath)
     directoryPath = app.configParserManager.getSavePath()
     zipNameFile = zipAllFilesInList(

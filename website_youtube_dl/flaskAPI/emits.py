@@ -1,16 +1,22 @@
 from abc import ABC, abstractmethod
 from ..common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from .emitKeys import EmitAttributes, EmitMessages
+from .emitKeys import EmitAttributes
 from .. import socketio
 
 
+
 class BaseEmit(ABC):
+    dataStr = "data"
+    playlistName = "playlistName"
+    trackList = "trackList"
+    playlistList = "plalistList"
+
     def __init__(self, emitMsg) -> None:
         self.emitMsg = emitMsg
 
     def sendEmit(self, data):
         convertedData = self.convertDataToMessage(data)
-        socketio.emit(self.emitMsg, {EmitAttributes.DATA.value: convertedData})
+        socketio.emit(self.emitMsg, {self.dataStr: convertedData})
 
     @abstractmethod
     def convertDataToMessage(self):  # pragma: no_cover
@@ -18,20 +24,22 @@ class BaseEmit(ABC):
 
 
 class DownloadMediaFinishEmit(BaseEmit):
+    errorStr = "error"
+
     def __init__(self) -> None:
-        emitMsg = EmitMessages.DOWNLOAD_MEDIA_FINISH.value
+        emitMsg = "downloadMediaFinish"
         super().__init__(emitMsg)
 
     def convertDataToMessage(self, genereted_hash):
         return {"HASH": genereted_hash}
 
     def sendEmitError(self, error_msg):
-        socketio.emit(self.emitMsg, {EmitAttributes.ERROR.value: error_msg})
+        socketio.emit(self.emitMsg, {self.errorStr: error_msg})
 
 
 class SingleMediaInfoEmit(BaseEmit):
     def __init__(self) -> None:
-        emitMsg = EmitMessages.MEDIA_INFO.value
+        emitMsg = "mediaInfo"
         super().__init__(emitMsg)
 
     def convertDataToMessage(self, flaskSingleMedia):
@@ -45,7 +53,7 @@ class SingleMediaInfoEmit(BaseEmit):
 
 class PlaylistMediaInfoEmit(BaseEmit):
     def __init__(self) -> None:
-        emitMsg = EmitMessages.PLAYLIST_MEDIA_INFO.value
+        emitMsg = "playlistMediaInfo"
         super().__init__(emitMsg)
 
     def convertDataToMessage(self, flaskPlaylistMedia):
@@ -57,23 +65,25 @@ class PlaylistMediaInfoEmit(BaseEmit):
                 PlaylistInfo.URL.value: track.url,
             }
             playlistTrackList.append(trackInfoDict)
-        return {EmitAttributes.PLAYLIST_NAME.value: playlistName,
-                EmitAttributes.TRACK_LIST.value: playlistTrackList}
+        return {self.playlistName: playlistName,
+                self.trackList: playlistTrackList}
 
 
 class UploadPlaylistToConfigEmit(BaseEmit):
     def __init__(self):
-        emitMsg = EmitMessages.UPLOAD_PLAYLISTS.value
+        emitMsg = "uploadPlalists"
         super().__init__(emitMsg)
 
     def convertDataToMessage(self, playlistList):
-        return {EmitAttributes.PLAYLIST_LIST.value: playlistList}
+        return {self.playlistList: playlistList}
 
 
 class GetPlaylistUrlEmit(BaseEmit):
+    playlistUrlStr = "playlistUrl"
+
     def __init__(self):
-        emitMsg = EmitMessages.PLAYLIST_URL.value
+        emitMsg = self.playlistUrlStr
         super().__init__(emitMsg)
 
     def convertDataToMessage(self, playlistUrl):
-        return {EmitMessages.PLAYLIST_URL.value: playlistUrl}
+        return {self.playlistUrlStr: playlistUrl}

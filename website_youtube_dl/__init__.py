@@ -28,7 +28,7 @@ def create_app(config_class=Config):
     app.register_blueprint(youtube)
     app.register_blueprint(youtube_playlist)
     socketio.init_app(app, manage_session=False)
-    app.session = init_flask_session()
+    app.session = SessionClient(session)
     return app
 
 
@@ -39,10 +39,6 @@ def init_logger():
     logger_werkzeug.setLevel(logging.ERROR)
     logger = logging.getLogger(__name__)
     return logger
-
-
-def init_flask_session():
-    return SessionClient(session)
 
 
 def init_configPareser():

@@ -1,4 +1,5 @@
 from flask import current_app as app
+
 import os
 
 
@@ -27,7 +28,8 @@ class SessionClient():
         self.session[key] = value
 
     def deleteElemFormSession(self, key):
-        self.ifElemInSession(key)
+        if not self.ifElemInSession(key):
+            return
         self.session.pop(key)
 
     def ifElemInSession(self, key):
@@ -37,16 +39,17 @@ class SessionClient():
         return True
 
     def getSessionElem(self, key):
-        self.ifElemInSession(key)
+        if not self.ifElemInSession(key):
+            return
         return self.session[key]
 
     def printSessionKeys(self):  # pragma: no_cover
         app.logger.info(self.session.keys())
 
-    def clearSession(self): # pragma: no_cover
+    def clearSession(self):  # pragma: no_cover
         self.session.clear()
 
-    def getAllSessionKeys(self): # pragma: no_cover
+    def getAllSessionKeys(self):  # pragma: no_cover
         return self.session.keys()
 
     # def __del__(self):
