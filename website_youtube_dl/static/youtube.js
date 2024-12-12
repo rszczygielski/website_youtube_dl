@@ -1,3 +1,5 @@
+var socket = io()
+
 class SingleMedia {
     constructor(title, artist, url) {
         this.title = title;
@@ -54,7 +56,7 @@ class MessageManager{
     }
 }
 
-class PlaylistMediaEmit extends MessageManager {
+class PlaylistMediaEmitReceiver extends MessageManager {
     static emitMsg = "playlistMediaInfo"
 
     constructor(requestJson){
@@ -77,7 +79,7 @@ class PlaylistMediaEmit extends MessageManager {
     }
 }
 
-class SingleMediaEmit extends MessageManager {
+class SingleMediaEmitReceiver extends MessageManager {
     static emitMsg = "mediaInfo"
 
     constructor(requestJson){
@@ -93,8 +95,53 @@ class SingleMediaEmit extends MessageManager {
 }
 
 
+class FormData{
+
+    constructor(youtubeURL, downloadType){
+        this.youtubeURL = youtubeURL
+        this.downloadType = downloadType
+    }
+}
+
+class BaseEmit {
+
+    constructor(emitMsg){
+        this.emitMsg = emitMsg
+    }
+
+    convertDataToMessage(){
+    }
+
+    sendEmit(data){
+        var convertedData = this.convertDataToMessage(data)
+        socket.emit(this.emitMsg, convertedData)
+    }
+}
+
+class EmitFormData extends BaseEmit {
+
+    constructor(){
+        var emitMsg = "FormData"
+        super(emitMsg)
+        this.ytURL = "youtubeURL"
+        this.downloadType = "downloadType"
+        this.emitMsg = emitMsg
+
+    }
+
+    /**
+     * @param {FormData} data
+     */
+    convertDataToMessage(formData){
+        return {
+            "youtubeURL": formData.youtubeURL,
+            "downloadType": formData.downloadType
+        }
+    }
+}
+
+
 $(document).ready(function () {
-    var socket = io();
     console.log("ready")
     socket.on('connect', function () {
         console.log("Connected Youtube");
@@ -119,10 +166,9 @@ $(document).ready(function () {
                 break;
             }
         }
-        socket.emit("FormData", {
-            "youtubeURL": youtubeURL.value,
-            "downloadType": downloadType
-        });
+        formData = new FormData(youtubeURL.value, downloadType)
+        emitFormData = new EmitFormData()
+        emitFormData.sendEmit(formData)
         return true
     })
 
@@ -140,16 +186,16 @@ $(document).ready(function () {
     })
 
 
-    socket.on(PlaylistMediaEmit.emitMsg, function (response) {
+    socket.on(PlaylistMediaEmitReceiver.emitMsg, function (response) {
         // console.log("InProgress", response["data"])
         var table = document.getElementById("downloadInfo")
-        var playlistMediaEmit = new PlaylistMediaEmit(response)
-        console.log(playlistMediaEmit)
-        if (playlistMediaEmit.isError()){
-            console.log(playlistMediaEmit.getError())
+        var playlistMediaEmitReceiver = new PlaylistMediaEmitReceiver(response)
+        console.log(playlistMediaEmitReceiver)
+        if (playlistMediaEmitReceiver.isError()){
+            console.log(playlistMediaEmitReceiver.getError())
             return
         }
-        var playlistMedia = playlistMediaEmit.getData()
+        var playlistMedia = playlistMediaEmitReceiver.getData()
         console.log(playlistMedia.trackList)
         for (singleMedia of playlistMedia.trackList) {
             var row = table.insertRow()
@@ -166,15 +212,15 @@ $(document).ready(function () {
         }
     })
 
-    socket.on(SingleMediaEmit.emitMsg, function (response) {
+    socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
-        var singleMediaEmit = new SingleMediaEmit(response)
-        console.log(singleMediaEmit)
-        if (singleMediaEmit.isError()){
-            console.log(singleMediaEmit.getError())
+        var singleMediaEmitReceiver = new SingleMediaEmitReceiver(response)
+        console.log(singleMediaEmitReceiver)
+        if (singleMediaEmitReceiver.isError()){
+            console.log(singleMediaEmitReceiver.getError())
             return
         }
-        var singleMedia = singleMediaEmit.getData()
+        var singleMedia = singleMediaEmitReceiver.getData()
         var row = table.insertRow()
         var full_row_html = `
         <td class=row-download-info>
