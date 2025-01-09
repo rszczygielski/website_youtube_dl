@@ -26,8 +26,6 @@ from .. import socketio
 
 youtube = Blueprint("youtube", __name__)
 
-# pwa poczytać, zorganizuj folder aby tak jak w yt_dlp
-
 
 @socketio.on("FormData")
 def socketDownloadServer(formData):
@@ -68,7 +66,6 @@ def downloadFile(name):
     fullPath = os.path.join(
         sessionDownloadData.fileDirectoryPath, downloadFileName)
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
-    # app.session.clearSession()
     return send_file(fullPath, as_attachment=True)
 
 
@@ -84,7 +81,7 @@ def index():
     return render_template('index.html')
 
 
-def downloadSingleVideo(singleMediaURL, type):
+def _downloadSingleVideo(singleMediaURL, type):
     singleMediaInfoResult = app.youtubeDownloder.downloadVideo(
         singleMediaURL, type)
     if singleMediaInfoResult.isError():
@@ -99,10 +96,10 @@ def downloadSingleVideo(singleMediaURL, type):
     return os.path.join(directoryPath, fileName)
 
 
-def downloadSingleVideoWithEmit(singleMediaURL, type):  # pragma: no_cover
+def downloadSingleVideo(singleMediaURL, type):  # pragma: no_cover
     if not sendEmitSingleMediaInfoFromYoutube(singleMediaURL):
         return
-    return downloadSingleVideo(singleMediaURL, type)
+    return _downloadSingleVideo(singleMediaURL, type)
 
 
 def downloadSingleAudio(singleMediaURL):
@@ -157,7 +154,7 @@ def downloadTracksFromPlaylistVideo(youtubeURL, type):
     filePaths = []
     playlistTrack: MediaFromPlaylist
     for playlistTrack in playlistMedia.mediaFromPlaylistList:
-        fullPath = downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
+        fullPath = _downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
                                        type=type)
         if fullPath is None:
             continue
@@ -236,7 +233,7 @@ def downloadCorrectData(youtubeURL, type, isPlaylist):
     elif type == YoutubeVariables.MP3.value and not isPlaylist:
         fullFilePath = downloadSingleAudio(youtubeURL)
     elif type != YoutubeVariables.MP3.value and not isPlaylist:
-        fullFilePath = downloadSingleVideoWithEmit(youtubeURL, type)
+        fullFilePath = downloadSingleVideo(youtubeURL, type)
     return fullFilePath
 
 

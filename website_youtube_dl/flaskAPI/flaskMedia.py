@@ -27,19 +27,3 @@ class FlaskPlaylistMedia():
             flaskSingleMediaList.append(FlaskMediaFromPlaylist(track.title,
                                                                track.ytHash))
         return cls(playlistName, flaskSingleMediaList)
-
-
-class SessionDownloadData():
-    fileName = None
-    fileDirectoryPath = None
-
-    def __init__(self, fullFilePath) -> None:
-        self.setSessionDownloadData(fullFilePath)
-
-    def setSessionDownloadData(self, fullFilePath):
-        if not os.path.isfile(fullFilePath):
-            raise FileNotFoundError(
-                f"File {fullFilePath} doesn't exist - something went wrong")
-        splitedFilePath = fullFilePath.split("/")
-        self.fileName = splitedFilePath[-1]
-        self.fileDirectoryPath = "/".join(splitedFilePath[:-1])

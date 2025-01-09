@@ -142,6 +142,7 @@ class testYoutubeWeb(TestCase):
         sessionData = SessionDownloadData(self.testPath)
         testKey = "testKey"
         self.app.session.addElemtoSession(testKey, sessionData)
+        print(self.app.session)
         response = self.flask.get('/downloadFile/testKey')
         self.assertEqual(len(isFileMock.mock_calls), 2)
         sendFileMock.assert_called_once_with(self.testPath, as_attachment=True)

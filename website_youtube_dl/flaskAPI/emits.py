@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from ..common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from .emitKeys import EmitAttributes
 from .. import socketio
 
 

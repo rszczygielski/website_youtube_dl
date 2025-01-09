@@ -128,8 +128,7 @@ class YoutubeDL():
         return resultOfYoutube
 
     def downloadAudio(self, youtubeURL: str):
-        """Method uded to download audio type from Youtube, convert metadata
-        into mp3 format used mutagen.easyid3
+        """Method uded to download audio type from Youtube
 
         Args:
             youtubeURL (str): YouTube URL
@@ -139,7 +138,7 @@ class YoutubeDL():
         resultOfYoutube = self._downloadFile(mediaHash)
         if resultOfYoutube.isError():
             errorMsg = resultOfYoutube.getErrorInfo()
-            logger.error(f"Download video info error: {errorMsg}")
+            logger.error(f"Download audio info error: {errorMsg}")
             return resultOfYoutube
         return resultOfYoutube
 
