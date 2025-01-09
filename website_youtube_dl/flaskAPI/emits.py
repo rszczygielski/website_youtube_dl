@@ -3,7 +3,6 @@ from ..common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from .. import socketio
 
 
-
 class BaseEmit(ABC):
     dataStr = "data"
     playlistName = "playlistName"
@@ -70,7 +69,7 @@ class PlaylistMediaInfoEmit(BaseEmit):
 
 class UploadPlaylistToConfigEmit(BaseEmit):
     def __init__(self):
-        emitMsg = "uploadPlalists"
+        emitMsg = "uploadPlaylists"
         super().__init__(emitMsg)
 
     def convertDataToMessage(self, playlistList):

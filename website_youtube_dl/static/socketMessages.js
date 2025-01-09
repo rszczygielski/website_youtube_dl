@@ -22,9 +22,43 @@ class PlaylistMedia {
     }
 }
 
-class FlaskResultHash{
+class DownloadMediaFinish{
     constructor(hash) {
         this.hash = hash
+    }
+}
+
+class FormData{
+
+    constructor(youtubeURL, downloadType){
+        this.youtubeURL = youtubeURL
+        this.downloadType = downloadType
+    }
+}
+
+class AddPlaylist{
+
+    constructor(playlistName, playlistURL){
+        this.playlistName = playlistName
+        this.playlistURL = playlistURL
+    }
+}
+
+class PlaylistName{
+    constructor(playlistName){
+        this.playlistName = playlistName
+    }
+}
+
+class UploadPlaylists{
+    constructor(plalistList){
+        this.plalistList = plalistList
+    }
+}
+
+class PlaylistUrl{
+    constructor(playlistUrl) {
+        this.playlistUrl = playlistUrl
     }
 }
 
@@ -94,12 +128,42 @@ class SingleMediaEmitReceiver extends BaseReceiver {
     }
 }
 
+class DownloadMediaFinishReceiver extends BaseReceiver {
+    static emitMsg = "downloadMediaFinish"
 
-class FormData{
+    constructor(requestJson){
+        super(requestJson)
+    }
 
-    constructor(youtubeURL, downloadType){
-        this.youtubeURL = youtubeURL
-        this.downloadType = downloadType
+    convertMessageToData(data) {
+        var hash = data["HASH"]
+        return new DownloadMediaFinish(hash)
+    }
+}
+
+class UploadPlaylistsReceiver extends BaseReceiver {
+    static emitMsg = "uploadPlaylists"
+
+    constructor(requestJson){
+        super(requestJson)
+    }
+
+    convertMessageToData(data) {
+        var plalistList = data["plalistList"]
+        return new UploadPlaylists(plalistList)
+    }
+}
+
+class PlaylistUrlReceiver extends BaseReceiver {
+    static emitMsg = "playlistUrl"
+
+    constructor(requestJson){
+        super(requestJson)
+    }
+
+    convertMessageToData(data) {
+        var playlistUrl = data["playlistUrl"]
+        return new PlaylistUrl(playlistUrl)
     }
 }
 
@@ -134,6 +198,83 @@ class EmitFormData extends BaseEmit {
         return {
             "youtubeURL": formData.youtubeURL,
             "downloadType": formData.downloadType
+        }
+    }
+}
+
+
+class EmitAddPlaylist extends BaseEmit {
+
+    constructor(){
+        var emitMsg = "addPlaylist"
+        super(emitMsg)
+        this.emitMsg = emitMsg
+    }
+
+    /**
+     * @param {AddPlaylist} data
+     */
+    convertDataToMessage(addPlaylist){
+        return {
+            "playlistName": addPlaylist.playlistName,
+            "playlistURL": addPlaylist.playlistURL
+        }
+    }
+}
+
+
+class EmitDeletePlaylist extends BaseEmit {
+
+    constructor(){
+        var emitMsg = "deletePlaylist"
+        super(emitMsg)
+        this.emitMsg = emitMsg
+    }
+
+    /**
+     * @param {PlaylistName} data
+     */
+    convertDataToMessage(playlistName){
+        return {
+            "playlistToDelete": playlistName.playlistName
+        }
+    }
+}
+
+
+class EmitPlaylistName extends BaseEmit {
+
+    constructor(){
+        var emitMsg = "playlistName"
+        super(emitMsg)
+        this.emitMsg = emitMsg
+    }
+
+    /**
+     * @param {PlaylistName} data
+     */
+    convertDataToMessage(playlistName){
+        return {
+            "playlistName": playlistName.playlistName
+        }
+    }
+}
+
+
+class EmitDownloadFromConfigFile extends BaseEmit {
+
+    constructor(){
+        var emitMsg = "downloadFromConfigFile"
+        super(emitMsg)
+        this.emitMsg = emitMsg
+    }
+
+    /**
+     * @param {PlaylistName} data
+     */
+    convertDataToMessage(playlistName){
+        return {
+            "playlistToDownload": playlistName.playlistName
         }
     }
 }

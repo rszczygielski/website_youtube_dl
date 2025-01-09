@@ -362,7 +362,8 @@ class testYoutubeWeb(TestCase):
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
         mockRequestSingleMedia.assert_called_once_with(self.actualYoutubeURL1)
-        self.assertEqual(emitData.data[self.dataStr], self.expectedResultSingleMediInfo)
+        self.assertEqual(emitData.data[self.dataStr],
+                         self.expectedResultSingleMediInfo)
         self.assertEqual(self.singleMediaInfoEmit.emitMsg, emitData.emitName)
         self.assertTrue(result)
 
@@ -392,7 +393,8 @@ class testYoutubeWeb(TestCase):
         emitData = EmitData.initFromMassage(receivedMsg)
         mockRequestSingleMedia.assert_called_once_with(
             self.actualYoutubePlaylistURL1)
-        self.assertEqual(emitData.data[self.dataStr], self.expectedResultPlaylistMediaInfo)
+        self.assertEqual(emitData.data[self.dataStr],
+                         self.expectedResultPlaylistMediaInfo)
         self.assertEqual(self.playlistMediaInfoEmit.emitMsg, emitData.emitName)
         self.assertTrue(result)
 
@@ -624,7 +626,7 @@ class testYoutubeWeb(TestCase):
         pythonEmit = self.socketIoTestClient.get_received()
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertEqual(emitData.emitName, "uploadPlalists")
+        self.assertEqual(emitData.emitName, "uploadPlaylists")
         self.assertEqual(
             emitData.data, {self.dataStr: {'plalistList': ["test_playlist", self.testPlaylistName]}})
 
@@ -642,7 +644,7 @@ class testYoutubeWeb(TestCase):
         pythonEmit = self.socketIoTestClient.get_received()
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertEqual(emitData.emitName, "uploadPlalists")
+        self.assertEqual(emitData.emitName, "uploadPlaylists")
         self.assertEqual(
             emitData.data, {self.dataStr: {'plalistList': ["test_playlist", self.testPlaylistName]}})
 

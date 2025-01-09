@@ -28,16 +28,16 @@ $(document).ready(function () {
         return true
     })
 
-    socket.on("downloadMediaFinish", function (response) {
-        if ("error" in response) {
-            console.log("Error", response["error"])
+    socket.on(DownloadMediaFinishReceiver.emitMsg, function (response) {
+        var downloadMediaFinishReceiver = new DownloadMediaFinishReceiver(response)
+        if (downloadMediaFinishReceiver.isError()){
+            console.log(downloadMediaFinishReceiver.getError())
+            return
         }
-        else {
-            var downloadSection = document.getElementById("downloadSection")
-            var fileHash = response["data"]["HASH"]
-            console.log(fileHash)
-            downloadSection.innerHTML = "<br><a href=/downloadFile/" + fileHash + " class='neon-button'>Download File</a>"
-        }
+        var downloadSection = document.getElementById("downloadSection")
+        var downloadMediaFinish = downloadMediaFinishReceiver.getData()
+        console.log(downloadMediaFinish.hash)
+        downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " class='neon-button'>Download File</a>"
     })
 
 

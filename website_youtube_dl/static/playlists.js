@@ -9,14 +9,19 @@ $(document).ready(function () {
     const addPlaylistButton = document.getElementById("addPlaylistButton")
     const deletePlalistButton = document.getElementById("deletePlaylistButton")
 
-    socket.on("uploadPlalists", function(response){
+    socket.on(UploadPlaylistsReceiver.emitMsg, function(response){
+        var uploadPlaylistsReceiver = new UploadPlaylistsReceiver(response)
+        if (uploadPlaylistsReceiver.isError()){
+            console.log(uploadPlaylistsReceiver.getError())
+            return
+        }
         const playlistSelect = document.getElementById("playlistSelect");
-        const playlistsNames = response["data"]["plalistList"]
-        console.log(playlistsNames)
+        var uploadPlaylists = uploadPlaylistsReceiver.getData()
+        console.log(uploadPlaylists.playlistsNames)
 
         playlistSelect.innerHTML = '';
 
-        playlistsNames.forEach(function(playlistName) {
+        uploadPlaylists.playlistsNames.forEach(function(playlistName) {
             let option = document.createElement("option");
             option.value = playlistName;
             option.textContent = playlistName;
@@ -24,61 +29,74 @@ $(document).ready(function () {
         });
     })
 
-    socket.on("downloadMediaFinish", function (response) {
-        console.log("DWONOLAD MEDIA FINISH ENTER")
-        if ("error" in response) {
-            console.log("Error", response["error"])
+    socket.on(DownloadMediaFinishReceiver.emitMsg, function (response) {
+        var downloadMediaFinishReceiver = new DownloadMediaFinishReceiver(response)
+        if (downloadMediaFinishReceiver.isError()){
+            console.log(downloadMediaFinishReceiver.getError())
+            return
         }
-        else {
-            const downloadSection = document.getElementById("downloadSection")
-            const fileHash = response["data"]["HASH"]
-            console.log(fileHash)
-            downloadSection.innerHTML = "<br><a href=/downloadFile/" + fileHash + " class='neon-button'>Download File</a>"
-        }
+        var downloadSection = document.getElementById("downloadSection")
+        var downloadMediaFinish = downloadMediaFinishReceiver.getData()
+        console.log(downloadMediaFinish.hash)
+        downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " class='neon-button'>Download File</a>"
     })
 
-    socket.on("mediaInfo", function (response) {
-        console.log("InProgress", response["data"])
-        for (var i = 0; i < response["data"].length; i++) {
-            var table = document.getElementById("downloadInfo")
-            var row = table.insertRow()
-            var cell = row.insertCell()
-            var cell2 = row.insertCell()
-            var cell3 = row.insertCell()
-            cell.innerHTML = response["data"][i]["artist"]
-            cell2.innerHTML = response["data"][i]["title"]
-            console.log(response["data"][i]["artist"])
-            console.log(response["data"][i]["title"])
-            cell3.innerHTML = "<a class=neon-button target='_blank' href=" + response["data"][i]["original_url"] + ">" + "url</a>"
+    socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
+        var table = document.getElementById("downloadInfo")
+        var singleMediaEmitReceiver = new SingleMediaEmitReceiver(response)
+        console.log(singleMediaEmitReceiver)
+        if (singleMediaEmitReceiver.isError()){
+            console.log(singleMediaEmitReceiver.getError())
+            return
         }
+        var singleMedia = singleMediaEmitReceiver.getData()
+        var row = table.insertRow()
+        var full_row_html = `
+        <td class=row-download-info>
+            <label class=trak-info>
+            ${singleMedia.artist} ${singleMedia.title}
+            </label>
+            <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
+        </td>
+        <br>
+        `
+        row.innerHTML = full_row_html
     })
 
-    socket.on("playlistUrl", function(response){
-        const playlistUrl = response["data"]["playlistUrl"]
+    socket.on(PlaylistUrlReceiver.emitMsg, function(response){
+        var playlistUrlReceiver = new PlaylistUrlReceiver(response)
+        if (playlistUrlReceiver.isError()){
+            console.log(playlistUrlReceiver.getError())
+            return
+        }
+        var playlistUrlObject = playlistUrlReceiver.getData()
         const urlInput = document.getElementById("playlistURL")
-        urlInput.value = playlistUrl
+        urlInput.value = playlistUrlObject.playlistUrl
     })
 
     addPlaylistButton.addEventListener("click", function (event) {
         const playlistName = document.getElementById("playlistName").value
         const playlistURL = document.getElementById("playlistURL").value
         console.log(playlistName, playlistURL)
-        socket.emit("addPlaylist", {
-            "playlistName": playlistName,
-            "playlistURL": playlistURL
-        })
+        var addPlaylist = new AddPlaylist(playlistName, playlistURL)
+        var emitAddPlaylist = new EmitAddPlaylist()
+        emitAddPlaylist.sendEmit(addPlaylist)
     });
 
     playlistSelect.addEventListener("click", function(event) {
         const playlistName =  playlistSelect.value;
         const playlistNameInput = document.getElementById("playlistName");
         playlistNameInput.value = playlistName;
-        socket.emit("playlistName", {"playlistName": playlistName})
+        var playlistNameObject = new PlaylistName(playlistName)
+        var emitPlaylistName = new EmitPlaylistName()
+        emitPlaylistName.sendEmit(playlistNameObject)
     });
 
     deletePlalistButton.addEventListener("click", function (event) {
         const playlistToDelete = playlistSelect.value
-        socket.emit("deletePlaylist", { "playlistToDelete": playlistToDelete })
+        var playlistNameObject = new PlaylistName(playlistToDelete)
+        var emitDeletePlaylist = new EmitDeletePlaylist()
+        emitDeletePlaylist.sendEmit(playlistNameObject)
     });
 
     downloadPlaylistButton.addEventListener("click", function (event) {
@@ -87,6 +105,9 @@ $(document).ready(function () {
         downloadSection.innerHTML = ''
         downloadInfo.innerHTML = ''
         const playlistToDownload = playlistSelect.value
-        socket.emit("downloadFromConfigFile", {"playlistToDownload": playlistToDownload })
+
+        var playlistNameObject = new PlaylistName(playlistToDownload)
+        var emitDownloadFromConfigFile = new EmitDownloadFromConfigFile()
+        emitDownloadFromConfigFile.sendEmit(playlistNameObject)
     });
 });
