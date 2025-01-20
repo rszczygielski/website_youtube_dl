@@ -44,7 +44,6 @@ $(document).ready(function () {
     socket.on(PlaylistMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
         var playlistMediaEmitReceiver = new PlaylistMediaEmitReceiver(response)
-        console.log(playlistMediaEmitReceiver)
         if (playlistMediaEmitReceiver.isError()){
             console.log(playlistMediaEmitReceiver.getError())
             return
@@ -55,9 +54,10 @@ $(document).ready(function () {
             var row = table.insertRow()
             var full_row_html = `
             <td class=row-download-info>
-                <label class=trak-info>
+                <label class=track-info>
                     ${singleMedia.title}
                 </label>
+            <td class=row-download-info>
                 <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
             </td>
             <br>
@@ -65,6 +65,23 @@ $(document).ready(function () {
             row.innerHTML = full_row_html
         }
     })
+
+    socket.on(PlaylistTrackFinishReceiver.emitMsg, function (response) {
+        var table = document.getElementById("downloadInfo")
+        var playlistTrackFinishReceiver = new PlaylistTrackFinishReceiver(response)
+        var downloadStatus = document.createElement("td")
+        if (playlistTrackFinishReceiver.isError()){
+            console.log("Failed download")
+            var trakcIndex = playlistTrackFinishReceiver.getError()
+            downloadStatus.innerHTML = "<div class=sucess-mark>❌</div>";
+        } else {
+            var trakcIndex = playlistTrackFinishReceiver.getData().index
+            downloadStatus.innerHTML = "<div class=sucess-mark>✔</div>"
+        }
+        var row = table.rows[trakcIndex]
+        var finishCell = row.insertCell()
+        finishCell.appendChild(downloadStatus)
+})
 
     socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
@@ -78,9 +95,11 @@ $(document).ready(function () {
         var row = table.insertRow()
         var full_row_html = `
         <td class=row-download-info>
-            <label class=trak-info>
+            <label class=track-info>
             ${singleMedia.artist} ${singleMedia.title}
             </label>
+            </td>
+        <td class=row-download-info>
             <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
         </td>
         <br>

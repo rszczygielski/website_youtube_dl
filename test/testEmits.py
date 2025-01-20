@@ -21,7 +21,7 @@ class TestEmits(TestCase):
     titleStr = "title"
     urlStr = "url"
     testPlaylistName = "playlistName"
-    playlistStr = "plalistList"
+    playlistStr = "playlistList"
     playlistUrlStr = "playlistUrl"
     trackList = "trackList"
     testTitle1 = "Society"

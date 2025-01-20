@@ -21,7 +21,7 @@ $(document).ready(function () {
 
         playlistSelect.innerHTML = '';
 
-        uploadPlaylists.playlistsNames.forEach(function(playlistName) {
+        uploadPlaylists.playlistList.forEach(function(playlistName) {
             let option = document.createElement("option");
             option.value = playlistName;
             option.textContent = playlistName;

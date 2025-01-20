@@ -11,7 +11,8 @@ from flask import (send_file,
 from flask import current_app as app
 from .emits import (DownloadMediaFinishEmit,
                     SingleMediaInfoEmit,
-                    PlaylistMediaInfoEmit)
+                    PlaylistMediaInfoEmit,
+                    PlaylistTrackFinish)
 from .session import SessionDownloadData
 from .flaskMedia import (
     FlaskMediaFromPlaylist,
@@ -151,13 +152,16 @@ def downloadTracksFromPlaylistVideo(youtubeURL, type):
     playlistMedia = sendEmitPlaylistMedia(youtubeURL)
     if not playlistMedia:
         return
+    playlistTrackFinish = PlaylistTrackFinish()
     filePaths = []
     playlistTrack: MediaFromPlaylist
-    for playlistTrack in playlistMedia.mediaFromPlaylistList:
+    for index, playlistTrack in enumerate(playlistMedia.mediaFromPlaylistList):
         fullPath = _downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
                                        type=type)
         if fullPath is None:
+            playlistTrackFinish.sendEmitError(index)
             continue
+        playlistTrackFinish.sendEmit(index)
         filePaths.append(fullPath)
     directoryPath = app.configParserManager.getSavePath()
     zipNameFile = zipAllFilesInList(
@@ -168,20 +172,38 @@ def downloadTracksFromPlaylistVideo(youtubeURL, type):
     fullZipPath = os.path.join(directoryPath, zipNameFile)
     return fullZipPath
 
+def getFilesFromDir(dirPath):
+    return [f.split(".")[0] for f in os.listdir(dirPath) if os.path.isfile(os.path.join(dirPath, f))]
 
 def downloadTracksFromPlaylistAudio(youtubeURL):
     playlistMedia = sendEmitPlaylistMedia(youtubeURL)
     if not playlistMedia:
         return
+    playlistTrackFinish = PlaylistTrackFinish()
     filePaths = []
+    downloadedFiles = getFilesFromDir(app.configParserManager.getSavePath())
     playlistTrack: FlaskMediaFromPlaylist
     for index, playlistTrack in enumerate(playlistMedia.mediaFromPlaylistList):
+        title = playlistTrack.title # zrobić funkcję i dodac do video pobierania
+        # https://www.youtube.com/playlist?list=PL6uhlddQJkfiCJfEQvnqzknbxfgBiGekb test
+        counter = 1
+        while title in downloadedFiles:
+            counter += 1
+            title = f"{title} ({counter})"
+        if counter > 1:
+            app.youtubeDownloder.setTitleTemplateOneTime(f"/%(title)s ({counter})")
+        print(app.youtubeDownloder.titleTemplateDefault, "Default")
+        print(app.youtubeDownloder.titleTemplate, "set")
+
         fullPath = downloadAudioFromPlaylist(singleMediaURL=playlistTrack.ytHash,
                                              playlistName=playlistMedia.playlistName,
                                              index=str(index))
         if fullPath is None: # napisz unittesty pod to
+            playlistTrackFinish.sendEmitError(index)
             continue
+        playlistTrackFinish.sendEmit(index)
         filePaths.append(fullPath)
+        downloadedFiles.append(title)
     directoryPath = app.configParserManager.getSavePath()
     zipNameFile = zipAllFilesInList(
         directoryPath, playlistMedia.playlistName, filePaths)

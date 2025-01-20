@@ -628,7 +628,7 @@ class testYoutubeWeb(TestCase):
         emitData = EmitData.initFromMassage(receivedMsg)
         self.assertEqual(emitData.emitName, "uploadPlaylists")
         self.assertEqual(
-            emitData.data, {self.dataStr: {'plalistList': ["test_playlist", self.testPlaylistName]}})
+            emitData.data, {self.dataStr: {'playlistList': ["test_playlist", self.testPlaylistName]}})
 
     @patch.object(ConfigParserManager, "getPlaylists", return_value={"test_playlist": "url1",
                                                                      testPlaylistName: "url2"})
@@ -646,7 +646,7 @@ class testYoutubeWeb(TestCase):
         emitData = EmitData.initFromMassage(receivedMsg)
         self.assertEqual(emitData.emitName, "uploadPlaylists")
         self.assertEqual(
-            emitData.data, {self.dataStr: {'plalistList': ["test_playlist", self.testPlaylistName]}})
+            emitData.data, {self.dataStr: {'playlistList': ["test_playlist", self.testPlaylistName]}})
 
     @patch.object(ConfigParserManager, "getPlaylistUrl", return_value=testPlaylistName)
     def testPlaylistConfigUrl(self, mockGetPlaylistUrl):

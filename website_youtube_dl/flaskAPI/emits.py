@@ -7,7 +7,8 @@ class BaseEmit(ABC):
     dataStr = "data"
     playlistName = "playlistName"
     trackList = "trackList"
-    playlistList = "plalistList"
+    playlistList = "playlistList"
+    errorStr = "error"
 
     def __init__(self, emitMsg) -> None:
         self.emitMsg = emitMsg
@@ -16,13 +17,15 @@ class BaseEmit(ABC):
         convertedData = self.convertDataToMessage(data)
         socketio.emit(self.emitMsg, {self.dataStr: convertedData})
 
+    def sendEmitError(self, error_msg):
+        socketio.emit(self.emitMsg, {self.errorStr: error_msg})
+
     @abstractmethod
     def convertDataToMessage(self):  # pragma: no_cover
         pass
 
 
 class DownloadMediaFinishEmit(BaseEmit):
-    errorStr = "error"
 
     def __init__(self) -> None:
         emitMsg = "downloadMediaFinish"
@@ -31,8 +34,6 @@ class DownloadMediaFinishEmit(BaseEmit):
     def convertDataToMessage(self, genereted_hash):
         return {"HASH": genereted_hash}
 
-    def sendEmitError(self, error_msg):
-        socketio.emit(self.emitMsg, {self.errorStr: error_msg})
 
 
 class SingleMediaInfoEmit(BaseEmit):
@@ -85,3 +86,15 @@ class GetPlaylistUrlEmit(BaseEmit):
 
     def convertDataToMessage(self, playlistUrl):
         return {self.playlistUrlStr: playlistUrl}
+
+class PlaylistTrackFinish(BaseEmit):
+
+    def __init__(self):
+        emitMsg = "playlistTrackFinish"
+        super().__init__(emitMsg)
+
+    def convertDataToMessage(self, index):
+        return {"index": index}
+
+    def sendEmitError(self, index:int):
+        socketio.emit(self.emitMsg, {self.errorStr: index})

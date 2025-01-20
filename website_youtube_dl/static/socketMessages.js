@@ -51,14 +51,20 @@ class PlaylistName{
 }
 
 class UploadPlaylists{
-    constructor(plalistList){
-        this.plalistList = plalistList
+    constructor(playlistList){
+        this.playlistList = playlistList
     }
 }
 
 class PlaylistUrl{
     constructor(playlistUrl) {
         this.playlistUrl = playlistUrl
+    }
+}
+
+class PlaylistIndex{
+    constructor(index){
+        this.index = index
     }
 }
 
@@ -149,8 +155,8 @@ class UploadPlaylistsReceiver extends BaseReceiver {
     }
 
     convertMessageToData(data) {
-        var plalistList = data["plalistList"]
-        return new UploadPlaylists(plalistList)
+        var playlistList = data["playlistList"]
+        return new UploadPlaylists(playlistList)
     }
 }
 
@@ -164,6 +170,19 @@ class PlaylistUrlReceiver extends BaseReceiver {
     convertMessageToData(data) {
         var playlistUrl = data["playlistUrl"]
         return new PlaylistUrl(playlistUrl)
+    }
+}
+
+class PlaylistTrackFinishReceiver extends BaseReceiver {
+    static emitMsg = "playlistTrackFinish"
+
+    constructor(requestJson){
+        super(requestJson)
+    }
+
+    convertMessageToData(data) {
+        var index = data["index"]
+        return new PlaylistIndex(index)
     }
 }
 

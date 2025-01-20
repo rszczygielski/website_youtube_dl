@@ -60,20 +60,23 @@ class ResultOfYoutube():
 
 
 class YoutubeDL():
+    titleTemplateDefault = "/%(title)s"
+    titleTemplate = titleTemplateDefault
+
     def __init__(self, configManager: ConfigParserManager, ytLogger: LoggerClass = Logger):
         self._configManager = configManager
         self.ytLogger = ytLogger
         self._savePath = self._configManager.getSavePath()
         self._ydl_opts = {
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: "downloaded_songs.txt",
             YoutubeOptiones.NO_OVERRIDE.value: False,
             YoutubeOptiones.LOGGER.value: None,
             YoutubeOptiones.QUIET.value: True,
             YoutubeOptiones.ADD_META_DATA.value: True,
         }
         self._ydl_media_info_opts = {
-            YoutubeOptiones.FORMAT.value: 'best/best',
+            YoutubeOptiones.FORMAT.value: "best/best",
             YoutubeOptiones.ADD_META_DATA.value: True,
             YoutubeOptiones.IGNORE_ERRORS.value: False,
             YoutubeOptiones.QUIET.value: True,
@@ -81,10 +84,10 @@ class YoutubeDL():
         }
 
         self._fast_info_opts = {
-            'extract_flat': 'in_playlist',
-            'addmetadata': True,
-            'ignoreerrors': False,
-            'quiet': True
+            "extract_flat": "in_playlist",
+            "addmetadata": True,
+            "ignoreerrors": False,
+            "quiet": True
         }
 
     def _downloadFile(self, singleMediaHash: str):
@@ -97,17 +100,20 @@ class YoutubeDL():
         Returns:
             class: meta data form youtube
         """
+        resultOfYoutube = ResultOfYoutube()
         with yt_dlp.YoutubeDL(self._ydl_opts) as ydl:
             try:
                 metaData = ydl.extract_info(singleMediaHash)
             except Exception as exception:
                 errorInfo = str(exception)
                 logger.error(f"Download media info error {errorInfo}")
-                resultOfYoutube = ResultOfYoutube()
                 resultOfYoutube.setError(errorInfo)
-                return resultOfYoutube
-        singleMedia = self._getMedia(metaData)
-        return ResultOfYoutube(singleMedia)
+        if not resultOfYoutube.isError():
+            singleMedia = self._getMedia(metaData)
+            resultOfYoutube.setData(singleMedia)
+        if self.titleTemplate != self.titleTemplateDefault:
+            self.titleTemplate = self.titleTemplateDefault
+        return resultOfYoutube
 
     def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
         """Method uded to download video type from YouTube
@@ -190,7 +196,7 @@ class YoutubeDL():
         """
         return {
             YoutubeOptiones.FORMAT.value: "bestvideo+bestaudio",
-            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: 'downloaded_songs.txt',
+            # YoutubeOptiones.DOWNLOAD_ARCHIVE.value: "downloaded_songs.txt",
             YoutubeOptiones.NO_OVERRIDE.value: False,
             YoutubeOptiones.LOGGER.value: None,
             YoutubeOptiones.QUIET.value: True,
@@ -257,21 +263,21 @@ class YoutubeDL():
             type (str): _description_
         """
         video_options = self._getDefaultOptions()
-        video_options[YoutubeOptiones.FORMAT.value] = f'best[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio'
+        video_options[YoutubeOptiones.FORMAT.value] = f"best[height={type}][ext=mp4]+bestaudio/bestvideo+bestaudio"
         video_options[YoutubeOptiones.OUT_TEMPLATE.value] = self._savePath + \
-            '/%(title)s' + f'_{type}p' + '.%(ext)s'
+            self.titleTemplate + f"_{type}p" + ".%(ext)s"
         self._ydl_opts = video_options
 
     def _setAudioOptions(self):
         """Method sets audio options
         """
         audio_options = self._getDefaultOptions()
-        audio_options['postprocessors'] = [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
+        audio_options["postprocessors"] = [{
+            "key": "FFmpegExtractAudio",
+            "preferredcodec": "mp3",
+            "preferredquality": "192",
         }]
-        audio_options['outtmpl'] = self._savePath + '/%(title)s.%(ext)s'
+        audio_options["outtmpl"] = self._savePath + f"{self.titleTemplate}.%(ext)s"
         self._ydl_opts = audio_options
 
     def _getMediaResultHash(self, url):
@@ -332,6 +338,9 @@ class YoutubeDL():
             playlistHash = splitedHashes[2]
             return playlistHash
 
+    def setTitleTemplateOneTime(self, newTitileTemplate):
+        self.titleTemplate = newTitileTemplate
+
 
 class YoutubeDlConfig(YoutubeDL):
     def __init__(self, configManager: ConfigParserManager,
@@ -378,7 +387,7 @@ class YoutubeDlConfig(YoutubeDL):
                 album = playlistTrack["album"]
             if "playlist_index" in playlistTrack:
                 index = playlistTrack["playlist_index"]
-            filePath = f'{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack["title"])}.mp3'
+            filePath = f"{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack['title'])}.mp3"
             self.easyID3Manager.setParams(filePath=filePath, title=title, album=album,
                                           artist=artist, playlistName=playlistName,
                                           trackNumber=index)
@@ -451,8 +460,8 @@ class TerminalUser(YoutubeDL):  # pragma: no_cover
     def downloadDoubleHashedLinkVideo(self, url, type):
         userResponse = input("""
         Playlist url detected.
-        If you want to download single video/audio press 's'
-        If you want to download whole playlist press 'p'
+        If you want to download single video/audio press "s"
+        If you want to download whole playlist press "p"
         """)
         if userResponse == "s":
             self.downloadVideo(url, type)
@@ -465,8 +474,8 @@ class TerminalUser(YoutubeDL):  # pragma: no_cover
     def downloadDoubleHashedLinkAudio(self, url):
         userResponse = input("""
         Playlist url detected.
-        If you want to download single video/audio press 's'
-        If you want to download whole playlist press 'p'
+        If you want to download single video/audio press "s"
+        If you want to download whole playlist press "p"
         """)
         if userResponse == "s":
             self.downloadAudio(url)
@@ -507,7 +516,7 @@ def main():  # pragma: no_cover
         "Program downloads mp3 form given youtube URL")
     parser.add_argument("-u", metavar="url", dest="url",
                         help="Link to the youtube video")
-    parser.add_argument("-t", metavar="type", dest="type", choices=['360', '480', '720', '1080', '4k', 'mp3'], default="1080",
+    parser.add_argument("-t", metavar="type", dest="type", choices=["360", "480", "720", "1080", "4k", "mp3"], default="1080",
                         help="Select downolad type --> ['360', '720', '1080', '2160', 'mp3'], default: 1080")
     parser.add_argument("-c", metavar="config", dest="config", default="youtube_config.ini",
                         help="Path to the config file --> default youtube_config.ini")
