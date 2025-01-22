@@ -1,5 +1,5 @@
-from website_youtube_dl.flaskAPI.emits import (BaseEmit,
-                                               DownloadMediaFinishEmit,
+from emitData import EmitData
+from website_youtube_dl.flaskAPI.emits import (DownloadMediaFinishEmit,
                                                SingleMediaInfoEmit,
                                                PlaylistMediaInfoEmit,
                                                UploadPlaylistToConfigEmit,
@@ -11,7 +11,6 @@ from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
 from website_youtube_dl.common.youtubeDataKeys import MediaInfo
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl import create_app, socketio
-from testYotubeWeb import EmitData
 from website_youtube_dl.common.youtubeLogKeys import YoutubeVariables
 
 

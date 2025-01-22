@@ -32,8 +32,6 @@ class TestVariables():
     testUrl = "testURL.com"
 
 
-
-
 class TestconfigParserManagerWithMockConfigClass(TestCase):
     # dodać klasę z zmiennymi żeby równiez ConfigParserMock mógł tego używać
 
