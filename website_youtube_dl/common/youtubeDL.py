@@ -1,11 +1,13 @@
 import yt_dlp
 import configparser
 import argparse
+import logging
+import os
+import re
 from .youtubeConfigManager import ConfigParserManager
 from .easyID3Manager import EasyID3Manager
 from .myLogger import Logger, LoggerClass
 from .youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -115,6 +117,33 @@ class YoutubeDL():
             self.titleTemplate = self.titleTemplateDefault
         return resultOfYoutube
 
+    def ifVideoExistOnYoutube(self, searchQuery:str):
+        """Method checks if given query exists on YouTube, methos uses yt-dlp package
+
+        Args:
+            searchQuery (str): query for to search YouTube
+
+        Returns:
+            bool: True if video exists, False if video not exists on YouTube
+        """
+
+        ydl_opts = {
+            'quiet': True,
+            'noplaylist': True,
+            'format': 'best',
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            result = ydl.extract_info(f"ytsearch1:{searchQuery}", download=False)
+
+            if 'entries' in result and len(result['entries']) > 0:
+                # video_info = result['entries'][0]  # First search result
+                # video_info['webpage_url']  # URL of the video
+                return True
+            else:
+                # raise Exception(f"Video {searchQuery} not found on YouTube")
+                return False
+
     def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
         """Method uded to download video type from YouTube
 
@@ -190,6 +219,31 @@ class YoutubeDL():
                 return resultOfYoutube
         singleMedia = self._getMedia(metaData)
         return ResultOfYoutube(singleMedia)
+
+    def verifyLocalFiles(self, dirPath:str):
+        """Method verifies if the local files still exists on YouTube
+
+        Args:
+            dirPath (str): path to file directory
+
+        Returns:
+            list: List of files which weren't verified, so those which are no longer present on YouTube
+        """
+        notVerifiedFiles = []
+        pattern = r"^(.*?)(?:_\d+p)?\.[a-zA-Z0-9]+$"
+        listOfFiles = os.listdir(dirPath)
+        for fileName in listOfFiles:
+            fullFilePath = os.path.join(dirPath, fileName)
+            if not os.path.isfile(fullFilePath):
+                continue
+            match = re.match(pattern, fileName)
+            if match:
+                fileNameStriped = match.group(1)
+                logger.info(f"Checking {fileNameStriped} file")
+            if not self.ifVideoExistOnYoutube(fileNameStriped):
+                notVerifiedFiles.append(fullFilePath)
+                logger.warning(F"File {fullFilePath}")
+        return notVerifiedFiles
 
     def _getDefaultOptions(self):
         """Method returns to the defualt youtubeDL options
