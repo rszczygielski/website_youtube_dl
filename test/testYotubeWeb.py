@@ -21,7 +21,7 @@ from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from website_youtube_dl.flaskAPI import emits
 from website_youtube_dl.flaskAPI import youtubeModifyPlaylist
 from test.socketClientMock import SessionClientMock
-from emitData import EmitData
+from test.emitData import EmitData
 
 
 class testYoutubeWeb(TestCase):
