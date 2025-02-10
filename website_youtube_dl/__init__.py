@@ -13,10 +13,10 @@ import logging
 socketio = SocketIO()
 
 
-def create_app(config_class=Config):
+def create_app(config_class=Config, configParser=ConfigParserManager):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.configParserManager = init_configPareser()
+    app.configParserManager = init_configPareser(configParser)
     app.youtubeDownloder = init_youtubeDL(app.configParserManager)
     app.logger = init_logger()
 
@@ -41,9 +41,9 @@ def init_logger():
     return logger
 
 
-def init_configPareser():
+def init_configPareser(configParser):
     config = "youtube_config.ini"
-    return ConfigParserManager(config)
+    return configParser(config)
 
 
 def init_youtubeDL(configParserManager: ConfigParserManager):

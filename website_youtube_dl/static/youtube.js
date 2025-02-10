@@ -53,14 +53,12 @@ $(document).ready(function () {
         for (singleMedia of playlistMedia.trackList) {
             var row = table.insertRow()
             var full_row_html = `
-            <td class=row-download-info>
-                <label class=track-info>
+            <td>
                     ${singleMedia.title}
-                </label>
-            <td class=row-download-info>
+            </td>
+            <td>
                 <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
             </td>
-            <br>
             `
             row.innerHTML = full_row_html
         }
@@ -94,12 +92,12 @@ $(document).ready(function () {
         var singleMedia = singleMediaEmitReceiver.getData()
         var row = table.insertRow()
         var full_row_html = `
-        <td class=row-download-info>
+        <td>
             <label class=track-info>
             ${singleMedia.artist} ${singleMedia.title}
             </label>
-            </td>
-        <td class=row-download-info>
+        </td>
+        <td>
             <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
         </td>
         <br>

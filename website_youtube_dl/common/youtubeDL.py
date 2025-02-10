@@ -442,8 +442,11 @@ class YoutubeDlConfig(YoutubeDL):
             if "playlist_index" in playlistTrack:
                 index = playlistTrack["playlist_index"]
             filePath = f"{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack['title'])}.mp3"
-            self.easyID3Manager.setParams(filePath=filePath, title=title, album=album,
-                                          artist=artist, playlistName=playlistName,
+            self.easyID3Manager.setParams(filePath=filePath,
+                                          title=title,
+                                          album=album,
+                                          artist=artist,
+                                          playlistName=playlistName,
                                           trackNumber=index)
             self.easyID3Manager.saveMetaData()
         return metaData

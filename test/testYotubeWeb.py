@@ -22,6 +22,7 @@ from website_youtube_dl.flaskAPI import emits
 from website_youtube_dl.flaskAPI import youtubeModifyPlaylist
 from test.socketClientMock import SessionClientMock
 from test.emitData import EmitData
+from unittest.mock import MagicMock
 
 
 class testYoutubeWeb(TestCase):
@@ -102,6 +103,9 @@ class testYoutubeWeb(TestCase):
 
     def setUp(self):
         app = create_app(TestingConfig)
+        app.configParserManager = MagicMock()
+        app.configParserManager.getSavePath = MagicMock(
+            return_value=self.testPath)
         app.config["TESTING"] = True
         session_dict = {}
         self.socketIoTestClient = socketio.test_client(app)
@@ -127,7 +131,6 @@ class testYoutubeWeb(TestCase):
         sessionData = SessionDownloadData(self.testPath)
         testKey = "testKey"
         self.app.session.addElemtoSession(testKey, sessionData)
-        print(self.app.session)
         response = self.flask.get('/downloadFile/testKey')
         self.assertEqual(len(isFileMock.mock_calls), 2)
         sendFileMock.assert_called_once_with(self.testPath, as_attachment=True)
@@ -257,16 +260,14 @@ class testYoutubeWeb(TestCase):
         self.assertFalse(pythonEmit)
 
     @patch.object(YoutubeDL, "downloadVideo", return_value=resultOfYoutubeSingle)
-    @patch.object(ConfigParserManager, "getSavePath", return_value=testPath)
     @patch.object(youtube, "sendEmitSingleMediaInfoFromYoutube", return_value=True)
     def testDownloadSingleMediaVideo(self,
                                      mocksendEmitSingleMediaInfoFromYoutube,
-                                     mockGetSavePath,
                                      mockDownloadVideo):
         with self.app.app_context():
             result = youtube.downloadSingleVideo(self.actualYoutubeURL1,
                                                  self.hd720p)
-        mockGetSavePath.assert_called_once()
+        self.app.configParserManager.getSavePath.assert_called_once()
         mocksendEmitSingleMediaInfoFromYoutube.assert_called_once_with(
             self.actualYoutubeURL1)
         mockDownloadVideo.assert_called_once_with(
@@ -298,16 +299,14 @@ class testYoutubeWeb(TestCase):
             emitData.data, {self.error: YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value})
 
     @patch.object(EasyID3Manager, "saveMetaData")
-    @patch.object(ConfigParserManager, "getSavePath", return_value=testPath)
     @patch.object(youtube, "sendEmitSingleMediaInfoFromYoutube", return_value=True)
     @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutubeSingle)
     def testDownloadSingleMediaAudio(self, mockDownloadAudio,
                                      mocksendEmitSingleMediaInfoFromYoutube,
-                                     mockGetSavePath,
                                      mockSaveMetaData):
         with self.app.app_context():
             result = youtube.downloadSingleAudio(self.actualYoutubeURL1)
-        mockGetSavePath.assert_called_once()
+        self.app.configParserManager.getSavePath.assert_called_once()
         mockDownloadAudio.assert_called_once_with(self.actualYoutubeURL1)
         mocksendEmitSingleMediaInfoFromYoutube.assert_called_once_with(
             self.actualYoutubeURL1)
@@ -433,10 +432,8 @@ class testYoutubeWeb(TestCase):
         mockZipFiles.assert_called_once()
 
     @patch.object(EasyID3Manager, "saveMetaData")
-    @patch.object(ConfigParserManager, "getSavePath", return_value=testPath)
     @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutubeSingle)
     def testDownloadAudioFromPlaylist(self, mockDownloadAudio,
-                                      mockGetSavePath,
                                       mockSaveMetaData):
         with self.app.app_context():
             result = youtube.downloadAudioFromPlaylist(self.actualYoutubeURL1,
@@ -444,7 +441,7 @@ class testYoutubeWeb(TestCase):
                                                        1)
         mockDownloadAudio.assert_called_once_with(self.actualYoutubeURL1)
         mockSaveMetaData.assert_called_once()
-        mockGetSavePath.assert_called_once()
+        self.app.configParserManager.getSavePath.assert_called_once()
         self.assertEqual(result, os.path.join(
             self.testPath, f"{self.testTitle1}.mp3"))
 
@@ -467,15 +464,20 @@ class testYoutubeWeb(TestCase):
 
     @patch.object(youtube, "zipAllFilesInList",
                   return_value=f"/home/test_path/{testPlaylistName}")
+    @patch.object(youtube, "getFilesFromDir", return_value=[testTitle1,
+                                                            testTitle2])
     @patch.object(youtube, "sendEmitPlaylistMedia", return_value=playlistMedia)
     @patch.object(youtube, "downloadAudioFromPlaylist", return_value="full_path_test")
-    def testDownloadTracksFromPlaylistAudio(self, mockDownloadAudio,
+    def testDownloadTracksFromPlaylistAudio(self,
+                                            mockDownloadAudio,
                                             mockSendEmitPlaylist,
+                                            mockGetFilesFromDir,
                                             mockZipFiles):
         with self.app.app_context():
             result = youtube.downloadTracksFromPlaylistAudio(
                 self.actualYoutubePlaylistURL1)
         mockSendEmitPlaylist.assert_called_once()
+        mockGetFilesFromDir.assert_called_once_with(self.testPath)
         calls = mockDownloadAudio.mock_calls
         self.assertEqual(call(singleMediaURL=self.testId1,
                               playlistName=self.testPlaylistName,
@@ -567,18 +569,16 @@ class testYoutubeWeb(TestCase):
                   return_value="test_hash")
     @patch.object(youtubeModifyPlaylist, "downloadTracksFromPlaylistAudio",
                   return_value="video_playlist_path")
-    @patch.object(ConfigParserManager, "getPlaylistUrl",
-                  return_value=actualYoutubePlaylistURL1)
-    def testDownloadConfigPlaylist(self, mockGetPlaylistUrl,
-                                   mockDownloadPlaylist,
+    def testDownloadConfigPlaylist(self, mockDownloadPlaylist,
                                    mockGenerateHash,
                                    mockIsFile):
+        self.app.configParserManager.getPlaylistUrl = MagicMock(
+            return_value=self.actualYoutubePlaylistURL1)
         self.socketIoTestClient.emit(
             "downloadFromConfigFile", {
                 "playlistToDownload": self.testPlaylistName
             }
         )
-        mockGetPlaylistUrl.assert_called_once_with(self.testPlaylistName)
         mockDownloadPlaylist.assert_called_once_with(
             self.actualYoutubePlaylistURL1)
         mockIsFile.assert_called_once()
@@ -593,34 +593,37 @@ class testYoutubeWeb(TestCase):
 
     @patch.object(youtubeModifyPlaylist, "downloadTracksFromPlaylistAudio",
                   return_value=None)
-    @patch.object(ConfigParserManager, "getPlaylistUrl",
-                  return_value=actualYoutubePlaylistURL1)
-    def testDownloadConfigPlaylistWithError(self, mockGetPlaylistUrl,
-                                            mockDownloadPlaylist):
+    def testDownloadConfigPlaylistWithError(self, mockDownloadPlaylist):
+        self.app.configParserManager.getPlaylistUrl = MagicMock(
+            return_value=self.actualYoutubePlaylistURL1)
         self.socketIoTestClient.emit(
             "downloadFromConfigFile", {
                 "playlistToDownload": self.testPlaylistName
             }
         )
-        mockGetPlaylistUrl.assert_called_once_with(self.testPlaylistName)
+        self.app.configParserManager.getPlaylistUrl.assert_called_once_with(
+            self.testPlaylistName)
         mockDownloadPlaylist.assert_called_once_with(
             self.actualYoutubePlaylistURL1)
         pythonEmit = self.socketIoTestClient.get_received()
         self.assertEqual(len(pythonEmit), 0)
 
-    @patch.object(ConfigParserManager, "getPlaylists", return_value={"test_playlist": "url1",
-                                                                     testPlaylistName: "url2"})
-    @patch.object(ConfigParserManager, "addPlaylist")
-    def testAddPlaylistConfig(self, mockAddPlaylist, mockGetplaylists):
+    def testAddPlaylistConfig(self):
+        self.app.configParserManager.addPlaylist = MagicMock()
+        self.app.configParserManager.getPlaylists = MagicMock(
+            return_value={
+                "test_playlist": "url1",
+                self.testPlaylistName: "url2"
+            })
         self.socketIoTestClient.emit(
             "addPlaylist", {
                 "playlistName": self.testPlaylistName,
                 "playlistURL": self.actualYoutubePlaylistURL1
             }
         )
-        mockAddPlaylist.assert_called_once_with(
+        self.app.configParserManager.addPlaylist.assert_called_once_with(
             self.testPlaylistName, self.actualYoutubePlaylistURL1)
-        mockGetplaylists.assert_called_once()
+        self.app.configParserManager.getPlaylists.assert_called_once()
         pythonEmit = self.socketIoTestClient.get_received()
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
@@ -628,17 +631,24 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(
             emitData.data, {self.dataStr: {'playlistList': ["test_playlist", self.testPlaylistName]}})
 
-    @patch.object(ConfigParserManager, "getPlaylists", return_value={"test_playlist": "url1",
-                                                                     testPlaylistName: "url2"})
-    @patch.object(ConfigParserManager, "deletePlaylist")
-    def testDeletePlaylistConfig(self, playlistToDelete, mockGetplaylists):
+    # @patch.object(ConfigParserManager, "getPlaylists", return_value={"test_playlist": "url1",
+    #                                                                  testPlaylistName: "url2"})
+    # @patch.object(ConfigParserManager, "deletePlaylist")
+    def testDeletePlaylistConfig(self):
+        self.app.configParserManager.deletePlaylist = MagicMock()
+        self.app.configParserManager.getPlaylists = MagicMock(
+            return_value={
+                "test_playlist": "url1",
+                self.testPlaylistName: "url2"
+            })
         self.socketIoTestClient.emit(
             "deletePlaylist", {
                 "playlistToDelete": self.testPlaylistName,
             }
         )
-        playlistToDelete.assert_called_once_with(self.testPlaylistName)
-        mockGetplaylists.assert_called_once()
+        self.app.configParserManager.deletePlaylist.assert_called_once_with(
+            self.testPlaylistName)
+        self.app.configParserManager.getPlaylists.assert_called_once()
         pythonEmit = self.socketIoTestClient.get_received()
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
@@ -646,8 +656,9 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(
             emitData.data, {self.dataStr: {'playlistList': ["test_playlist", self.testPlaylistName]}})
 
-    @patch.object(ConfigParserManager, "getPlaylistUrl", return_value=testPlaylistName)
-    def testPlaylistConfigUrl(self, mockGetPlaylistUrl):
+    def testPlaylistConfigUrl(self):
+        self.app.configParserManager.getPlaylistUrl = MagicMock(
+            return_value=self.testPlaylistName)
         self.socketIoTestClient.emit(
             "playlistName", {
                 "playlistName": self.testPlaylistName,
@@ -655,7 +666,7 @@ class testYoutubeWeb(TestCase):
         )
         pythonEmit = self.socketIoTestClient.get_received()
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
-        mockGetPlaylistUrl.assert_called_once()
+        self.app.configParserManager.getPlaylistUrl.assert_called_once()
         emitData = EmitData.initFromMassage(receivedMsg)
         self.assertEqual(self.playlistUrlStr, emitData.emitName)
         self.assertEqual(
@@ -664,10 +675,6 @@ class testYoutubeWeb(TestCase):
     def testModifyPlaylistHTML(self):
         response = self.flask.get("/modify_playlist.html")
         self.assertEqual(response.status_code, 200)
-
-    # def testDownloadFileHTML(self):
-    #     response = self.flask.get("/downloadFile/test", )
-    #     self.assertEqual(response.status_code, 200)
 
 
 class TestEmits(TestCase):

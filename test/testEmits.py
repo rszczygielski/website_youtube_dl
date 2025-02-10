@@ -12,6 +12,7 @@ from website_youtube_dl.common.youtubeDataKeys import MediaInfo
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl import create_app, socketio
 from website_youtube_dl.common.youtubeLogKeys import YoutubeVariables
+from unittest.mock import MagicMock
 
 
 class TestEmits(TestCase):
@@ -58,7 +59,8 @@ class TestEmits(TestCase):
         self.playlistMediaInfoEmit = PlaylistMediaInfoEmit()
         self.uploadPlaylistToConfigEmit = UploadPlaylistToConfigEmit()
         self.getPlaylistUrlEmit = GetPlaylistUrlEmit()
-        app = create_app(TestingConfig)
+        self.configManagerMock = MagicMock()
+        app = create_app(TestingConfig, self.configManagerMock)
         app.config["TESTING"] = True
         self.socketIoTestClient = socketio.test_client(app)
         self.flask = app.test_client()

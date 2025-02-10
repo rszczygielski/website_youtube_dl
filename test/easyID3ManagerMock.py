@@ -12,8 +12,11 @@ class EasyID3Manager():  # pragma: no_cover
     def changeFilePath(self, fileFullPath):
         self.filePath = fileFullPath
 
-    def setParams(self, title=None, album=None,
-                  artist=None, trackNumber=None,
+    def setParams(self,
+                  title=None,
+                  album=None,
+                  artist=None,
+                  trackNumber=None,
                   playlistName=None):
         self.title = title
         self.album = album

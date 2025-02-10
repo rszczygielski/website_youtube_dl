@@ -16,9 +16,14 @@ class EasyID3Manager():  # pragma: no_cover
         self.artist = None
         self.playlistName = None
         self.trackNumber = None
+        self.website = None
 
-    def setParams(self, filePath, title=None, album=None,
-                  artist=None, trackNumber=None,
+    def setParams(self, filePath,
+                  title=None,
+                  album=None,
+                  artist=None,
+                  website=None,
+                  trackNumber=None,
                   playlistName=None):
         if not os.path.isfile(filePath):
             logger.warning(
@@ -27,6 +32,7 @@ class EasyID3Manager():  # pragma: no_cover
         self.title = title
         self.album = album
         self.artist = artist
+        self.website = website
         self.trackNumber = trackNumber
         self.playlistName = playlistName
 
@@ -41,6 +47,8 @@ class EasyID3Manager():  # pragma: no_cover
             audio[MetaDataType.ALBUM.value] = self.album
         if self.artist:
             audio[MetaDataType.ARTIST.value] = self.artist
+        if self.website:
+            audio[MetaDataType.WEBSITE.value] = self.website
         if self.trackNumber:
             audio[MetaDataType.TRACK_NUMBER.value] = self.trackNumber
         audio.save()

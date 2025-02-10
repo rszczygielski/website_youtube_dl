@@ -4,6 +4,7 @@ from unittest.mock import patch
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl import create_app
 from website_youtube_dl.flaskAPI.session import SessionDownloadData
+from unittest.mock import MagicMock
 import os
 
 
@@ -13,7 +14,8 @@ class SessionTest(TestCase):
     testPath = "testdir/testfile"
 
     def setUp(self):
-        app = create_app(TestingConfig)
+        self.configManagerMock = MagicMock()
+        app = create_app(TestingConfig, self.configManagerMock)
         sessionDict = {}
         self.sessionClient = SessionClient(sessionDict)
         self.flask = app.test_client()

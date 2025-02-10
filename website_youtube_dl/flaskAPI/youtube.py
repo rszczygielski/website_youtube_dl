@@ -118,7 +118,8 @@ def downloadSingleAudio(singleMediaURL):
     easyID3Manager.setParams(filePath=filePath,
                              title=singleMedia.title,
                              album=singleMedia.album,
-                             artist=singleMedia.artist)
+                             artist=singleMedia.artist,
+                             website=singleMedia.ytHash)
     easyID3Manager.saveMetaData()
     fileName = f"{singleMedia.title}.{YoutubeVariables.MP3.value}"
     app.logger.info(f"{YoutubeLogs.AUDIO_DOWNLOADED.value}: {fileName}")
@@ -140,6 +141,7 @@ def downloadAudioFromPlaylist(singleMediaURL, playlistName, index):
                              title=singleMedia.title,
                              album=playlistName,
                              artist=singleMedia.artist,
+                             website=singleMedia.ytHash,
                              trackNumber=index)
     easyID3Manager.saveMetaData()
     fileName = f"{singleMedia.title}.{YoutubeVariables.MP3.value}"

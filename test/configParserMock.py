@@ -1,5 +1,8 @@
 import configparser
-# from testConfigManager import TestVariables
+from website_youtube_dl.common.configKeys import ConfigKeys
+from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+import os
+
 
 class ConfigParserMock(configparser.ConfigParser):
     readStringForMock = "[global]\npath = /home/rszczygielski/pythonVSC/youtube_files\n[playlists]\ntest_playlist = https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO\nnowy_swiat = https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"
@@ -12,3 +15,27 @@ class ConfigParserMockWithEmptyData(configparser.ConfigParser):
 
     def read(self, file_path):
         self.read_string("")
+
+
+class ConfigManagerMock(ConfigParserManager):
+    def __init__(self, configFilePath, configParser=ConfigParserMock()):
+        self.configFilePath = configFilePath
+        self.configParser = configParser
+        homePath = os.path.expanduser(ConfigKeys.SWUNG_DASH.value)
+        self.musicPath = os.path.join(homePath, ConfigKeys.MUSIC.value)
+
+    def createDefaultConfigFile(self):
+        pass
+
+    def getSavePath(self):
+        self.configParser.clear()
+        self.configParser.read(self.configFilePath)
+        if len(self.configParser.sections()) == 0:
+            self.createDefaultConfigFile()
+        return self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value]
+
+    def handleDefaultDir(self, dirPath):
+        pass
+
+    def saveConfig(self):
+        pass

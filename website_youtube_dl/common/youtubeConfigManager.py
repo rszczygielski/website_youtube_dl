@@ -16,6 +16,7 @@ class ConfigParserManager():
         self.configParser.add_section(ConfigKeys.PLAYLISTS.value)
         homePath = os.path.expanduser(ConfigKeys.SWUNG_DASH.value)
         musicPath = os.path.join(homePath, ConfigKeys.MUSIC.value)
+        # self.handleDefaultDir(musicPath)
         self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value] = musicPath
         self.saveConfig()
 
@@ -25,6 +26,11 @@ class ConfigParserManager():
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
         return self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value]
+
+    def handleDefaultDir(self, dirPath):
+        if not os.path.exists(dirPath):
+            logger.info(f"Default directory {dirPath} not exists, creating one")
+            os.mkdir(dirPath)
 
     def getPlaylistUrl(self, playlistName):
         self.configParser.read(self.configFilePath)
