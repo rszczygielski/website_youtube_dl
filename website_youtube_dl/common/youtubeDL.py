@@ -117,11 +117,11 @@ class YoutubeDL():
             self.titleTemplate = self.titleTemplateDefault
         return resultOfYoutube
 
-    def ifVideoExistOnYoutube(self, searchQuery:str):
+    def ifVideoExistOnYoutube(self, ytHash:str):
         """Method checks if given query exists on YouTube, methos uses yt-dlp package
 
         Args:
-            searchQuery (str): query for to search YouTube
+            ytHash (str): query for to search YouTube
 
         Returns:
             bool: True if video exists, False if video not exists on YouTube
@@ -134,14 +134,13 @@ class YoutubeDL():
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(f"ytsearch1:{searchQuery}", download=False)
-
-            if 'entries' in result and len(result['entries']) > 0:
-                # video_info = result['entries'][0]  # First search result
-                # video_info['webpage_url']  # URL of the video
+            try:
+                ydl.extract_info(ytHash, download=False)
+                logger.error(f"Video with {ytHash} exists on YouTube")
                 return True
-            else:
-                # raise Exception(f"Video {searchQuery} not found on YouTube")
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Video might be deleted from YouTube error: {errorInfo}")
                 return False
 
     def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
@@ -230,20 +229,41 @@ class YoutubeDL():
             list: List of files which weren't verified, so those which are no longer present on YouTube
         """
         notVerifiedFiles = []
-        pattern = r"^(.*?)(?:_\d+p)?\.[a-zA-Z0-9]+$"
         listOfFiles = os.listdir(dirPath)
         for fileName in listOfFiles:
             fullFilePath = os.path.join(dirPath, fileName)
-            if not os.path.isfile(fullFilePath):
+            if not os.path.isfile(fullFilePath) or not fullFilePath.endswith(".mp3"):
                 continue
-            match = re.match(pattern, fileName)
-            if match:
-                fileNameStriped = match.group(1)
-                logger.info(f"Checking {fileNameStriped} file")
-            if not self.ifVideoExistOnYoutube(fileNameStriped):
+            audioManager = EasyID3Manager.initFromFileMetaData(fullFilePath)
+            if not self.ifVideoExistOnYoutube(audioManager.website):
                 notVerifiedFiles.append(fullFilePath)
-                logger.warning(F"File {fullFilePath}")
         return notVerifiedFiles
+
+    def ifVideoExistOnYoutube(self, ytHash:str):
+        """Method checks if given YouTube video hash exists on YouTube, methos uses yt-dlp package
+
+        Args:
+            ytHash (str): YouTube video hash for YouTube search
+
+        Returns:
+            bool: True if video exists, False if video not exists on YouTube
+        """
+
+        ydl_opts = {
+            'quiet': True,
+            'noplaylist': True,
+            'format': 'best',
+        }
+
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                ydl.extract_info(ytHash, download=False)
+                logger.error(f"Video with {ytHash} exists on YouTube")
+                return True
+            except Exception as exception:
+                errorInfo = str(exception)
+                logger.error(f"Video might be deleted from YouTube error: {errorInfo}")
+                return False
 
     def _getDefaultOptions(self):
         """Method returns to the defualt youtubeDL options

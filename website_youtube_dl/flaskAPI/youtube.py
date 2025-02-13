@@ -82,7 +82,7 @@ def index():
     return render_template('index.html')
 
 
-def _downloadSingleVideo(singleMediaURL, type):
+def downloadSingleVideo(singleMediaURL, type):
     singleMediaInfoResult = app.youtubeDownloder.downloadVideo(
         singleMediaURL, type)
     if singleMediaInfoResult.isError():
@@ -97,10 +97,10 @@ def _downloadSingleVideo(singleMediaURL, type):
     return os.path.join(directoryPath, fileName)
 
 
-def downloadSingleVideo(singleMediaURL, type):  # pragma: no_cover
+def downloadSingleVideo(singleMediaURL, videoType):  # pragma: no_cover
     if not sendEmitSingleMediaInfoFromYoutube(singleMediaURL):
         return
-    return _downloadSingleVideo(singleMediaURL, type)
+    return downloadSingleVideo(singleMediaURL, videoType)
 
 
 def downloadSingleAudio(singleMediaURL):
@@ -119,7 +119,7 @@ def downloadSingleAudio(singleMediaURL):
                              title=singleMedia.title,
                              album=singleMedia.album,
                              artist=singleMedia.artist,
-                             website=singleMedia.ytHash)
+                             ytHash=singleMedia.ytHash)
     easyID3Manager.saveMetaData()
     fileName = f"{singleMedia.title}.{YoutubeVariables.MP3.value}"
     app.logger.info(f"{YoutubeLogs.AUDIO_DOWNLOADED.value}: {fileName}")
@@ -141,7 +141,7 @@ def downloadAudioFromPlaylist(singleMediaURL, playlistName, index):
                              title=singleMedia.title,
                              album=playlistName,
                              artist=singleMedia.artist,
-                             website=singleMedia.ytHash,
+                             ytHash=singleMedia.ytHash,
                              trackNumber=index)
     easyID3Manager.saveMetaData()
     fileName = f"{singleMedia.title}.{YoutubeVariables.MP3.value}"
@@ -150,57 +150,25 @@ def downloadAudioFromPlaylist(singleMediaURL, playlistName, index):
     return os.path.join(directoryPath, fileName)
 
 
-def downloadTracksFromPlaylistVideo(youtubeURL, type):
-    playlistMedia = sendEmitPlaylistMedia(youtubeURL)
-    if not playlistMedia:
-        return
-    playlistTrackFinish = PlaylistTrackFinish()
-    filePaths = []
-    playlistTrack: MediaFromPlaylist
-    for index, playlistTrack in enumerate(playlistMedia.mediaFromPlaylistList):
-        fullPath = _downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
-                                       type=type)
-        if fullPath is None:
-            playlistTrackFinish.sendEmitError(index)
-            continue
-        playlistTrackFinish.sendEmit(index)
-        filePaths.append(fullPath)
-    directoryPath = app.configParserManager.getSavePath()
-    zipNameFile = zipAllFilesInList(
-        directoryPath, playlistMedia.playlistName, filePaths)
-    app.logger.info(
-        f"{YoutubeLogs.PLAYLIST_DOWNLAODED.value}: {playlistMedia.playlistName}")
-    app.logger.debug(f"{YoutubeLogs.DIRECTORY_PATH}: {directoryPath}")
-    fullZipPath = os.path.join(directoryPath, zipNameFile)
-    return fullZipPath
-
-def getFilesFromDir(dirPath):
-    return [f.split(".")[0] for f in os.listdir(dirPath) if os.path.isfile(os.path.join(dirPath, f))]
-
-def downloadTracksFromPlaylistAudio(youtubeURL):
+def downloadTracksFromPlaylist(youtubeURL, videoType):
     playlistMedia = sendEmitPlaylistMedia(youtubeURL)
     if not playlistMedia:
         return
     playlistTrackFinish = PlaylistTrackFinish()
     filePaths = []
     downloadedFiles = getFilesFromDir(app.configParserManager.getSavePath())
-    playlistTrack: FlaskMediaFromPlaylist
+    playlistTrack: MediaFromPlaylist
     for index, playlistTrack in enumerate(playlistMedia.mediaFromPlaylistList):
-        title = playlistTrack.title # zrobić funkcję i dodac do video pobierania
-        # https://www.youtube.com/playlist?list=PL6uhlddQJkfiCJfEQvnqzknbxfgBiGekb test
-        counter = 1
-        while title in downloadedFiles:
-            counter += 1
-            title = f"{title} ({counter})"
-        if counter > 1:
-            app.youtubeDownloder.setTitleTemplateOneTime(f"/%(title)s ({counter})")
-        print(app.youtubeDownloder.titleTemplateDefault, "Default")
-        print(app.youtubeDownloder.titleTemplate, "set")
-
-        fullPath = downloadAudioFromPlaylist(singleMediaURL=playlistTrack.ytHash,
-                                             playlistName=playlistMedia.playlistName,
-                                             index=str(index))
-        if fullPath is None: # napisz unittesty pod to
+        title = playlistTrack.title
+        setTitleTemplateForYoutubeDownloader(downloadedFiles, title)
+        if not videoType:
+            fullPath = downloadAudioFromPlaylist(singleMediaURL=playlistTrack.ytHash,
+                                                playlistName=playlistMedia.playlistName,
+                                                index=str(index))
+        else:
+            fullPath = downloadSingleVideo(singleMediaURL=playlistTrack.ytHash,
+                                type=videoType)
+        if fullPath is None:  # napisz unittesty pod to
             playlistTrackFinish.sendEmitError(index)
             continue
         playlistTrackFinish.sendEmit(index)
@@ -214,6 +182,24 @@ def downloadTracksFromPlaylistAudio(youtubeURL):
     app.logger.debug(f"{YoutubeLogs.DIRECTORY_PATH}: {directoryPath}")
     fullZipPath = os.path.join(directoryPath, zipNameFile)
     return fullZipPath
+
+def getFilesFromDir(dirPath):
+    return [f.split(".")[0] for f in os.listdir(dirPath) if os.path.isfile(os.path.join(dirPath, f))]
+
+
+def setTitleTemplateForYoutubeDownloader(downloadedFiles,
+                                         title):
+    # https://www.youtube.com/playlist?list=PL6uhlddQJkfiCJfEQvnqzknbxfgBiGekb test
+    counter = 1
+    while title in downloadedFiles:
+        counter += 1
+        title = f"{title} ({counter})"
+    if counter > 1:
+        app.youtubeDownloder.setTitleTemplateOneTime(
+            f"/%(title)s ({counter})")
+    print(app.youtubeDownloder.titleTemplateDefault, "Default")
+    print(app.youtubeDownloder.titleTemplate, "set")
+
 
 
 def sendEmitSingleMediaInfoFromYoutube(singleMediaURL):
@@ -249,15 +235,18 @@ def sendEmitPlaylistMedia(youtubeURL):
     return playlistMedia
 
 
-def downloadCorrectData(youtubeURL, type, isPlaylist):
-    if type == YoutubeVariables.MP3.value and isPlaylist:
-        fullFilePath = downloadTracksFromPlaylistAudio(youtubeURL)
-    elif type != YoutubeVariables.MP3.value and isPlaylist:
-        fullFilePath = downloadTracksFromPlaylistVideo(youtubeURL, type)
-    elif type == YoutubeVariables.MP3.value and not isPlaylist:
-        fullFilePath = downloadSingleAudio(youtubeURL)
-    elif type != YoutubeVariables.MP3.value and not isPlaylist:
-        fullFilePath = downloadSingleVideo(youtubeURL, type)
+def downloadCorrectData(youtubeURL, videoType, isPlaylist):
+    if videoType == YoutubeVariables.MP3.value and isPlaylist:
+        fullFilePath = downloadTracksFromPlaylist(youtubeURL=youtubeURL,
+                                                  videoType=None)
+    elif videoType != YoutubeVariables.MP3.value and isPlaylist:
+        fullFilePath = downloadTracksFromPlaylist(youtubeURL=youtubeURL,
+                                                  videoType=videoType)
+    elif videoType == YoutubeVariables.MP3.value and not isPlaylist:
+        fullFilePath = downloadSingleAudio(singleMediaURL=youtubeURL)
+    elif videoType != YoutubeVariables.MP3.value and not isPlaylist:
+        fullFilePath = downloadSingleVideo(singleMediaURL=youtubeURL,
+                                           videoType=videoType)
     return fullFilePath
 
 

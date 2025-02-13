@@ -1,0 +1,170 @@
+
+
+/* General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #111; /* Dark background for contrast */
+    color: white;
+}
+
+/* Centering Main Content */
+.center-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+
+/* Table for Playlist Form */
+.table-modify-playlists {
+    width: 100%;
+    max-width: 600px;
+    border-spacing: 10px;
+}
+
+.table-modify-playlists td {
+    padding: 10px;
+}
+
+/* Input Fields */
+.input-text {
+    width: 100%;
+    max-width: 400px;
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* Select Dropdown */
+#playlistSelect {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 16px;
+    text-align: center;
+}
+
+/* Download Info Table */
+#downloadInfo {
+    width: 100%;
+    max-width: 800px;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+#downloadInfo tr {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#downloadInfo td {
+    text-align: center;
+    padding: 8px;
+    width: auto;
+    min-width: 120px;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .menu {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .menu {
+        padding: 10px;
+        max-width: 95%;
+    }
+
+    .table-modify-playlists {
+        max-width: 100%;
+    }
+
+    .table-modify-playlists td {
+        display: block;
+        text-align: center;
+        padding: 5px;
+    }
+
+    #playlistSelect {
+        width: 90%;
+    }
+
+    #downloadInfo tr {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu {
+        padding: 8px;
+    }
+
+    .input-text {
+        width: 90%;
+    }
+
+    #downloadInfo td {
+        width: 100%;
+    }
+}
+
+
+
+
+.normal-button{
+    font-size: 1.5rem;
+    font-family: var(--main-font);
+    display: block;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--clr-neon);
+    border: var(--clr-neon) 0.125em solid;
+    background-color: var(--clr-bg);
+    padding: 0.25em 1em;
+    border-radius: 0.25em;
+}
+
+.normal-button:hover{
+    transform: scale(1.3);
+    background: var(--clr-neon);
+    color: var(--clr-bg);
+    text-shadow: none;
+}
+
+
+.neon-button {
+    font-size: 30px;
+    font-family: var(--main-font);
+    display: inline-block;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--clr-neon);
+    border: var(--clr-neon) 0.125em solid;
+    background-color: var(--clr-bg);
+    padding: 0.25em 1em;
+    border-radius: 0.25em;
+    text-shadow: 0 0 0.3em;
+
+    box-shadow: inset 0 0 0.5em 0 var(--clr-neon),
+    0 0 0.5em 0 var(--clr-neon);
+}
+
+.neon-button:hover{
+    transform: scale(1.3);
+    background: var(--clr-neon);
+    color: var(--clr-bg);
+    text-shadow: none;
+}

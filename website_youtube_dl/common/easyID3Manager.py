@@ -22,7 +22,7 @@ class EasyID3Manager():  # pragma: no_cover
                   title=None,
                   album=None,
                   artist=None,
-                  website=None,
+                  ytHash=None,
                   trackNumber=None,
                   playlistName=None):
         if not os.path.isfile(filePath):
@@ -32,13 +32,13 @@ class EasyID3Manager():  # pragma: no_cover
         self.title = title
         self.album = album
         self.artist = artist
-        self.website = website
+        self.ytHash = ytHash
         self.trackNumber = trackNumber
         self.playlistName = playlistName
 
     def saveMetaData(self):
         if self.filePath is None:
-           raise FileNotFoundError(
+            raise FileNotFoundError(
                 f"File {self.filePath} doesn't exist - provide correct file path")
         audio = EasyID3(self.filePath)
         if self.title:
@@ -47,12 +47,24 @@ class EasyID3Manager():  # pragma: no_cover
             audio[MetaDataType.ALBUM.value] = self.album
         if self.artist:
             audio[MetaDataType.ARTIST.value] = self.artist
-        if self.website:
-            audio[MetaDataType.WEBSITE.value] = self.website
+        if self.ytHash:
+            audio[MetaDataType.WEBSITE.value] = self.ytHash
         if self.trackNumber:
             audio[MetaDataType.TRACK_NUMBER.value] = self.trackNumber
         audio.save()
 
+    def readMetaData(self):
+        audio = EasyID3(self.filePath)
+        if MetaDataType.TITLE.value in audio:
+            self.title = audio[MetaDataType.TITLE.value]
+        if MetaDataType.ALBUM.value in audio:
+            self.album = audio[MetaDataType.ALBUM.value]
+        if MetaDataType.ARTIST.value in audio:
+            self.artist = audio[MetaDataType.ARTIST.value]
+        if MetaDataType.WEBSITE.value in audio:
+            self.ytHash = audio[MetaDataType.WEBSITE.value]
+        if MetaDataType.TRACK_NUMBER.value in audio:
+            self.trackNumber = audio[MetaDataType.TRACK_NUMBER.value]
 
     def _showMetaDataInfo(self, path):  # pragma: no_cover
         """Method used to show Metadata info

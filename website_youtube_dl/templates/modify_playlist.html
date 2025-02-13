@@ -15,6 +15,7 @@
     <script type="text/javascript" charset="utf-8" src="static/socketMessages.js"></script>
     <link rel="stylesheet" href="../static/bootstrap-5.0.2-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="../static/style.css" type="text/css" />
+
 </head>
 {% with messages = get_flashed_messages(with_categories=true) %}
 {% if messages %}
@@ -32,23 +33,31 @@
     <br>
     <br>
     <center>
-        <form>
-            <table class="table-modify-playlists">
-                <tr>
-                    <td><p class="neon-label" style="font-size: 30px;" >Playlist Name</p></td>
-                    <td><input class="input-text" type="text" id="playlistName" placeholder="Playlist Name"
-                            size="30"></input></td>
-                </tr>
-                <tr>
-                    <td><p class="neon-label" style="font-size: 30px">URL</p></td>
-                    <td><input class="input-text" type="url" id="playlistURL" placeholder="Playlist URL"
-                            size="50"></input></td>
-                </tr>
-            </table>
-        <br>
-        </form>
-        <button class="neon-button" id="addPlaylistButton">Add playlist</button>
-        <br>
+        <div class="menu">
+            <form>
+                <table class="table-modify-playlists">
+                    <tr>
+                        <td><p class="neon-label" style="font-size: 30px;" >Playlist Name</p></td>
+                        <td><input class="input-text" type="text" id="playlistName" placeholder="Playlist Name"
+                                size="50"></input></td>
+                    </tr>
+                    <tr>
+                        <td><p class="neon-label" style="font-size: 30px">URL</p></td>
+                        <td><input class="input-text" type="url" id="playlistURL" placeholder="Playlist URL"
+                                size="50"></input></td>
+                    </tr>
+                </table>
+            </form>
+            <br>
+            <div class="neon-button-container">
+                <button class="neon-button" id="addPlaylistButton">Add playlist</button>
+            </div>
+        </div>
+    <br>
+    <br>
+
+    <div class="download-info-area">
+
         <label for="playlists" class="neon-label">List of playlists</label>
         <br>
         <select name="playlistSelect" id="playlistSelect" size="5" style="width: 300px;" class="input-text">
@@ -69,7 +78,8 @@
         <br>
         <div id="downloadSection">
         </div>
+    </div>
+
     </center>
-    
 </body>
 </html>

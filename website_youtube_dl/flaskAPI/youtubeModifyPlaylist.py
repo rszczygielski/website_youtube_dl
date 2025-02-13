@@ -4,7 +4,7 @@ from .. import socketio
 from .emits import (DownloadMediaFinishEmit,
                     UploadPlaylistToConfigEmit,
                     GetPlaylistUrlEmit)
-from .youtube import generateHash, downloadTracksFromPlaylistAudio
+from .youtube import generateHash, downloadTracksFromPlaylist
 from .session import SessionDownloadData
 
 
@@ -22,7 +22,7 @@ def downloadConfigPlaylist(formData):
     playlistName = formData["playlistToDownload"]
     app.logger.info(f"Selected playlist form config {playlistName}")
     playlistURL = app.configParserManager.getPlaylistUrl(playlistName)
-    fullFilePath = downloadTracksFromPlaylistAudio(playlistURL)
+    fullFilePath = downloadTracksFromPlaylist(playlistURL)
     if not fullFilePath:
         return False
     sessionDownloadData = SessionDownloadData(fullFilePath)

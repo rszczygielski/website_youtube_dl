@@ -16,7 +16,7 @@ class ConfigParserManager():
         self.configParser.add_section(ConfigKeys.PLAYLISTS.value)
         homePath = os.path.expanduser(ConfigKeys.SWUNG_DASH.value)
         musicPath = os.path.join(homePath, ConfigKeys.MUSIC.value)
-        # self.handleDefaultDir(musicPath)
+        self.handleDefaultDir(musicPath)
         self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value] = musicPath
         self.saveConfig()
 
