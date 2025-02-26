@@ -22,7 +22,8 @@ def downloadConfigPlaylist(formData):
     playlistName = formData["playlistToDownload"]
     app.logger.info(f"Selected playlist form config {playlistName}")
     playlistURL = app.configParserManager.getPlaylistUrl(playlistName)
-    fullFilePath = downloadTracksFromPlaylist(playlistURL)
+    fullFilePath = downloadTracksFromPlaylist(youtubeURL=playlistURL,
+                                              videoType=None)
     if not fullFilePath:
         return False
     sessionDownloadData = SessionDownloadData(fullFilePath)

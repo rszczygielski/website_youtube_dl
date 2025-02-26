@@ -54,7 +54,7 @@ $(document).ready(function () {
             var row = table.insertRow()
             var full_row_html = `
             <td>
-                    ${singleMedia.title}
+                ${singleMedia.title}
             </td>
             <td>
                 <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
@@ -100,7 +100,6 @@ $(document).ready(function () {
         <td>
             <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
         </td>
-        <br>
         `
         row.innerHTML = full_row_html
     })

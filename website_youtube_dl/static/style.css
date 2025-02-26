@@ -72,13 +72,14 @@ background: rgba(0, 0, 0, 0.925);
 .track-info {
     display: block;
     align-items: center;
+    width: 100%;
+    max-width: 500px;
 }
 
 .download-info-area {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     width: 100%;
     max-width: 2500px;
     margin: 0 auto;
@@ -95,14 +96,18 @@ background: rgba(0, 0, 0, 0.925);
 #downloadInfo tr {
     display: flex;
     align-items: center;
+    width: 100%;
+    max-width: 1500px;
 }
 
 #downloadInfo td {
     display: flex;
-    align-items: center;
-    padding: 10px;
-    width: 150px;
+    white-space: nowrap;
+    padding: 10px 15px;
+    width: 100%;
+    max-width: 1500px;
 }
+
 
 .download-file-area{
     display: flex;
