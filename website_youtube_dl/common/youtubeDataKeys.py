@@ -28,6 +28,8 @@ class MediaInfo(Enum):
     YOUTUBE_HASH = "id"
     URL = "webpage_url"
     EXTENSION = "ext"
+    FUL_PATH = "filename"
+    REQUESTED_DOWNLOADS = "requested_downloads"
 
 class YoutubeOptiones(Enum):
     FORMAT = "format"

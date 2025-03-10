@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 
 class SingleMedia():
-    def __init__(self, title, album, artist, ytHash, url, extension):
+    def __init__(self, file_name, title, album, artist, ytHash, url, extension):
+        self.file_name = file_name
         self.title = title
         self.album = album
         self.artist = artist
@@ -286,7 +287,7 @@ class YoutubeDL():
         Returns:
             SingleMedia : SingleMedia instance with all the info set up
         """
-        title = album = youtube_hash = artist = url = extension = ""
+        full_path = title = album = youtube_hash = artist = url = extension = ""
         if MediaInfo.TITLE.value in metaData:
             title = yt_dlp.utils.sanitize_filename(
                 metaData[MediaInfo.TITLE.value])
@@ -300,7 +301,11 @@ class YoutubeDL():
             url = metaData[MediaInfo.URL.value]
         if MediaInfo.EXTENSION.value in metaData:
             extension = metaData[MediaInfo.EXTENSION.value]
-        return SingleMedia(title, album, artist,
+        if MediaInfo.REQUESTED_DOWNLOADS.value in metaData:
+            requested_downloads = metaData[MediaInfo.REQUESTED_DOWNLOADS.value][0]
+            if MediaInfo.FUL_PATH.value in requested_downloads:
+                full_path = requested_downloads[MediaInfo.FUL_PATH.value]
+        return SingleMedia(full_path, title, album, artist,
                            youtube_hash, url, extension)
 
     def _getPlaylistMedia(self, metaData) -> PlaylistMedia:

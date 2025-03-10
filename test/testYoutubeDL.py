@@ -18,6 +18,8 @@ class TestYoutubeDL(TestCase):
     mainMediaDownloadError = "Download media info error ValueError"
     mainPlaylistWithoutVideoError = 'This a playlist only - without video hash to download'
 
+    folder_path = os.path.abspath(__file__)
+
     testPlaylistName = "testPlaylist"
     testTitle1 = "Society"
     testAlbum1 = "Into The Wild"
@@ -26,12 +28,17 @@ class TestYoutubeDL(TestCase):
     testPlaylistIndex1 = 1
     testOriginalUrl1 = 'https://www.youtube.com/watch?v=ABsslEoL0-c'
     testId1 = 'ABsslEoL0-c'
+    testFullPath1 = f"{folder_path}/{testTitle1}.webm"
+
     testTitle2 = 'Hard Sun'
     testArtist2 = "Eddie Vedder"
     testExt2 = "webm"
     testPlaylistIndex2 = 2
     testOriginalUrl2 = 'https://www.youtube.com/watch?v=_EZUfnMv3Lg'
     testId2 = '_EZUfnMv3Lg'
+    testFullPath2 = f"{folder_path}/{testTitle2}.webm"
+
+
 
     songMetaData1 = {
         MediaInfo.TITLE.value: testTitle1,
@@ -78,7 +85,7 @@ class TestYoutubeDL(TestCase):
         PlaylistInfo.PLAYLIST_TRACKS.value: testEntriesList
     }
 
-    singleMediaTest = youtubeDL.SingleMedia(testTitle1, testAlbum1,
+    singleMediaTest = youtubeDL.SingleMedia(testFullPath1, testTitle1, testAlbum1,
                                             testArtist1, testId1,
                                             testOriginalUrl1, testExt1)
 
