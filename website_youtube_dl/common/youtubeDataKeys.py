@@ -1,5 +1,23 @@
 from enum import Enum
 
+
+class MainYoutubeKeys(Enum):
+    FUL_PATH = "filename"
+    REQUESTED_DOWNLOADS = "requested_downloads"
+    DOWNLOAD_FILE_NAME = "downloadFileName"
+    DOWNLOAD_DIRECOTRY_PATH = "downloadDirectoryPath"
+    YOUTUBE_URL = "youtubeURL"
+    DOWNLOAD_TYP = "downloadType"
+    URL_LIST = "list="
+    URL_VIDEO = "v="
+    MP3 = "mp3"
+    FORM_DATA = "FormData"
+    DATA = "data"
+    HASH = "HASH"
+    NAME = "name"
+    ERROR = 'error'
+    ARGS = "args"
+
 class MetaDataType(Enum):
     TITLE = "title"
     ALBUM = "album"

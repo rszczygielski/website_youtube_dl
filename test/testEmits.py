@@ -11,7 +11,7 @@ from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
 from website_youtube_dl.common.youtubeDataKeys import MediaInfo
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl import create_app, socketio
-from website_youtube_dl.common.youtubeLogKeys import YoutubeVariables
+from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from unittest.mock import MagicMock
 
 
@@ -69,7 +69,7 @@ class TestEmits(TestCase):
     def testDownloadMediaFinishEmitConvertDataToMsg(self):
         result = self.downloadMediaFinishEmit.convertDataToMessage(
             self.testHash)
-        self.assertEqual({YoutubeVariables.HASH.value: self.testHash},
+        self.assertEqual({MainYoutubeKeys.HASH.value: self.testHash},
                          result)
 
     def getEmitMassage(self, fullEmit, msgNumber):
@@ -83,7 +83,7 @@ class TestEmits(TestCase):
         self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
                          emitData.emitName)
         self.assertIn(self.dataStr, emitData.data)
-        self.assertIn(YoutubeVariables.HASH.value,
+        self.assertIn(MainYoutubeKeys.HASH.value,
                       emitData.data[self.dataStr])
 
     def testSingleMediaInfoEmitConvertDataToMsg(self):

@@ -3,11 +3,14 @@ import configparser
 import argparse
 import logging
 import os
-import re
 from .youtubeConfigManager import ConfigParserManager
 from .easyID3Manager import EasyID3Manager
 from .myLogger import Logger, LoggerClass
-from .youtubeDataKeys import PlaylistInfo, MediaInfo, YoutubeOptiones
+from .youtubeDataKeys import (PlaylistInfo,
+                              MediaInfo,
+                              YoutubeOptiones)
+from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +121,7 @@ class YoutubeDL():
             self.titleTemplate = self.titleTemplateDefault
         return resultOfYoutube
 
-    def ifVideoExistOnYoutube(self, ytHash:str):
+    def ifQueryExistOnYoutube(self, ytHash: str):  # pragma: no_cover
         """Method checks if given query exists on YouTube, methos uses yt-dlp package
 
         Args:
@@ -141,7 +144,8 @@ class YoutubeDL():
                 return True
             except Exception as exception:
                 errorInfo = str(exception)
-                logger.error(f"Video might be deleted from YouTube error: {errorInfo}")
+                logger.error(
+                    f"Video might be deleted from YouTube error: {errorInfo}")
                 return False
 
     def downloadVideo(self, youtubeURL: str, type: str) -> ResultOfYoutube:
@@ -220,7 +224,7 @@ class YoutubeDL():
         singleMedia = self._getMedia(metaData)
         return ResultOfYoutube(singleMedia)
 
-    def verifyLocalFiles(self, dirPath:str):
+    def verifyLocalFiles(self, dirPath: str):
         """Method verifies if the local files still exists on YouTube
 
         Args:
@@ -240,7 +244,7 @@ class YoutubeDL():
                 notVerifiedFiles.append(fullFilePath)
         return notVerifiedFiles
 
-    def ifVideoExistOnYoutube(self, ytHash:str):
+    def ifVideoExistOnYoutube(self, ytHash: str):  # pragma: no_cover
         """Method checks if given YouTube video hash exists on YouTube, methos uses yt-dlp package
 
         Args:
@@ -263,7 +267,8 @@ class YoutubeDL():
                 return True
             except Exception as exception:
                 errorInfo = str(exception)
-                logger.error(f"Video might be deleted from YouTube error: {errorInfo}")
+                logger.error(
+                    f"Video might be deleted from YouTube error: {errorInfo}")
                 return False
 
     def _getDefaultOptions(self):
@@ -301,10 +306,10 @@ class YoutubeDL():
             url = metaData[MediaInfo.URL.value]
         if MediaInfo.EXTENSION.value in metaData:
             extension = metaData[MediaInfo.EXTENSION.value]
-        if MediaInfo.REQUESTED_DOWNLOADS.value in metaData:
-            requested_downloads = metaData[MediaInfo.REQUESTED_DOWNLOADS.value][0]
-            if MediaInfo.FUL_PATH.value in requested_downloads:
-                full_path = requested_downloads[MediaInfo.FUL_PATH.value]
+        if MainYoutubeKeys.REQUESTED_DOWNLOADS.value in metaData:
+            requested_downloads = metaData[MainYoutubeKeys.REQUESTED_DOWNLOADS.value][0]
+            if MainYoutubeKeys.FUL_PATH.value in requested_downloads:
+                full_path = requested_downloads[MainYoutubeKeys.FUL_PATH.value]
         return SingleMedia(full_path, title, album, artist,
                            youtube_hash, url, extension)
 
@@ -356,7 +361,8 @@ class YoutubeDL():
             "preferredcodec": "mp3",
             "preferredquality": "192",
         }]
-        audio_options["outtmpl"] = self._savePath + f"{self.titleTemplate}.%(ext)s"
+        audio_options["outtmpl"] = self._savePath + \
+            f"{self.titleTemplate}.%(ext)s"
         self._ydl_opts = audio_options
 
     def _getMediaResultHash(self, url):
@@ -451,21 +457,21 @@ class YoutubeDlConfig(YoutubeDL):
             logger.error(
                 "Playlist dosn't have track list - no entries key in meta data")
             return False
-        playlistName = metaData["title"]
+        playlistName = metaData[PlaylistInfo.TITLE.value]
         for playlistTrack in metaData[entriesKey]:
             if playlistTrack is None:
                 logger.info("Track Not Found")
                 continue
             directoryPath = self._configManager.getSavePath()
             title = artist = album = index = None
-            if "title" in playlistTrack:
-                title = playlistTrack["title"]
-            if "artist" in playlistTrack:
-                artist = playlistTrack["artist"]
-            if "album" in playlistTrack:
-                album = playlistTrack["album"]
-            if "playlist_index" in playlistTrack:
-                index = playlistTrack["playlist_index"]
+            if PlaylistInfo.TITLE.value in playlistTrack:
+                title = playlistTrack[PlaylistInfo.TITLE.value]
+            if PlaylistInfo.ARTIST.value in playlistTrack:
+                artist = playlistTrack[PlaylistInfo.ARTIST.value]
+            if PlaylistInfo.ALBUM.value in playlistTrack:
+                album = playlistTrack[PlaylistInfo.TITLE.value]
+            if PlaylistInfo.PLAYLIST_INDEX.value in playlistTrack:
+                index = playlistTrack[PlaylistInfo.PLAYLIST_INDEX.value]
             filePath = f"{directoryPath}/{yt_dlp.utils.sanitize_filename(playlistTrack['title'])}.mp3"
             self.easyID3Manager.setParams(filePath=filePath,
                                           title=title,
@@ -598,9 +604,12 @@ def main():  # pragma: no_cover
         "Program downloads mp3 form given youtube URL")
     parser.add_argument("-u", metavar="url", dest="url",
                         help="Link to the youtube video")
-    parser.add_argument("-t", metavar="type", dest="type", choices=["360", "480", "720", "1080", "4k", "mp3"], default="1080",
+    parser.add_argument("-t", metavar="type", dest="type",
+                        choices=["360", "480", "720", "1080", "4k", "mp3"],
+                        default="1080",
                         help="Select downolad type --> ['360', '720', '1080', '2160', 'mp3'], default: 1080")
-    parser.add_argument("-c", metavar="config", dest="config", default="youtube_config.ini",
+    parser.add_argument("-c", metavar="config", dest="config",
+                        default="youtube_config.ini",
                         help="Path to the config file --> default youtube_config.ini")
     args = parser.parse_args()
     url = args.url

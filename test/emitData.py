@@ -1,4 +1,5 @@
-from website_youtube_dl.common.youtubeLogKeys import YoutubeVariables
+from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+
 
 class EmitData:
     def __init__(self, emitName, data):
@@ -11,6 +12,6 @@ class EmitData:
 
     @classmethod
     def initFromMassage(cls, receivedMsg):
-        data = receivedMsg[YoutubeVariables.ARGS.value][0]
-        emitName = receivedMsg[YoutubeVariables.NAME.value]
+        data = receivedMsg[MainYoutubeKeys.ARGS.value][0]
+        emitName = receivedMsg[MainYoutubeKeys.NAME.value]
         return cls(emitName, data)

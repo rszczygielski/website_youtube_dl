@@ -6,6 +6,7 @@ from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 import website_youtube_dl.common.youtubeDL as youtubeDL
 from test.configParserMock import ConfigParserMock
+from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 
 
 class TestYoutubeDL(TestCase):
@@ -38,8 +39,6 @@ class TestYoutubeDL(TestCase):
     testId2 = '_EZUfnMv3Lg'
     testFullPath2 = f"{folder_path}/{testTitle2}.webm"
 
-
-
     songMetaData1 = {
         MediaInfo.TITLE.value: testTitle1,
         MediaInfo.ALBUM.value: testAlbum1,
@@ -47,7 +46,9 @@ class TestYoutubeDL(TestCase):
         MediaInfo.EXTENSION.value: testExt1,
         PlaylistInfo.PLAYLIST_INDEX.value: testPlaylistIndex1,
         MediaInfo.URL.value: testOriginalUrl1,
-        MediaInfo.YOUTUBE_HASH.value: testId1
+        MediaInfo.YOUTUBE_HASH.value: testId1,
+        MainYoutubeKeys.REQUESTED_DOWNLOADS.value: [
+            {MainYoutubeKeys.FUL_PATH.value: testFullPath1}]
     }
 
     songMetaData2 = {
@@ -57,7 +58,10 @@ class TestYoutubeDL(TestCase):
         MediaInfo.EXTENSION.value: testExt2,
         PlaylistInfo.PLAYLIST_INDEX.value: testPlaylistIndex2,
         MediaInfo.URL.value: testOriginalUrl2,
-        MediaInfo.YOUTUBE_HASH.value: testId2
+        MediaInfo.YOUTUBE_HASH.value: testId2,
+        MainYoutubeKeys.REQUESTED_DOWNLOADS.value: [
+            {MainYoutubeKeys.FUL_PATH.value: testFullPath2}]
+
     }
 
     songFromPlaylist1 = {
@@ -104,7 +108,7 @@ class TestYoutubeDL(TestCase):
                                                   ConfigParserMock())
         self.youtubeTest = youtubeDL.YoutubeDL(configParserManager)
         self.youtubeConfigPlaylists = youtubeDL.YoutubeDlConfig(configParserManager,
-            MagicMock())
+                                                                MagicMock())
         self.youtubeTest._savePath = self.testDir
         self.youtubeTest._ydl_opts['outtmpl'] = self.testDir + \
             '/%(title)s.%(ext)s'
@@ -149,6 +153,17 @@ class TestYoutubeDL(TestCase):
         mockExtractinfo.assert_called_once_with(self.mainURL1)
         singleMedia = resultOfYoutube.getData()
         self.checkResultSingleMedia(singleMedia, self.singleMediaTest)
+
+    @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
+    def testDownloadFileDifferentTitleTemplate(self, mockExtractinfo):
+        self.youtubeTest.setTitleTemplateOneTime("test")
+        self.assertEqual("test", self.youtubeTest.titleTemplate)
+        resultOfYoutube = self.youtubeTest._downloadFile(self.mainURL1)
+        self.assertEqual(False, resultOfYoutube.isError())
+        mockExtractinfo.assert_called_once_with(self.mainURL1)
+        singleMedia = resultOfYoutube.getData()
+        self.checkResultSingleMedia(singleMedia, self.singleMediaTest)
+        self.assertEqual('/%(title)s', self.youtubeTest.titleTemplate)
 
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   side_effect=ValueError(mainMediaDownloadError))
@@ -251,7 +266,6 @@ class TestYoutubeDL(TestCase):
             self.mainPlaylistUrlNoVideoHash1)
         mockExtractinfo.assert_called_once_with(self.mainPlaylistHash)
         self.assertEqual(self.playlistMetaDataFull, metaData)
-
 
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value={"title": testPlaylistName})

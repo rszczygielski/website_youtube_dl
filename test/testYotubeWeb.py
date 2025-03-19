@@ -1,7 +1,7 @@
 from website_youtube_dl import create_app, socketio
 import os
-from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs, YoutubeVariables
-from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs
 from unittest import TestCase, main
 from unittest.mock import patch, call
 from website_youtube_dl.config import TestingConfig
@@ -162,9 +162,9 @@ class testYoutubeWeb(TestCase):
     @patch.object(youtube, "downloadCorrectData")
     def testSocketDownloadServerSuccess(self, mockDownloadData, isFile):
         self.socketIoTestClient.emit(
-            YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubeURL1,
-                YoutubeVariables.DOWNLOAD_TYP.value: self.mp3
+            MainYoutubeKeys.FORM_DATA.value, {
+                MainYoutubeKeys.YOUTUBE_URL.value: self.actualYoutubeURL1,
+                MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
             }
         )
         pythonEmit = self.socketIoTestClient.get_received()
@@ -175,42 +175,42 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
                          emitData.emitName)
         self.assertIn(self.dataStr, emitData.data)
-        self.assertIn(YoutubeVariables.HASH.value,
+        self.assertIn(MainYoutubeKeys.HASH.value,
                       emitData.data[self.dataStr])
 
     def testSocketDownloadServerNoDownloadType(self):
         self.socketIoTestClient.emit(
-            YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubeURL1
+            MainYoutubeKeys.FORM_DATA.value, {
+                MainYoutubeKeys.YOUTUBE_URL.value: self.actualYoutubeURL1
             }
         )
         pythonEmit = self.socketIoTestClient.get_received()
         self.assertEqual(len(pythonEmit), 1)
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertIn(YoutubeVariables.NAME.value, receivedMsg)
+        self.assertIn(MainYoutubeKeys.NAME.value, receivedMsg)
         self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
                          emitData.emitName)
-        self.assertIn(YoutubeVariables.ERROR.value, emitData.data)
-        self.assertEqual(emitData.data[YoutubeVariables.ERROR.value],
+        self.assertIn(MainYoutubeKeys.ERROR.value, emitData.data)
+        self.assertEqual(emitData.data[MainYoutubeKeys.ERROR.value],
                          YoutubeLogs.NO_FORMAT.value)
 
     def testSocketDownloadServerNoYoutubeURL(self):
         self.socketIoTestClient.emit(
-            YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: YoutubeVariables.EMPTY_STRING.value,
-                YoutubeVariables.DOWNLOAD_TYP.value: self.mp3
+            MainYoutubeKeys.FORM_DATA.value, {
+                MainYoutubeKeys.YOUTUBE_URL.value: "",
+                MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
             }
         )
         pythonEmit = self.socketIoTestClient.get_received()
         self.assertEqual(len(pythonEmit), 1)
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertIn(YoutubeVariables.NAME.value, receivedMsg)
+        self.assertIn(MainYoutubeKeys.NAME.value, receivedMsg)
         self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
                          emitData.emitName)
-        self.assertIn(YoutubeVariables.ERROR.value, emitData.data)
-        self.assertEqual(emitData.data[YoutubeVariables.ERROR.value],
+        self.assertIn(MainYoutubeKeys.ERROR.value, emitData.data)
+        self.assertEqual(emitData.data[MainYoutubeKeys.ERROR.value],
                          YoutubeLogs.NO_URL.value)
 
     @patch.object(youtube, "generateHash", return_value=testGeneratedHash)
@@ -222,9 +222,9 @@ class testYoutubeWeb(TestCase):
                                                mockSetSessionDownloadData,
                                                mockGenerateHash):
         self.socketIoTestClient.emit(
-            YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubeURL2,
-                YoutubeVariables.DOWNLOAD_TYP.value: self.mp3
+            MainYoutubeKeys.FORM_DATA.value, {
+                MainYoutubeKeys.YOUTUBE_URL.value: self.actualYoutubeURL2,
+                MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
             }
         )
         mockGenerateHash.assert_called_once()
@@ -237,7 +237,7 @@ class testYoutubeWeb(TestCase):
                                                  False)
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertIn(YoutubeVariables.NAME.value, receivedMsg)
+        self.assertIn(MainYoutubeKeys.NAME.value, receivedMsg)
         self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
                          emitData.emitName)
         expectedData = self.downloadMediaFinishEmit.convertDataToMessage(
@@ -249,9 +249,9 @@ class testYoutubeWeb(TestCase):
     @patch.object(youtube, "downloadCorrectData")
     def testSocketDownloadPlaylist(self, mockDownloadData, isFile):
         self.socketIoTestClient.emit(
-            YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubePlaylistURL1,
-                YoutubeVariables.DOWNLOAD_TYP.value: self.mp3
+            MainYoutubeKeys.FORM_DATA.value, {
+                MainYoutubeKeys.YOUTUBE_URL.value: self.actualYoutubePlaylistURL1,
+                MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
             }
         )
         pythonEmit = self.socketIoTestClient.get_received()
@@ -262,15 +262,15 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
                          emitData.emitName)
         self.assertIn(self.dataStr, emitData.data)
-        self.assertIn(YoutubeVariables.HASH.value,
+        self.assertIn(MainYoutubeKeys.HASH.value,
                       emitData.data[self.dataStr])
 
     @patch.object(youtube, "downloadCorrectData", return_value=None)
     def testSocketDownloadFail(self, mockDownloadData):
         self.socketIoTestClient.emit(
-            YoutubeVariables.FORM_DATA.value, {
-                YoutubeVariables.YOUTUBE_URL.value: self.actualYoutubeURL1,
-                YoutubeVariables.DOWNLOAD_TYP.value: self.mp3
+            MainYoutubeKeys.FORM_DATA.value, {
+                MainYoutubeKeys.YOUTUBE_URL.value: self.actualYoutubeURL1,
+                MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
             }
         )
         pythonEmit = self.socketIoTestClient.get_received()
@@ -286,11 +286,13 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube.downloadSingleVideo(self.actualYoutubeURL1,
                                                  self.hd720p)
+        # print(self.singleMedia1.file_name, "*"*60)
         self.app.configParserManager.getSavePath.assert_called_once()
         mocksendEmitSingleMediaInfoFromYoutube.assert_called_once_with(
             self.actualYoutubeURL1)
         mockDownloadVideo.assert_called_once_with(
             self.actualYoutubeURL1, self.hd720p)
+        print(result)
         self.assertEqual(self.testFullPath1, result)
 
     @patch.object(YoutubeDL, "downloadVideo", return_value=resultOfYoutubeSingleWithError1)
@@ -329,6 +331,8 @@ class testYoutubeWeb(TestCase):
             self.actualYoutubeURL1)
         mockSaveMetaData.assert_called_once()
         self.assertEqual(self.testFullPath1.replace("webm", "mp3"), result)
+        # youtube.py 114 line replace messing up the tests
+        self.singleMedia1.file_name = self.testFullPath1
 
     @patch.object(youtube, "sendEmitSingleMediaInfoFromYoutube", return_value=False)
     def testDownloadSingleMediaAudioEmitMediaInfoError(self,
@@ -459,7 +463,7 @@ class testYoutubeWeb(TestCase):
         mockDownloadAudio.assert_called_once_with(self.actualYoutubeURL1)
         mockSaveMetaData.assert_called_once()
         self.app.configParserManager.getSavePath.assert_called_once()
-        self.assertEqual(result, self.testFullPath1.replace(".webm", ".mp3"))
+        self.assertEqual(self.testFullPath1.replace("webm", "mp3"), result)
 
     @patch.object(YoutubeDL, "downloadAudio", return_value=resultOfYoutubeSingleWithError1)
     def testDownloadAudioFromPlaylistWithError(self, mockDownloadAudio):

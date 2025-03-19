@@ -2,8 +2,8 @@ from ..common.youtubeDL import (SingleMedia,
                                 PlaylistMedia,
                                 MediaFromPlaylist,
                                 ResultOfYoutube)
-from ..common.youtubeLogKeys import (YoutubeLogs,
-                                     YoutubeVariables)
+from ..common.youtubeLogKeys import YoutubeLogs
+from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from ..common.easyID3Manager import EasyID3Manager
 from flask import (send_file,
                    render_template,
@@ -31,21 +31,21 @@ youtube = Blueprint("youtube", __name__)
 @socketio.on("FormData")
 def socketDownloadServer(formData):
     app.logger.debug(formData)
-    youtubeURL = formData[YoutubeVariables.YOUTUBE_URL.value]
+    youtubeURL = formData[MainYoutubeKeys.YOUTUBE_URL.value]
     downloadErrorEmit = DownloadMediaFinishEmit()
-    if YoutubeVariables.DOWNLOAD_TYP.value not in formData:
+    if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
         app.logger.warning(YoutubeLogs.NO_FORMAT.value)
         downloadErrorEmit.sendEmitError(YoutubeLogs.NO_FORMAT.value)
         return False
-    formatType = formData[YoutubeVariables.DOWNLOAD_TYP.value]
+    formatType = formData[MainYoutubeKeys.DOWNLOAD_TYP.value]
     app.logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {formatType}")
     fromatType = FormatType().initFromForm(formatType)
     if not youtubeURL:
         app.logger.warning(YoutubeLogs.NO_URL.value)
         downloadErrorEmit.sendEmitError(YoutubeLogs.NO_URL.value)
         return False
-    isPlaylist = YoutubeVariables.URL_LIST.value in youtubeURL \
-        and YoutubeVariables.URL_VIDEO.value not in youtubeURL
+    isPlaylist = MainYoutubeKeys.URL_LIST.value in youtubeURL \
+        and MainYoutubeKeys.URL_VIDEO.value not in youtubeURL
     fullFilePath = downloadCorrectData(youtubeURL, fromatType,
                                        isPlaylist)
     if not fullFilePath:

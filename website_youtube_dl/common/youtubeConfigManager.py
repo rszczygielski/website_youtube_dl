@@ -27,7 +27,7 @@ class ConfigParserManager():
             self.createDefaultConfigFile()
         return self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value]
 
-    def handleDefaultDir(self, dirPath):
+    def handleDefaultDir(self, dirPath): # pragma: no_cover
         if not os.path.exists(dirPath):
             logger.info(f"Default directory {dirPath} not exists, creating one")
             os.mkdir(dirPath)
