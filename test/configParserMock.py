@@ -24,18 +24,18 @@ class ConfigManagerMock(ConfigParserManager):
         homePath = os.path.expanduser(ConfigKeys.SWUNG_DASH.value)
         self.musicPath = os.path.join(homePath, ConfigKeys.MUSIC.value)
 
-    def createDefaultConfigFile(self):
+    def create_default_config_file(self):
         pass
 
-    def getSavePath(self):
+    def get_save_path(self):
         self.configParser.clear()
         self.configParser.read(self.configFilePath)
         if len(self.configParser.sections()) == 0:
             self.createDefaultConfigFile()
         return self.configParser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value]
 
-    def handleDefaultDir(self, dirPath):
+    def handle_default_dir(self, dirPath):
         pass
 
-    def saveConfig(self):
+    def save_config(self):
         pass

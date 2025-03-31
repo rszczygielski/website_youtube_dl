@@ -11,7 +11,7 @@ $(document).ready(function () {
 
     socket.on(UploadPlaylistsReceiver.emitMsg, function(response){
         var uploadPlaylistsReceiver = new UploadPlaylistsReceiver(response)
-        if (uploadPlaylistsReceiver.isError()){
+        if (uploadPlaylistsReceiver.is_error()){
             console.log(uploadPlaylistsReceiver.getError())
             return
         }
@@ -21,17 +21,17 @@ $(document).ready(function () {
 
         playlistSelect.innerHTML = '';
 
-        uploadPlaylists.playlistList.forEach(function(playlistName) {
+        uploadPlaylists.playlist_list.forEach(function(playlist_name) {
             let option = document.createElement("option");
-            option.value = playlistName;
-            option.textContent = playlistName;
+            option.value = playlist_name;
+            option.textContent = playlist_name;
             playlistSelect.appendChild(option);
         });
     })
 
     socket.on(DownloadMediaFinishReceiver.emitMsg, function (response) {
         var downloadMediaFinishReceiver = new DownloadMediaFinishReceiver(response)
-        if (downloadMediaFinishReceiver.isError()){
+        if (downloadMediaFinishReceiver.is_error()){
             console.log(downloadMediaFinishReceiver.getError())
             return
         }
@@ -43,6 +43,7 @@ $(document).ready(function () {
 
     socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
+        console.log("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
         var singleMediaEmitReceiver = new SingleMediaEmitReceiver(response)
         console.log(singleMediaEmitReceiver)
         if (singleMediaEmitReceiver.isError()){
@@ -65,38 +66,38 @@ $(document).ready(function () {
 
     socket.on(PlaylistUrlReceiver.emitMsg, function(response){
         var playlistUrlReceiver = new PlaylistUrlReceiver(response)
-        if (playlistUrlReceiver.isError()){
+        if (playlistUrlReceiver.is_error()){
             console.log(playlistUrlReceiver.getError())
             return
         }
         var playlistUrlObject = playlistUrlReceiver.getData()
-        const urlInput = document.getElementById("playlistURL")
+        const urlInput = document.getElementById("playlist_url")
         urlInput.value = playlistUrlObject.playlistUrl
     })
 
     addPlaylistButton.addEventListener("click", function (event) {
-        const playlistName = document.getElementById("playlistName").value
-        const playlistURL = document.getElementById("playlistURL").value
-        console.log(playlistName, playlistURL)
-        var addPlaylist = new AddPlaylist(playlistName, playlistURL)
+        const playlist_name = document.getElementById("playlistName").value
+        const playlist_url = document.getElementById("playlist_url").value
+        console.log(playlist_name, playlist_url)
+        var addPlaylist = new AddPlaylist(playlist_name, playlist_url)
         var emitAddPlaylist = new EmitAddPlaylist()
         emitAddPlaylist.sendEmit(addPlaylist)
     });
 
     playlistSelect.addEventListener("click", function(event) {
-        const playlistName =  playlistSelect.value;
-        const playlistNameInput = document.getElementById("playlistName");
-        playlistNameInput.value = playlistName;
-        var playlistNameObject = new PlaylistName(playlistName)
+        const playlist_name =  playlistSelect.value;
+        const playlist_nameInput = document.getElementById("playlistName");
+        playlist_nameInput.value = playlist_name;
+        var playlist_nameObject = new PlaylistName(playlist_name)
         var emitPlaylistName = new EmitPlaylistName()
-        emitPlaylistName.sendEmit(playlistNameObject)
+        emitPlaylistName.sendEmit(playlist_nameObject)
     });
 
     deletePlalistButton.addEventListener("click", function (event) {
         const playlistToDelete = playlistSelect.value
-        var playlistNameObject = new PlaylistName(playlistToDelete)
+        var playlist_nameObject = new PlaylistName(playlistToDelete)
         var emitDeletePlaylist = new EmitDeletePlaylist()
-        emitDeletePlaylist.sendEmit(playlistNameObject)
+        emitDeletePlaylist.sendEmit(playlist_nameObject)
     });
 
     downloadPlaylistButton.addEventListener("click", function (event) {
@@ -106,8 +107,8 @@ $(document).ready(function () {
         downloadInfo.innerHTML = ''
         const playlistToDownload = playlistSelect.value
 
-        var playlistNameObject = new PlaylistName(playlistToDownload)
+        var playlist_nameObject = new PlaylistName(playlistToDownload)
         var emitDownloadFromConfigFile = new EmitDownloadFromConfigFile()
-        emitDownloadFromConfigFile.sendEmit(playlistNameObject)
+        emitDownloadFromConfigFile.sendEmit(playlist_nameObject)
     });
 });

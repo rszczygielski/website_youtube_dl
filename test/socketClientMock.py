@@ -2,20 +2,20 @@ from website_youtube_dl.flaskAPI.session import SessionClient
 
 
 class SessionClientMock(SessionClient):
-    sessionData = {}
+    session_data = {}
 
     def __init__(self, session):
         super().__init__(session)
 
-    def clearSession(self):
+    def clear_session(self):
         pass
 
-    def addElemtoSession(self, key, value):
-        self.sessionData[key] = value
+    def add_elem_to_session(self, key, value):
+        self.session_data[key] = value
 
-    def getSessionElem(self, key):
-        return self.sessionData[key]
+    def get_session_elem(self, key):
+        return self.session_data[key]
 
-    def ifElemInSession(self, key):
+    def if_elem_in_session(self, key):
         if key not in self.session.keys():
             return False

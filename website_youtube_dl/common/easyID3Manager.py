@@ -10,51 +10,51 @@ logger = logging.getLogger(__name__)
 class EasyID3Manager():  # pragma: no_cover
 
     def __init__(self):
-        self.filePath = None
+        self.file_path = None
         self.title = None
         self.album = None
         self.artist = None
-        self.playlistName = None
-        self.trackNumber = None
+        self.playlist_name = None
+        self.track_number = None
         self.website = None
 
-    def setParams(self, filePath,
-                  title=None,
-                  album=None,
-                  artist=None,
-                  ytHash=None,
-                  trackNumber=None,
-                  playlistName=None):
+    def set_params(self, filePath,
+                   title=None,
+                   album=None,
+                   artist=None,
+                   yt_hash=None,
+                   track_number=None,
+                   playlist_name=None):
         if not os.path.isfile(filePath):
             logger.warning(
                 f"File {filePath} doesn't exist - provide correct file path")
-        self.filePath = filePath
+        self.file_path = filePath
         self.title = title
         self.album = album
         self.artist = artist
-        self.ytHash = ytHash
-        self.trackNumber = trackNumber
-        self.playlistName = playlistName
+        self.yt_hash = yt_hash
+        self.track_number = track_number
+        self.playlist_name = playlist_name
 
-    def saveMetaData(self):
-        if self.filePath is None:
+    def save_meta_data(self):
+        if self.file_path is None:
             raise FileNotFoundError(
-                f"File {self.filePath} doesn't exist - provide correct file path")
-        audio = EasyID3(self.filePath)
+                f"File {self.file_path} doesn't exist - provide correct file path")
+        audio = EasyID3(self.file_path)
         if self.title:
             audio[MetaDataType.TITLE.value] = self.title
         if self.album:
             audio[MetaDataType.ALBUM.value] = self.album
         if self.artist:
             audio[MetaDataType.ARTIST.value] = self.artist
-        if self.ytHash:
-            audio[MetaDataType.WEBSITE.value] = self.ytHash
-        if self.trackNumber:
-            audio[MetaDataType.TRACK_NUMBER.value] = self.trackNumber
+        if self.yt_hash:
+            audio[MetaDataType.WEBSITE.value] = self.yt_hash
+        if self.track_number:
+            audio[MetaDataType.TRACK_NUMBER.value] = self.track_number
         audio.save()
 
-    def readMetaData(self):
-        audio = EasyID3(self.filePath)
+    def read_meta_data(self):
+        audio = EasyID3(self.file_path)
         if MetaDataType.TITLE.value in audio:
             self.title = audio[MetaDataType.TITLE.value]
         if MetaDataType.ALBUM.value in audio:
@@ -62,15 +62,15 @@ class EasyID3Manager():  # pragma: no_cover
         if MetaDataType.ARTIST.value in audio:
             self.artist = audio[MetaDataType.ARTIST.value]
         if MetaDataType.WEBSITE.value in audio:
-            self.ytHash = audio[MetaDataType.WEBSITE.value]
+            self.yt_hash = audio[MetaDataType.WEBSITE.value]
         if MetaDataType.TRACK_NUMBER.value in audio:
-            self.trackNumber = audio[MetaDataType.TRACK_NUMBER.value]
+            self.track_number = audio[MetaDataType.TRACK_NUMBER.value]
 
-    def _showMetaDataInfo(self, path):  # pragma: no_cover
+    def _show_meta_data_info(self, path):  # pragma: no_cover
         """Method used to show Metadata info
 
         Args:
             path (str): file path
         """
-        audioInfo = MP3(path, ID3=EasyID3)
-        logger.info(audioInfo.pprint())
+        audio_info = MP3(path, i_d3=EasyID3)
+        logger.info(audio_info.pprint())

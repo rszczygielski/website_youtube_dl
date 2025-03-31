@@ -18,18 +18,19 @@ class MainYoutubeKeys(Enum):
     ERROR = 'error'
     ARGS = "args"
 
+
 class MetaDataType(Enum):
     TITLE = "title"
     ALBUM = "album"
     ARTIST = "artist"
     PLAYLIST_INDEX = "playlist_index"
     TRACK_NUMBER = "tracknumber"
-    PLAYLIST_NAME = "playlist_name"
+    PLAYLIST_NAME = "playlistName"
     WEBSITE = "website"
 
 
 class PlaylistInfo(Enum):
-    PLAYLIST_NAME = "playlist_name"
+    PLAYLIST_NAME = "playlistName"
     TITLE = "title"
     ALBUM = "album"
     ARTIST = "artist"
@@ -38,6 +39,7 @@ class PlaylistInfo(Enum):
     PLAYLIST_TRACKS = "entries"
     URL = "url"
     EXTENSION = "ext"
+
 
 class MediaInfo(Enum):
     TITLE = "title"
@@ -49,6 +51,7 @@ class MediaInfo(Enum):
     FUL_PATH = "filename"
     REQUESTED_DOWNLOADS = "requested_downloads"
 
+
 class YoutubeOptiones(Enum):
     FORMAT = "format"
     DOWNLOAD_ARCHIVE = "download_archive"
@@ -58,4 +61,3 @@ class YoutubeOptiones(Enum):
     QUIET = "quiet"
     LOGGER = "logger"
     OUT_TEMPLATE = "outtmpl"
-

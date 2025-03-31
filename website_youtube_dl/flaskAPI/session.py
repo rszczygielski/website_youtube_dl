@@ -4,19 +4,19 @@ import os
 
 
 class SessionDownloadData():
-    fileName = None
-    fileDirectoryPath = None
+    file_name = None
+    file_directory_path = None
 
     def __init__(self, fullFilePath) -> None:
-        self.setSessionDownloadData(fullFilePath)
+        self.set_session_download_data(fullFilePath)
 
-    def setSessionDownloadData(self, fullFilePath):
+    def set_session_download_data(self, fullFilePath):
         if not os.path.isfile(fullFilePath):
             raise FileNotFoundError(
                 f"File {fullFilePath} doesn't exist - something went wrong")
-        splitedFilePath = fullFilePath.split("/")
-        self.fileName = splitedFilePath[-1]
-        self.fileDirectoryPath = "/".join(splitedFilePath[:-1])
+        splited_file_path = fullFilePath.split("/")
+        self.file_name = splited_file_path[-1]
+        self.file_directory_path = "/".join(splited_file_path[:-1])
 
 
 class SessionClient():
@@ -24,33 +24,33 @@ class SessionClient():
     def __init__(self, session):
         self.session = session
 
-    def addElemtoSession(self, key, value):
+    def add_elem_to_session(self, key, value):
         self.session[key] = value
 
-    def deleteElemFormSession(self, key):
-        if not self.ifElemInSession(key):
+    def delete_elem_form_session(self, key):
+        if not self.if_elem_in_session(key):
             return
         self.session.pop(key)
 
-    def ifElemInSession(self, key):
+    def if_elem_in_session(self, key):
         if key not in self.session.keys():
             app.logger.error(f"Session doesn't have a key: {key}")
             return False
         return True
 
-    def getSessionElem(self, key):
-        if not self.ifElemInSession(key):
+    def get_session_elem(self, key):
+        if not self.if_elem_in_session(key):
             return
         return self.session[key]
 
-    def printSessionKeys(self):  # pragma: no_cover
+    def print_session_keys(self):  # pragma: no_cover
         app.logger.info(self.session.keys())
 
-    def clearSession(self):  # pragma: no_cover
+    def clear_session(self):  # pragma: no_cover
         self.session.clear()
 
-    def getAllSessionKeys(self):  # pragma: no_cover
+    def get_all_session_keys(self):  # pragma: no_cover
         return self.session.keys()
 
     # def __del__(self):
-    #     self.clearSession()
+    #     self.clear_session()

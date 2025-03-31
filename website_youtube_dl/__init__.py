@@ -13,11 +13,11 @@ import logging
 socketio = SocketIO()
 
 
-def create_app(config_class=Config, configParser=ConfigParserManager):
+def create_app(config_class=Config, config_parser=ConfigParserManager):
     app = Flask(__name__)
     app.config.from_object(config_class)
-    app.configParserManager = init_configPareser(configParser)
-    app.youtubeDownloder = init_youtubeDL(app.configParserManager)
+    app.config_parser_manager = init_config_pareser(config_parser)
+    app.youtube_downloder = init_youtube_dl(app.config_parser_manager)
     app.logger = init_logger()
 
     Session(app)
@@ -34,21 +34,22 @@ def create_app(config_class=Config, configParser=ConfigParserManager):
 
 def init_logger():
     logging.basicConfig(
-        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s", level=logging.DEBUG)
+        format="%(asctime)s-%(levelname)s-%(filename)s:%(lineno)d - %(message)s",
+        level=logging.DEBUG)
     logger_werkzeug = logging.getLogger('werkzeug')
     logger_werkzeug.setLevel(logging.ERROR)
     logger = logging.getLogger(__name__)
     return logger
 
 
-def init_configPareser(configParser):
+def init_config_pareser(configParser):
     config = "youtube_config.ini"
     return configParser(config)
 
 
-def init_youtubeDL(configParserManager: ConfigParserManager):
-    youtubeLogger = LoggerClass()
+def init_youtube_dl(config_parser_manager: ConfigParserManager):
+    youtube_logger = LoggerClass()
 
-    youtubeDownloder = YoutubeDL(
-        configParserManager, youtubeLogger)
-    return youtubeDownloder
+    youtube_downloder = YoutubeDL(
+        config_parser_manager, youtube_logger)
+    return youtube_downloder

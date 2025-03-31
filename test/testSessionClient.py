@@ -9,64 +9,67 @@ import os
 
 
 class SessionTest(TestCase):
-    testKey1 = "key_1"
-    testValue = "value_1"
-    testPath = "testdir/testfile"
+    test_key1 = "key_1"
+    test_value = "value_1"
+    test_path = "testdir/testfile"
 
     def setUp(self):
-        self.configManagerMock = MagicMock()
-        app = create_app(TestingConfig, self.configManagerMock)
-        sessionDict = {}
-        self.sessionClient = SessionClient(sessionDict)
+        self.config_manager_mock = MagicMock()
+        app = create_app(TestingConfig, self.config_manager_mock)
+        session_dict = {}
+        self.session_client = SessionClient(session_dict)
         self.flask = app.test_client()
         self.app = app
 
-    def testAddElementToSession(self):
-        sessionKeysEmpty = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionKeysEmpty), 0)
-        self.sessionClient.addElemtoSession(self.testKey1, self.testValue)
-        sessionOneElem = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionOneElem), 1)
-        value = self.sessionClient.getSessionElem(self.testKey1)
-        self.assertEqual(self.testValue, value)
+    def test_add_element_to_session(self):
+        session_keys_empty = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_keys_empty), 0)
+        self.session_client.add_elem_to_session(
+            self.test_key1, self.test_value)
+        session_one_elem = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_one_elem), 1)
+        value = self.session_client.get_session_elem(self.test_key1)
+        self.assertEqual(self.test_value, value)
 
-    def testDeleteElementToSession(self):
-        sessionKeysEmpty = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionKeysEmpty), 0)
-        self.sessionClient.addElemtoSession(self.testKey1, self.testValue)
-        sessionOneElem = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionOneElem), 1)
-        self.sessionClient.deleteElemFormSession(self.testKey1)
-        sessionAfterDelete = self.sessionClient.getAllSessionKeys()
+    def test_delete_element_to_session(self):
+        session_keys_empty = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_keys_empty), 0)
+        self.session_client.add_elem_to_session(
+            self.test_key1, self.test_value)
+        session_one_elem = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_one_elem), 1)
+        self.session_client.delete_elem_form_session(self.test_key1)
+        sessionAfterDelete = self.session_client.get_all_session_keys()
         self.assertEqual(len(sessionAfterDelete), 0)
 
     # test na delete jeśli nie ma elementu
 
-    def testIfElemInSessionTrue(self):
-        sessionKeysEmpty = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionKeysEmpty), 0)
-        self.sessionClient.addElemtoSession(self.testKey1, self.testValue)
-        sessionOneElem = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionOneElem), 1)
-        result = self.sessionClient.ifElemInSession(self.testKey1)
+    def test_if_elem_in_session_true(self):
+        session_keys_empty = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_keys_empty), 0)
+        self.session_client.add_elem_to_session(
+            self.test_key1, self.test_value)
+        session_one_elem = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_one_elem), 1)
+        result = self.session_client.if_elem_in_session(self.test_key1)
         self.assertTrue(result)
 
-    def testElemNotInSession(self):
-        sessionKeysEmpty = self.sessionClient.getAllSessionKeys()
-        self.assertEqual(len(sessionKeysEmpty), 0)
+    def test_elem_not_in_session(self):
+        session_keys_empty = self.session_client.get_all_session_keys()
+        self.assertEqual(len(session_keys_empty), 0)
         with self.app.app_context():
-            result = self.sessionClient.ifElemInSession(self.testKey1)
+            result = self.session_client.if_elem_in_session(self.test_key1)
         self.assertFalse(result)
 
     @patch.object(os.path, "isfile", return_value=True)
-    def testInitSessionDownloadData(self, mockIsFile):
-        sessionData = SessionDownloadData(self.testPath)
-        mockIsFile.assert_called_once_with(self.testPath)
-        splietedTestPath = self.testPath.split("/")
-        fileName = splietedTestPath[-1]
-        dirName = splietedTestPath[0]
-        self.assertEqual(sessionData.fileName, fileName)
-        self.assertEqual(sessionData.fileDirectoryPath, dirName)
+    def test_init_session_download_data(self, mock_is_file):
+        session_data = SessionDownloadData(self.test_path)
+        mock_is_file.assert_called_once_with(self.test_path)
+        splieted_test_path = self.test_path.split("/")
+        file_name = splieted_test_path[-1]
+        dir_name = splieted_test_path[0]
+        self.assertEqual(session_data.file_name, file_name)
+        self.assertEqual(session_data.file_directory_path, dir_name)
 
 
 if __name__ == "__main__":

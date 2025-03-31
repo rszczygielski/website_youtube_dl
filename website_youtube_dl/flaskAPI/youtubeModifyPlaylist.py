@@ -4,7 +4,7 @@ from .. import socketio
 from .emits import (DownloadMediaFinishEmit,
                     UploadPlaylistToConfigEmit,
                     GetPlaylistUrlEmit)
-from .youtube import generateHash, downloadTracksFromPlaylist
+from .youtube import generate_hash, download_tracks_from_playlist
 from .session import SessionDownloadData
 
 
@@ -13,48 +13,50 @@ youtube_playlist = Blueprint("youtube_playlist", __name__)
 
 @youtube_playlist.route("/modify_playlist.html")
 def modify_playlist_html():
-    playlistList = app.configParserManager.getPlaylists()
-    return render_template("modify_playlist.html", playlistsNames=playlistList.keys())
+    playlist_list = app.config_parser_manager.get_playlists()
+    return render_template(
+        "modify_playlist.html",
+        playlists_names=playlist_list.keys())
 
 
 @socketio.on("downloadFromConfigFile")
-def downloadConfigPlaylist(formData):
-    playlistName = formData["playlistToDownload"]
-    app.logger.info(f"Selected playlist form config {playlistName}")
-    playlistURL = app.configParserManager.getPlaylistUrl(playlistName)
-    fullFilePath = downloadTracksFromPlaylist(youtubeURL=playlistURL,
-                                              videoType=None)
-    if not fullFilePath:
+def download_config_playlist(formData):
+    playlist_name = formData["playlistToDownload"]
+    app.logger.info(f"Selected playlist form config {playlist_name}")
+    playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
+    full_file_path = download_tracks_from_playlist(youtubeURL=playlist_url,
+                                                   video_type=None)
+    if not full_file_path:
         return False
-    sessionDownloadData = SessionDownloadData(fullFilePath)
-    genereted_hash = generateHash()
-    app.session.addElemtoSession(genereted_hash, sessionDownloadData)
-    emitDownloadFinish = DownloadMediaFinishEmit()
-    emitDownloadFinish.sendEmit(genereted_hash)
+    session_download_data = SessionDownloadData(full_file_path)
+    genereted_hash = generate_hash()
+    app.session.add_elem_to_session(genereted_hash, session_download_data)
+    emit_download_finish = DownloadMediaFinishEmit()
+    emit_download_finish.send_emit(genereted_hash)
 
 
 @socketio.on("addPlaylist")
-def addPlalistConfig(formData):
-    playlistName = formData["playlistName"]
-    playlistURL = formData["playlistURL"]
-    app.configParserManager.addPlaylist(playlistName, playlistURL)
-    playlistList = list(app.configParserManager.getPlaylists().keys())
-    uploadPlaylistEmit = UploadPlaylistToConfigEmit()
-    uploadPlaylistEmit.sendEmit(playlistList)
+def add_plalist_config(formData):
+    playlist_name = formData["playlistName"]
+    playlist_url = formData["playlistURL"]
+    app.config_parser_manager.add_playlist(playlist_name, playlist_url)
+    playlist_list = list(app.config_parser_manager.get_playlists().keys())
+    upload_playlist_emit = UploadPlaylistToConfigEmit()
+    upload_playlist_emit.send_emit(playlist_list)
 
 
 @socketio.on("deletePlaylist")
-def deletePlalistConfig(formData):
-    playlistName = formData["playlistToDelete"]
-    app.configParserManager.deletePlaylist(playlistName)
-    playlistList = list(app.configParserManager.getPlaylists().keys())
-    uploadPlaylistEmit = UploadPlaylistToConfigEmit()
-    uploadPlaylistEmit.sendEmit(playlistList)
+def delete_plalist_config(formData):
+    playlist_name = formData["playlistToDelete"]
+    app.config_parser_manager.deletePlaylist(playlist_name)
+    playlist_list = list(app.config_parser_manager.get_playlists().keys())
+    upload_playlist_emit = UploadPlaylistToConfigEmit()
+    upload_playlist_emit.send_emit(playlist_list)
 
 
 @socketio.on("playlistName")
-def getPlaylistConfigUrl(formData):
-    playlistName = formData["playlistName"]
-    playlistUrl = app.configParserManager.getPlaylistUrl(playlistName)
-    getPlaylistEmit = GetPlaylistUrlEmit()
-    getPlaylistEmit.sendEmit(playlistUrl)
+def get_playlist_config_url(formData):
+    playlist_name = formData["playlistName"]
+    playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
+    get_playlist_emit = GetPlaylistUrlEmit()
+    get_playlist_emit.send_emit(playlist_url)

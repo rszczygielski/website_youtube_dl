@@ -38,9 +38,9 @@ class FormData{
 
 class AddPlaylist{
 
-    constructor(playlistName, playlistURL){
+    constructor(playlistName, playlist_url){
         this.playlistName = playlistName
-        this.playlistURL = playlistURL
+        this.playlist_url = playlist_url
     }
 }
 
@@ -104,8 +104,10 @@ class PlaylistMediaEmitReceiver extends BaseReceiver {
     }
 
     convertMessageToData(data) {
-        var playlistName = data["playlist_name"]
+        var playlistName = data["playlistName"]
         var trackList = data["trackList"]
+        console.log("TTTTTTTTTT")
+        console.log(trackList)
         var singleMediaArr = []
         console.log(trackList)
         console.log(typeof(trackList))
@@ -192,11 +194,11 @@ class BaseEmit {
         this.emitMsg = emitMsg
     }
 
-    convertDataToMessage(){
+    convert_data_to_message(){
     }
 
     sendEmit(data){
-        var convertedData = this.convertDataToMessage(data)
+        var convertedData = this.convert_data_to_message(data)
         socket.emit(this.emitMsg, convertedData)
     }
 }
@@ -213,7 +215,7 @@ class EmitFormData extends BaseEmit {
     /**
      * @param {FormData} data
      */
-    convertDataToMessage(formData){
+    convert_data_to_message(formData){
         return {
             "youtubeURL": formData.youtubeURL,
             "downloadType": formData.downloadType
@@ -233,7 +235,7 @@ class EmitAddPlaylist extends BaseEmit {
     /**
      * @param {AddPlaylist} data
      */
-    convertDataToMessage(addPlaylist){
+    convert_data_to_message(addPlaylist){
         return {
             "playlistName": addPlaylist.playlistName,
             "playlistURL": addPlaylist.playlistURL
@@ -253,7 +255,7 @@ class EmitDeletePlaylist extends BaseEmit {
     /**
      * @param {PlaylistName} data
      */
-    convertDataToMessage(playlistName){
+    convert_data_to_message(playlistName){
         return {
             "playlistToDelete": playlistName.playlistName
         }
@@ -272,7 +274,7 @@ class EmitPlaylistName extends BaseEmit {
     /**
      * @param {PlaylistName} data
      */
-    convertDataToMessage(playlistName){
+    convert_data_to_message(playlistName){
         return {
             "playlistName": playlistName.playlistName
         }
@@ -291,7 +293,7 @@ class EmitDownloadFromConfigFile extends BaseEmit {
     /**
      * @param {PlaylistName} data
      */
-    convertDataToMessage(playlistName){
+    convert_data_to_message(playlistName){
         return {
             "playlistToDownload": playlistName.playlistName
         }

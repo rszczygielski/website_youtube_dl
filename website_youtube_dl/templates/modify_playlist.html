@@ -37,13 +37,17 @@
             <form>
                 <table class="table-modify-playlists">
                     <tr>
-                        <td><p class="neon-label" style="font-size: 30px;" >Playlist Name</p></td>
+                        <td>
+                            <p class="neon-label" style="font-size: 30px;">Playlist Name</p>
+                        </td>
                         <td><input class="input-text" type="text" id="playlistName" placeholder="Playlist Name"
                                 size="50"></input></td>
                     </tr>
                     <tr>
-                        <td><p class="neon-label" style="font-size: 30px">URL</p></td>
-                        <td><input class="input-text" type="url" id="playlistURL" placeholder="Playlist URL"
+                        <td>
+                            <p class="neon-label" style="font-size: 30px">URL</p>
+                        </td>
+                        <td><input class="input-text" type="url" id="playlist_url" placeholder="Playlist URL"
                                 size="50"></input></td>
                     </tr>
                 </table>
@@ -53,32 +57,33 @@
                 <button class="neon-button" id="addPlaylistButton">Add playlist</button>
             </div>
         </div>
-    <br>
-    <br>
+        <br>
+        <br>
 
-    <div class="download-info-area">
+        <div class="download-info-area">
 
-        <label for="playlists" class="neon-label">List of playlists</label>
-        <br>
-        <select name="playlistSelect" id="playlistSelect" size="5" style="width: 300px;" class="input-text">
-            {% for playlistName in playlistsNames %}
-            <option value={{ playlistName }}>{{ playlistName }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <br>
-        <button id="downloadPlaylist" class="neon-button">Download Config Playlist</button>
-        <br>
-        <br>
-        <button class="neon-button" id="deletePlaylistButton">Delete playlist</button>
-        <br>
-        <br>
-        <table id="downloadInfo" class="neon-label-small">
-        </table>
-        <br>
-    </div>
-    <div id="downloadSection">
-    </div>
+            <label for="playlists" class="neon-label">List of playlists</label>
+            <br>
+            <select name="playlistSelect" id="playlistSelect" size="5" style="width: 300px;" class="input-text">
+                {% for playlist_name in playlistsNames %}
+                <option value={{ playlist_name }}>{{ playlist_name }}</option>
+                {% endfor %}
+            </select>
+            <br>
+            <br>
+            <button id="downloadPlaylist" class="neon-button">Download Config Playlist</button>
+            <br>
+            <br>
+            <button class="neon-button" id="deletePlaylistButton">Delete playlist</button>
+            <br>
+            <br>
+            <table id="downloadInfo" class="neon-label-small">
+            </table>
+            <br>
+        </div>
+        <div id="downloadSection">
+        </div>
     </center>
 </body>
+
 </html>

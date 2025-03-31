@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ConfigKeys(Enum):
     GLOBAL = "global"
     PLAYLISTS = "playlists"

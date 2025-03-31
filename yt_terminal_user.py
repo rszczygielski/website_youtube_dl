@@ -9,55 +9,55 @@ logger = logging.getLogger(__name__)
 
 
 class TerminalUser(YoutubeDlPlaylists):  # pragma: no_cover
-    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager) -> None:
-        super().__init__(configManager, easyID3Manager)
+    def __init__(self, configManager: ConfigParserManager, easy_id3_manager: EasyID3Manager) -> None:
+        super().__init__(configManager, easy_id3_manager)
 
-    def isPlaylist(self, url):
+    def is_playlist(self, url):
         if url != None and "list=" in url:
             return True
         else:
             return False
 
-    def ifDoubleHash(self, url):
+    def if_double_hash(self, url):
         if url != None and "list=" in url and "v=" in url:
             return True
         else:
             return False
 
-    def downloadDoubleHashedLinkVideo(self, url, type):
+    def download_double_hashed_link_video(self, url, type):
         userResponse = input("""
         Playlist url detected.
         If you want to download single video/audio press "s"
         If you want to download whole playlist press "p"
         """)
         if userResponse == "s":
-            self.downloadVideo(url, type)
+            self.download_video(url, type)
         elif userResponse == "p":
-            self.downloadWholeVideoPlaylist(url, type)
+            self.download_whole_video_playlist(url, type)
         else:
             raise ValueError(
                 "Please enter 's' for single video or 'p' for playlist")
 
-    def downloadDoubleHashedLinkAudio(self, url):
+    def download_double_hashed_link_audio(self, url):
         userResponse = input("""
         Playlist url detected.
         If you want to download single video/audio press "s"
         If you want to download whole playlist press "p"
         """)
         if userResponse == "s":
-            self.downloadAudio(url)
+            self.download_audio(url)
         elif userResponse == "p":
-            self.downloadWholeAudioPlaylist(url)
+            self.download_whole_audio_playlist(url)
         else:
             raise ValueError(
                 "Please enter 's' for single video or 'p' for playlist")
 
-    def downloadTerminal(self, url, type):
+    def download_terminal(self, url, type):
         if not url and type == "mp3":
-            self.downoladAllConfigPlaylistsAudio()
+            self.downolad_all_config_playlists_audio()
             return
         elif not url and type != "mp3":
-            self.downoladAllConfigPlaylistsVideo(type)
+            self.downolad_all_config_playlists_video(type)
             return
         isPlaylist = self.isPlaylist(url)
         isDouble = self.ifDoubleHash(url)
@@ -68,14 +68,14 @@ class TerminalUser(YoutubeDlPlaylists):  # pragma: no_cover
                 self.downloadDoubleHashedLinkVideo(url, type)
         elif isPlaylist and not isDouble:
             if type == "mp3":
-                self.downloadWholeAudioPlaylist(url)
+                self.download_whole_audio_playlist(url)
             else:
-                self.downloadWholeVideoPlaylist(url, type)
+                self.download_whole_video_playlist(url, type)
         else:
             if type == "mp3":
-                self.downloadAudio(url)
+                self.download_audio(url)
             else:
-                self.downloadVideo(url, type)
+                self.download_video(url, type)
 
 
 def main():  # pragma: no_cover
@@ -94,10 +94,10 @@ def main():  # pragma: no_cover
     url = args.url
     type = args.type
     config = args.config
-    configParserManager = ConfigParserManager(
+    config_parser_manager = ConfigParserManager(
         config, configparser.ConfigParser())
-    easyID3Manager = EasyID3Manager()
-    terminalUser = TerminalUser(configParserManager, easyID3Manager)
+    easy_id3_manager = EasyID3Manager()
+    terminalUser = TerminalUser(config_parser_manager, easy_id3_manager)
     terminalUser.downloadTerminal(url, type)
 
 

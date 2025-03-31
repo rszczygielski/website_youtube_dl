@@ -123,17 +123,17 @@
 <ellipse fill="#26d98c" stroke="black" cx="321.44" cy="-776.78" rx="35.14" ry="18"/>
 <text text-anchor="middle" x="321.44" y="-774.28" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#000000">mutagen</text>
 </g>
-<!-- website_youtube_dl_common_easyID3Manager -->
+<!-- website_youtube_dl_common_easy_id3_manager -->
 <g id="node11" class="node">
-<title>website_youtube_dl_common_easyID3Manager</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>website_youtube_dl_common_easy_id3_manager</title><style>.edge>path:hover{stroke-width:8}</style>
 <ellipse fill="#532db4" stroke="black" cx="321.44" cy="-527.81" rx="82.96" ry="28.98"/>
 <text text-anchor="middle" x="321.44" y="-536.31" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">website_youtube_dl.</text>
 <text text-anchor="middle" x="321.44" y="-525.31" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">common.</text>
-<text text-anchor="middle" x="321.44" y="-514.31" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">easyID3Manager</text>
+<text text-anchor="middle" x="321.44" y="-514.31" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">easy_id3_manager</text>
 </g>
-<!-- mutagen&#45;&gt;website_youtube_dl_common_easyID3Manager -->
+<!-- mutagen&#45;&gt;website_youtube_dl_common_easy_id3_manager -->
 <g id="edge9" class="edge">
-<title>mutagen&#45;&gt;website_youtube_dl_common_easyID3Manager</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>mutagen&#45;&gt;website_youtube_dl_common_easy_id3_manager</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M317.94,-758.69C315.75,-744.08 314.5,-722.77 321.44,-705.78"/>
 </g>
 <!-- mutagen_easyid3 -->
@@ -155,16 +155,16 @@
 <path fill="none" stroke="black" d="M152.09,-830.99C156.58,-822.57 161.86,-812.66 166.64,-803.69"/>
 <polygon fill="#40c089" stroke="black" points="169.77,-805.26 171.38,-794.79 163.59,-801.97 169.77,-805.26"/>
 </g>
-<!-- mutagen_easyid3&#45;&gt;website_youtube_dl_common_easyID3Manager -->
+<!-- mutagen_easyid3&#45;&gt;website_youtube_dl_common_easy_id3_manager -->
 <g id="edge11" class="edge">
-<title>mutagen_easyid3&#45;&gt;website_youtube_dl_common_easyID3Manager</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>mutagen_easyid3&#45;&gt;website_youtube_dl_common_easy_id3_manager</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M129.65,-831.44C119.54,-811.9 108.49,-781.58 121.44,-758.78 174.51,-665.31 281.21,-722.47 321.44,-622.79"/>
 <path fill="none" stroke="black" d="M321.44,-620.79C326.97,-603.68 327.64,-583.82 326.65,-566.95"/>
 <polygon fill="#40c089" stroke="black" points="330.13,-566.56 325.84,-556.87 323.15,-567.12 330.13,-566.56"/>
 </g>
-<!-- mutagen_mp3&#45;&gt;website_youtube_dl_common_easyID3Manager -->
+<!-- mutagen_mp3&#45;&gt;website_youtube_dl_common_easy_id3_manager -->
 <g id="edge12" class="edge">
-<title>mutagen_mp3&#45;&gt;website_youtube_dl_common_easyID3Manager</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>mutagen_mp3&#45;&gt;website_youtube_dl_common_easy_id3_manager</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M225.68,-769.08C260.81,-761.01 306.05,-743.49 321.44,-705.78"/>
 <path fill="none" stroke="black" d="M321.44,-703.78C335.04,-670.46 307.97,-656.17 321.44,-622.79"/>
 </g>
@@ -252,15 +252,15 @@
 <text text-anchor="middle" x="518.44" y="-431.33" font-family="Helvetica,sans-Serif" font-size="10.00" fill="white">common.</text>
 <text text-anchor="middle" x="518.44" y="-420.33" font-family="Helvetica,sans-Serif" font-size="10.00" fill="white">youtubeDL</text>
 </g>
-<!-- website_youtube_dl_common_easyID3Manager&#45;&gt;website_youtube_dl_common_youtubeDL -->
+<!-- website_youtube_dl_common_easy_id3_manager&#45;&gt;website_youtube_dl_common_youtubeDL -->
 <g id="edge18" class="edge">
-<title>website_youtube_dl_common_easyID3Manager&#45;&gt;website_youtube_dl_common_youtubeDL</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>website_youtube_dl_common_easy_id3_manager&#45;&gt;website_youtube_dl_common_youtubeDL</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M369.88,-504.19C399.51,-490.36 437.37,-472.68 467.46,-458.63"/>
 <polygon fill="#532db4" stroke="black" points="468.95,-461.8 476.53,-454.4 465.99,-455.45 468.95,-461.8"/>
 </g>
-<!-- website_youtube_dl_common_easyID3Manager&#45;&gt;website_youtube_dl_flaskAPI_youtube -->
+<!-- website_youtube_dl_common_easy_id3_manager&#45;&gt;website_youtube_dl_flaskAPI_youtube -->
 <g id="edge19" class="edge">
-<title>website_youtube_dl_common_easyID3Manager&#45;&gt;website_youtube_dl_flaskAPI_youtube</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>website_youtube_dl_common_easy_id3_manager&#45;&gt;website_youtube_dl_flaskAPI_youtube</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M297.04,-500.03C281.79,-482.38 262.44,-458.28 248.44,-434.83"/>
 <path fill="none" stroke="black" d="M248.44,-432.83C227.27,-397.38 225.17,-380.84 235.44,-340.84"/>
 </g>
@@ -295,9 +295,9 @@
 <text text-anchor="middle" x="210.44" y="-619.29" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">common.</text>
 <text text-anchor="middle" x="210.44" y="-608.29" font-family="Helvetica,sans-Serif" font-size="10.00" fill="#ffffff">youtubeDataKeys</text>
 </g>
-<!-- website_youtube_dl_common_youtubeDataKeys&#45;&gt;website_youtube_dl_common_easyID3Manager -->
+<!-- website_youtube_dl_common_youtubeDataKeys&#45;&gt;website_youtube_dl_common_easy_id3_manager -->
 <g id="edge24" class="edge">
-<title>website_youtube_dl_common_youtubeDataKeys&#45;&gt;website_youtube_dl_common_easyID3Manager</title><style>.edge>path:hover{stroke-width:8}</style>
+<title>website_youtube_dl_common_youtubeDataKeys&#45;&gt;website_youtube_dl_common_easy_id3_manager</title><style>.edge>path:hover{stroke-width:8}</style>
 <path fill="none" stroke="black" d="M241.65,-594.93C254.18,-584.54 268.77,-572.45 282.02,-561.47"/>
 <polygon fill="#5a22e7" stroke="black" points="284.6,-563.88 290.07,-554.8 280.14,-558.49 284.6,-563.88"/>
 </g>

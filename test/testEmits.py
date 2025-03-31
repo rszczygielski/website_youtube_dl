@@ -16,135 +16,136 @@ from unittest.mock import MagicMock
 
 
 class TestEmits(TestCase):
-    testHash = "testHash"
-    dataStr = "data"
-    titleStr = "title"
-    urlStr = "url"
-    testPlaylistName = "playlistName"
-    playlistStr = "playlistList"
-    playlistUrlStr = "playlistUrl"
-    trackList = "trackList"
-    testTitle1 = "Society"
-    testAlbum1 = "Into The Wild"
-    testArtist1 = "Eddie Vedder"
-    testOriginalUrl1 = 'https://www.youtube.com/watch?v=ABsslEoL0-c'
+    test_hash = "test_hash"
+    data_str = "data"
+    title_str = "title"
+    url_str = "url"
+    test_playlist_name = "playlistName"
+    playlist_str = "playlist_list"
+    playlist_url_str = "playlistUrl"
+    track_list = "trackList"
+    test_title1 = "Society"
+    test_album1 = "Into The Wild"
+    test_artist1 = "Eddie Vedder"
+    test_original_url1 = 'https://www.youtube.com/watch?v=ABsslEoL0-c'
 
-    testTitle2 = 'Hard Sun'
-    testArtist2 = "Eddie Vedder"
-    testExt2 = "webm"
-    testPlaylistIndex2 = 2
-    testOriginalUrl2 = 'https://www.youtube.com/watch?v=_EZUfnMv3Lg'
-    youtubePlaylistURL = "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
+    test_title2 = 'Hard Sun'
+    test_artist2 = "Eddie Vedder"
+    test_ext2 = "webm"
+    test_playlist_index2 = 2
+    test_original_url2 = 'https://www.youtube.com/watch?v=_EZUfnMv3Lg'
+    youtube_playlist_url = "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
 
-    flaskSingleMedia = FlaskSingleMedia(testTitle1,
-                                        testArtist1,
-                                        testOriginalUrl1)
+    flask_single_media = FlaskSingleMedia(test_title1,
+                                          test_artist1,
+                                          test_original_url1)
 
-    flaskMediaFromPlaylist1 = FlaskMediaFromPlaylist(testTitle1,
-                                                     testOriginalUrl1)
+    flaskMediaFromPlaylist1 = FlaskMediaFromPlaylist(test_title1,
+                                                     test_original_url1)
 
-    flaskMediaFromPlaylist2 = FlaskMediaFromPlaylist(testTitle2,
-                                                     testOriginalUrl2)
-    trakListWithObjects = [flaskMediaFromPlaylist1, flaskMediaFromPlaylist2]
-    trackListWithDict = [{titleStr: testTitle1,
-                         urlStr: testOriginalUrl1},
-                         {titleStr: testTitle2,
-                          urlStr: testOriginalUrl2}]
-    flaskPlaylistMedia = FlaskPlaylistMedia(
-        testPlaylistName, trakListWithObjects)
+    flaskMediaFromPlaylist2 = FlaskMediaFromPlaylist(test_title2,
+                                                     test_original_url2)
+    trakList_with_objects = [flaskMediaFromPlaylist1, flaskMediaFromPlaylist2]
+    track_list_with_dict = [{title_str: test_title1,
+                             url_str: test_original_url1},
+                            {title_str: test_title2,
+                             url_str: test_original_url2}]
+    flask_playlist_media = FlaskPlaylistMedia(
+        test_playlist_name, trakList_with_objects)
 
     def setUp(self):
-        self.downloadMediaFinishEmit = DownloadMediaFinishEmit()
-        self.singleMediaInfoEmit = SingleMediaInfoEmit()
-        self.playlistMediaInfoEmit = PlaylistMediaInfoEmit()
-        self.uploadPlaylistToConfigEmit = UploadPlaylistToConfigEmit()
-        self.getPlaylistUrlEmit = GetPlaylistUrlEmit()
-        self.configManagerMock = MagicMock()
-        app = create_app(TestingConfig, self.configManagerMock)
+        self.download_media_finish_emit = DownloadMediaFinishEmit()
+        self.single_media_info_emit = SingleMediaInfoEmit()
+        self.playlist_media_info_emit = PlaylistMediaInfoEmit()
+        self.upload_playlist_to_config_emit = UploadPlaylistToConfigEmit()
+        self.get_playlist_url_emit = GetPlaylistUrlEmit()
+        self.config_manager_mock = MagicMock()
+        app = create_app(TestingConfig, self.config_manager_mock)
         app.config["TESTING"] = True
-        self.socketIoTestClient = socketio.test_client(app)
+        self.socket_io_test_client = socketio.test_client(app)
         self.flask = app.test_client()
         self.app = app
 
-    def testDownloadMediaFinishEmitConvertDataToMsg(self):
-        result = self.downloadMediaFinishEmit.convertDataToMessage(
-            self.testHash)
-        self.assertEqual({MainYoutubeKeys.HASH.value: self.testHash},
+    def test_download_media_finish_emit_convert_data_to_msg(self):
+        result = self.download_media_finish_emit.convert_data_to_message(
+            self.test_hash)
+        self.assertEqual({MainYoutubeKeys.HASH.value: self.test_hash},
                          result)
 
-    def getEmitMassage(self, fullEmit, msgNumber):
+    def get_emit_massage(self, fullEmit, msgNumber):
         return fullEmit[msgNumber]
 
-    def testDownloadMediaFinishEmitSendEmit(self):
-        self.downloadMediaFinishEmit.sendEmit(self.testHash)
-        pythonEmit = self.socketIoTestClient.get_received()
-        receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
-        emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertEqual(self.downloadMediaFinishEmit.emitMsg,
-                         emitData.emitName)
-        self.assertIn(self.dataStr, emitData.data)
+    def test_download_media_finish_emit_send_emit(self):
+        self.download_media_finish_emit.send_emit(self.test_hash)
+        python_emit = self.socket_io_test_client.get_received()
+        received_msg = EmitData.get_emit_massage(python_emit, 0)
+        emit_data = EmitData.init_from_massage(received_msg)
+        self.assertEqual(self.download_media_finish_emit.emit_msg,
+                         emit_data.emit_name)
+        self.assertIn(self.data_str, emit_data.data)
         self.assertIn(MainYoutubeKeys.HASH.value,
-                      emitData.data[self.dataStr])
+                      emit_data.data[self.data_str])
 
-    def testSingleMediaInfoEmitConvertDataToMsg(self):
-        result = self.singleMediaInfoEmit.convertDataToMessage(
-            self.flaskSingleMedia)
+    def test_single_media_info_emit_convert_data_to_msg(self):
+        result = self.single_media_info_emit.convert_data_to_message(
+            self.flask_single_media)
         self.assertEqual({
-            MediaInfo.TITLE.value: self.flaskSingleMedia.title,
-            MediaInfo.ARTIST.value: self.flaskSingleMedia.artist,
-            MediaInfo.URL.value: self.flaskSingleMedia.url
+            MediaInfo.TITLE.value: self.flask_single_media.title,
+            MediaInfo.ARTIST.value: self.flask_single_media.artist,
+            MediaInfo.URL.value: self.flask_single_media.url
         }, result)
 
-    def testSingleMediaInfoEmitSendEmit(self):
-        self.singleMediaInfoEmit.sendEmit(self.flaskSingleMedia)
-        pythonEmit = self.socketIoTestClient.get_received()
-        receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
-        emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertEqual(self.singleMediaInfoEmit.emitMsg,
-                         emitData.emitName)
-        self.assertIn(self.dataStr, emitData.data)
-        data = emitData.data[self.dataStr]
+    def test_single_media_info_emit_send_emit(self):
+        self.single_media_info_emit.send_emit(self.flask_single_media)
+        python_emit = self.socket_io_test_client.get_received()
+        received_msg = EmitData.get_emit_massage(python_emit, 0)
+        emit_data = EmitData.init_from_massage(received_msg)
+        self.assertEqual(self.single_media_info_emit.emit_msg,
+                         emit_data.emit_name)
+        self.assertIn(self.data_str, emit_data.data)
+        data = emit_data.data[self.data_str]
         self.assertEqual({
-            MediaInfo.TITLE.value: self.flaskSingleMedia.title,
-            MediaInfo.ARTIST.value: self.flaskSingleMedia.artist,
-            MediaInfo.URL.value: self.flaskSingleMedia.url
+            MediaInfo.TITLE.value: self.flask_single_media.title,
+            MediaInfo.ARTIST.value: self.flask_single_media.artist,
+            MediaInfo.URL.value: self.flask_single_media.url
         }, data)
 
-    def testPlaylistMediaInfoEmitConvertDataToMsg(self):
-        result = self.playlistMediaInfoEmit.convertDataToMessage(
-            self.flaskPlaylistMedia)
-        self.assertEqual({self.playlistMediaInfoEmit.playlistName: self.playlistMediaInfoEmit.playlistName,
-                          self.playlistMediaInfoEmit.trackList: self.trackListWithDict}, result)
+    def test_playlist_media_info_emit_convert_data_to_msg(self):
+        result = self.playlist_media_info_emit.convert_data_to_message(
+            self.flask_playlist_media)
+        self.assertEqual({self.playlist_media_info_emit.playlist_name: self.playlist_media_info_emit.playlist_name,
+                          self.playlist_media_info_emit.track_list: self.track_list_with_dict}, result)
 
-    def testPlaylistMediaInfoEmitConvertSendEmit(self):
-        self.playlistMediaInfoEmit.sendEmit(self.flaskPlaylistMedia)
-        pythonEmit = self.socketIoTestClient.get_received()
-        receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
-        emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertEqual(self.playlistMediaInfoEmit.emitMsg,
-                         emitData.emitName)
-        self.assertIn(self.dataStr, emitData.data)
-        self.assertEqual(self.playlistMediaInfoEmit.playlistName,
-                         emitData.data[self.dataStr][self.playlistMediaInfoEmit.playlistName])
-        self.assertEqual(self.trackListWithDict,
-                         emitData.data[self.dataStr][self.trackList])
+    def test_playlist_media_info_emit_convert_send_emit(self):
+        self.playlist_media_info_emit.send_emit(self.flask_playlist_media)
+        python_emit = self.socket_io_test_client.get_received()
+        received_msg = EmitData.get_emit_massage(python_emit, 0)
+        emit_data = EmitData.init_from_massage(received_msg)
+        self.assertEqual(self.playlist_media_info_emit.emit_msg,
+                         emit_data.emit_name)
+        self.assertIn(self.data_str, emit_data.data)
+        self.assertEqual(self.playlist_media_info_emit.playlist_name,
+                         emit_data.data[self.data_str][self.playlist_media_info_emit.playlist_name])
+        print(emit_data.data)
+        self.assertEqual(self.track_list_with_dict,
+                         emit_data.data[self.data_str][self.track_list])
 
-    def testGetPlaylistUrlEmitConfigEmitConvertDataToMsg(self):
-        result = self.getPlaylistUrlEmit.convertDataToMessage(
-            self.youtubePlaylistURL)
+    def test_get_playlist_url_emit_config_emit_convert_data_to_msg(self):
+        result = self.get_playlist_url_emit.convert_data_to_message(
+            self.youtube_playlist_url)
         self.assertEqual(
-            {self.playlistUrlStr: self.youtubePlaylistURL}, result)
+            {self.playlist_url_str: self.youtube_playlist_url}, result)
 
-    def testGetPlaylistUrlEmitConfigEmitSendEmit(self):
-        self.getPlaylistUrlEmit.sendEmit(self.youtubePlaylistURL)
-        pythonEmit = self.socketIoTestClient.get_received()
-        receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
-        emitData = EmitData.initFromMassage(receivedMsg)
-        self.assertEqual(self.getPlaylistUrlEmit.emitMsg,
-                         emitData.emitName)
-        self.assertIn(self.dataStr, emitData.data)
+    def test_get_playlist_url_emit_config_emit_send_emit(self):
+        self.get_playlist_url_emit.send_emit(self.youtube_playlist_url)
+        python_emit = self.socket_io_test_client.get_received()
+        received_msg = EmitData.get_emit_massage(python_emit, 0)
+        emit_data = EmitData.init_from_massage(received_msg)
+        self.assertEqual(self.get_playlist_url_emit.emit_msg,
+                         emit_data.emit_name)
+        self.assertIn(self.data_str, emit_data.data)
         self.assertEqual(
-            {self.playlistUrlStr: self.youtubePlaylistURL}, emitData.data[self.dataStr])
+            {self.playlist_url_str: self.youtube_playlist_url}, emit_data.data[self.data_str])
 
 
 if __name__ == "__main__":

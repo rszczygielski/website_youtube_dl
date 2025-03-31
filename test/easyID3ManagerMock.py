@@ -6,31 +6,31 @@ class EasyID3Manager():  # pragma: no_cover
         self.title = None
         self.album = None
         self.artist = None
-        self.playlistName = None
+        self.playlist_name = None
         self.trackNumber = None
 
-    def changeFilePath(self, fileFullPath):
+    def change_file_path(self, fileFullPath):
         self.filePath = fileFullPath
 
-    def setParams(self,
-                  title=None,
-                  album=None,
-                  artist=None,
-                  trackNumber=None,
-                  playlistName=None):
+    def set_params(self,
+                   title=None,
+                   album=None,
+                   artist=None,
+                   trackNumber=None,
+                   playlist_name=None):
         self.title = title
         self.album = album
         self.artist = artist
-        self.playlistName = playlistName
+        self.playlist_name = playlist_name
         self.trackNumber = trackNumber
 
-    def saveMetaData(self):
+    def save_meta_data(self):
         pass
 
-    def setPlaylistName(self, playlistName):
-        self.playlistName = playlistName
+    def set_playlist_name(self, playlist_name):
+        self.playlist_name = playlist_name
 
-    def _showMetaDataInfo(self, path):  # pragma: no_cover
+    def _show_meta_data_info(self, path):  # pragma: no_cover
         """Method used to show Metadata info
 
         Args:

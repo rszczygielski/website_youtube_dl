@@ -4,97 +4,97 @@ from .. import socketio
 
 
 class BaseEmit(ABC):
-    dataStr = "data"
-    playlistName = "playlistName"
-    trackList = "trackList"
-    playlistList = "playlistList"
-    errorStr = "error"
+    data_str = "data"
+    playlist_name = "playlistName"
+    track_list = "trackList"
+    playlist_list = "playlistList"
+    error_str = "error"
 
-    def __init__(self, emitMsg) -> None:
-        self.emitMsg = emitMsg
+    def __init__(self, emit_msg) -> None:
+        self.emit_msg = emit_msg
 
-    def sendEmit(self, data):
-        convertedData = self.convertDataToMessage(data)
-        socketio.emit(self.emitMsg, {self.dataStr: convertedData})
+    def send_emit(self, data):
+        converted_data = self.convert_data_to_message(data)
+        socketio.emit(self.emit_msg, {self.data_str: converted_data})
 
-    def sendEmitError(self, error_msg):
-        socketio.emit(self.emitMsg, {self.errorStr: error_msg})
+    def send_emit_error(self, error_msg):
+        socketio.emit(self.emit_msg, {self.error_str: error_msg})
 
     @abstractmethod
-    def convertDataToMessage(self):  # pragma: no_cover
+    def convert_data_to_message(self):  # pragma: no_cover
         pass
 
 
 class DownloadMediaFinishEmit(BaseEmit):
 
     def __init__(self) -> None:
-        emitMsg = "downloadMediaFinish"
-        super().__init__(emitMsg)
+        emit_msg = "downloadMediaFinish"
+        super().__init__(emit_msg)
 
-    def convertDataToMessage(self, genereted_hash):
+    def convert_data_to_message(self, genereted_hash):
         return {"HASH": genereted_hash}
-
 
 
 class SingleMediaInfoEmit(BaseEmit):
     def __init__(self) -> None:
-        emitMsg = "mediaInfo"
-        super().__init__(emitMsg)
+        emit_msg = "mediaInfo"
+        super().__init__(emit_msg)
 
-    def convertDataToMessage(self, flaskSingleMedia):
-        mediaInfoDict = {
-            MediaInfo.TITLE.value: flaskSingleMedia.title,
-            MediaInfo.ARTIST.value: flaskSingleMedia.artist,
-            MediaInfo.URL.value: flaskSingleMedia.url
+    def convert_data_to_message(self, flask_single_media):
+        media_info_dict = {
+            MediaInfo.TITLE.value: flask_single_media.title,
+            MediaInfo.ARTIST.value: flask_single_media.artist,
+            MediaInfo.URL.value: flask_single_media.url
         }
-        return mediaInfoDict
+        return media_info_dict
 
 
 class PlaylistMediaInfoEmit(BaseEmit):
     def __init__(self) -> None:
-        emitMsg = "playlistMediaInfo"
-        super().__init__(emitMsg)
+        emit_msg = "playlistMediaInfo"
+        super().__init__(emit_msg)
 
-    def convertDataToMessage(self, flaskPlaylistMedia):
-        playlistName = flaskPlaylistMedia.playlistName
-        playlistTrackList = []
-        for track in flaskPlaylistMedia.trackList:
-            trackInfoDict = {
+    def convert_data_to_message(self, flask_playlist_media):
+        playlist_name = flask_playlist_media.playlist_name
+        playlist_track_list = []
+        for track in flask_playlist_media.track_list:
+            track_info_dict = {
                 PlaylistInfo.TITLE.value: track.title,
                 PlaylistInfo.URL.value: track.url,
             }
-            playlistTrackList.append(trackInfoDict)
-        return {self.playlistName: playlistName,
-                self.trackList: playlistTrackList}
+            playlist_track_list.append(track_info_dict)
+        return {self.playlist_name: playlist_name,
+                self.track_list: playlist_track_list}
 
 
 class UploadPlaylistToConfigEmit(BaseEmit):
     def __init__(self):
-        emitMsg = "uploadPlaylists"
-        super().__init__(emitMsg)
+        emit_msg = "uploadPlaylists"
+        super().__init__(emit_msg)
 
-    def convertDataToMessage(self, playlistList):
-        return {self.playlistList: playlistList}
+    def convert_data_to_message(self, playlist_list):
+        return {self.playlist_list: playlist_list}
 
 
 class GetPlaylistUrlEmit(BaseEmit):
-    playlistUrlStr = "playlistUrl"
+    playlist_url_str = "playlistUrl"
 
     def __init__(self):
-        emitMsg = self.playlistUrlStr
-        super().__init__(emitMsg)
+        emit_msg = self.playlist_url_str
+        super().__init__(emit_msg)
 
-    def convertDataToMessage(self, playlistUrl):
-        return {self.playlistUrlStr: playlistUrl}
+    def convert_data_to_message(self, playlistUrl):
+        return {self.playlist_url_str: playlistUrl}
+
 
 class PlaylistTrackFinish(BaseEmit):
 
     def __init__(self):
-        emitMsg = "playlistTrackFinish"
-        super().__init__(emitMsg)
+        emit_msg = "playlistTrackFinish"
+        super().__init__(emit_msg)
 
-    def convertDataToMessage(self, index):
+    def convert_data_to_message(self, index):
         return {"index": index}
 
-    def sendEmitError(self, index:int):
-        socketio.emit(self.emitMsg, {self.errorStr: index})
+    def send_emit_error(self, index: int):
+        socketio.emit(self.emit_msg, {self.error_str: index})
