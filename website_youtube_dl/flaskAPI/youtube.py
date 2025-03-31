@@ -23,7 +23,8 @@ from .flaskMedia import (
     Format720p,
     Format1080p,
     Format2160p)
-import zipfile
+
+from ..common.utils import getFilesFromDir, zipAllFilesInList
 import os
 import random
 import string
@@ -188,10 +189,6 @@ def downloadTracksFromPlaylist(youtubeURL, formatInstance):
     return fullZipPath
 
 
-def getFilesFromDir(dirPath):
-    return [f.split(".")[0] for f in os.listdir(dirPath) if os.path.isfile(os.path.join(dirPath, f))]
-
-
 def generateTitleTemplateForYoutubeDownloader(downloadedFiles,
                                               title):
     # https://www.youtube.com/playlist?list=PL6uhlddQJkfiCJfEQvnqzknbxfgBiGekb test
@@ -260,16 +257,6 @@ def getFormatInstance(format_str):
         "2160p": Format2160p,
     }
     return format_classes.get(format_str)()
-
-
-def zipAllFilesInList(direcoryPath, playlistName, listOfFilePaths):  # pragma: no_cover
-    typeOfCompres = "zip"
-    zipFileFullPath = os.path.join(direcoryPath,
-                                   playlistName)
-    with zipfile.ZipFile(f"{zipFileFullPath}.{typeOfCompres}", "w") as zipInstance:
-        for filePath in listOfFilePaths:
-            zipInstance.write(filePath, filePath.split("/")[-1])
-    return f"{zipFileFullPath.split('/')[-1]}.{typeOfCompres}"
 
 
 def handleError(errorMsg):  # pragma: no_cover

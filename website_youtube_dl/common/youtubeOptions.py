@@ -1,7 +1,5 @@
 from enum import Enum
 
-# TYPE 3
-
 class YoutubeOptiones(Enum):
     FORMAT = "format"
     DOWNLOAD_ARCHIVE = "download_archive"
