@@ -24,7 +24,7 @@ def download_config_playlist(formData):
     playlist_name = formData["playlistToDownload"]
     app.logger.info(f"Selected playlist form config {playlist_name}")
     playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
-    full_file_path = download_tracks_from_playlist(youtubeURL=playlist_url,
+    full_file_path = download_tracks_from_playlist(youtube_url=playlist_url,
                                                    video_type=None)
     if not full_file_path:
         return False
