@@ -59,4 +59,3 @@ class YoutubeOptiones(Enum):
     LOGGER = "logger"
     OUT_TEMPLATE = "outtmpl"
 
-

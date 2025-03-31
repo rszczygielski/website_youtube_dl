@@ -8,7 +8,13 @@ from website_youtube_dl.config import TestingConfig
 from website_youtube_dl.flaskAPI import youtube
 from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
                                                     FlaskPlaylistMedia,
-                                                    FormatType)
+                                                    FormatType,
+                                                    FormatMP3,
+                                                    Format360p,
+                                                    Format480p,
+                                                    Format720p,
+                                                    Format1080p,
+                                                    Format2160p)
 from website_youtube_dl.flaskAPI.session import SessionDownloadData
 from website_youtube_dl.common.youtubeDL import (YoutubeDL,
                                                  SingleMedia,
@@ -64,10 +70,10 @@ class testYoutubeWeb(TestCase):
     hd720p = "720"
     mp3 = "mp3"
 
-    testFromatTypeMp3 = FormatType()
-    testFromatTypeMp3.mp3 = mp3
-    testFromatType720p = FormatType()
-    testFromatType720p.f_720p = hd720p
+    testFormatTypeMp3 = FormatType()
+    testFormatTypeMp3.mp3 = mp3
+    testFormatType720p = FormatType()
+    testFormatType720p.f_720p = hd720p
 
     pathFiles = [os.path.join(testPath, testTitle1),
                  os.path.join(testPath, testTitle2)]
@@ -216,7 +222,7 @@ class testYoutubeWeb(TestCase):
     @patch.object(youtube, "generateHash", return_value=testGeneratedHash)
     @patch.object(SessionDownloadData, "setSessionDownloadData")
     @patch.object(youtube, "downloadCorrectData")
-    @patch.object(FormatType, "initFromForm", return_value=testFromatTypeMp3)
+    @patch.object(FormatType, "initFromForm", return_value=testFormatTypeMp3)
     def testSocketDownloadPlaylistAndVideoHash(self, mockInitFromForm,
                                                mockDownloadData,
                                                mockSetSessionDownloadData,
@@ -233,7 +239,7 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(len(pythonEmit), 1)
         mockInitFromForm.asser_called_once_with(self.mp3)
         mockDownloadData.assert_called_once_with(self.actualYoutubeURL2,
-                                                 self.testFromatTypeMp3,
+                                                 self.testFormatTypeMp3,
                                                  False)
         receivedMsg = EmitData.getEmitMassage(pythonEmit, 0)
         emitData = EmitData.initFromMassage(receivedMsg)
@@ -286,7 +292,6 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube.downloadSingleVideo(self.actualYoutubeURL1,
                                                  self.hd720p)
-        # print(self.singleMedia1.file_name, "*"*60)
         self.app.configParserManager.getSavePath.assert_called_once()
         mocksendEmitSingleMediaInfoFromYoutube.assert_called_once_with(
             self.actualYoutubeURL1)
@@ -440,7 +445,7 @@ class testYoutubeWeb(TestCase):
                                             mockZipFiles):
         with self.app.app_context():
             result = youtube.downloadTracksFromPlaylist(self.actualYoutubePlaylistURL1,
-                                                        self.testFromatType720p)
+                                                        self.testFormatType720p)
         mockSendEmitPlaylist.assert_called_once()
         mockGetFilesFromDir.assert_called_once_with(self.testPath)
         calls = mockDownloadVideo.mock_calls
@@ -493,7 +498,7 @@ class testYoutubeWeb(TestCase):
                                             mockZipFiles):
         with self.app.app_context():
             result = youtube.downloadTracksFromPlaylist(
-                self.actualYoutubePlaylistURL1, self.testFromatTypeMp3)
+                self.actualYoutubePlaylistURL1, self.testFormatTypeMp3)
         mockSendEmitPlaylist.assert_called_once()
         mockGetFilesFromDir.assert_called_once_with(self.testPath)
         calls = mockDownloadAudio.mock_calls
@@ -538,22 +543,22 @@ class testYoutubeWeb(TestCase):
             self.actualYoutubeURL1, self.hd720p, True)
         self.assertEqual(result, "video_playlist_path")
         mockDownloadPlaylist.assert_called_once_with(youtubeURL=self.actualYoutubeURL1,
-                                                     fromatType=self.hd720p)
+                                                     formatType=self.hd720p)
 
     @patch.object(youtube, "downloadTracksFromPlaylist",
                   return_value="/home/music/audio_playlist_path")
     def testDownloadCorrectDataPlaylistAudio(self, mockDownloadPlaylist):
         result = youtube.downloadCorrectData(
-            self.actualYoutubeURL1, self.testFromatTypeMp3, True)
+            self.actualYoutubeURL1, self.testFormatTypeMp3, True)
         self.assertEqual(result, "/home/music/audio_playlist_path")
         mockDownloadPlaylist.assert_called_once_with(youtubeURL=self.actualYoutubeURL1,
-                                                     fromatType=self.testFromatTypeMp3)
+                                                     formatType=self.testFormatTypeMp3)
 
     @patch.object(youtube, "downloadSingleVideo",
                   return_value="/home/music/video_single_path")
     def testDownloadCorrectDataSingleVideo(self, mockDownloadSingleMedia):
         result = youtube.downloadCorrectData(
-            self.actualYoutubeURL1, self.testFromatType720p, False)
+            self.actualYoutubeURL1, self.testFormatType720p, False)
         self.assertEqual(result, "/home/music/video_single_path")
         mockDownloadSingleMedia.assert_called_once_with(singleMediaURL=self.actualYoutubeURL1,
                                                         videoType=self.hd720p)
@@ -562,7 +567,7 @@ class testYoutubeWeb(TestCase):
                   return_value="/home/music/audio_single_path")
     def testDownloadCorrectDataSingleAudio(self, mockDownloadSingleMedia):
         result = youtube.downloadCorrectData(
-            self.actualYoutubeURL1, self.testFromatTypeMp3, False)
+            self.actualYoutubeURL1, self.testFormatTypeMp3, False)
         self.assertEqual(result, "/home/music/audio_single_path")
         mockDownloadSingleMedia.assert_called_once_with(
             singleMediaURL=self.actualYoutubeURL1)

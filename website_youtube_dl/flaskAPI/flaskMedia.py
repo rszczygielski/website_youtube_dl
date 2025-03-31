@@ -29,7 +29,59 @@ class FlaskPlaylistMedia():
         return cls(playlistName, flaskSingleMediaList)
 
 
-class FormatType:
+class FormatBase():
+    def __init__(self, fileFormat):
+        self.fileFormat = fileFormat
+        self.fileSuffix = fileFormat
+
+    def getFormatType(self):
+        return self.fileFormat
+
+    def getFileSuffix(self):
+        return self.fileSuffix
+
+    def setFileSuffix(self, fileSuffix):
+        self.fileSuffix = fileSuffix
+
+
+class FormatMP3(FormatBase):
+    def __init__(self):
+        super().__init__("mp3")
+
+
+class VideoFormat(FormatBase):
+    def __init__(self, resolution):
+        super().__init__(resolution)
+        self.setFileSuffix(f"f_{resolution}p")
+
+
+class Format360p(VideoFormat):
+    def __init__(self):
+        super().__init__("360")
+
+
+class Format480p(VideoFormat):
+    def __init__(self):
+        super().__init__("480")
+
+
+class Format720p(VideoFormat):
+    def __init__(self):
+        super().__init__("720")
+
+
+class Format1080p(VideoFormat):
+    def __init__(self):
+        super().__init__("1080")
+
+
+class Format2160p(VideoFormat):
+    def __init__(self):
+        super().__init__("2160")
+
+
+
+class FormatType():
     def __init__(self):
         self.mp3 = False
         self.f_360p = False

@@ -1,6 +1,4 @@
 import yt_dlp
-import configparser
-import argparse
 import logging
 import os
 from .youtubeConfigManager import ConfigParserManager
@@ -427,14 +425,14 @@ class YoutubeDL():
         self.titleTemplate = newTitileTemplate
 
 
-class YoutubeDlConfig(YoutubeDL):
+class YoutubeDlPlaylists(YoutubeDL):
     def __init__(self, configManager: ConfigParserManager,
                  easyID3Manager: EasyID3Manager,
                  ytLogger: LoggerClass = Logger):
         super().__init__(configManager, ytLogger)
         self.easyID3Manager = easyID3Manager
 
-    def fastDownloadAudioPlaylist(self, youtubeURL: str):
+    def downloadWholeAudioPlaylist(self, youtubeURL: str):
         """Method uded to download audio playlist from YouTube
 
         Args:
@@ -482,7 +480,7 @@ class YoutubeDlConfig(YoutubeDL):
             self.easyID3Manager.saveMetaData()
         return metaData
 
-    def fastDownloadVideoPlaylist(self, youtubeURL: str, type: str):
+    def downloadWholeVideoPlaylist(self, youtubeURL: str, type: str):
         """Method uded to download video playlist from YouTube
 
         Args:
@@ -514,7 +512,7 @@ class YoutubeDlConfig(YoutubeDL):
         playlistList = self._configManager.getUrlOfPlaylists()
         self._setVideoOptions(type)
         for playlistURL in playlistList:
-            self.fastDownloadVideoPlaylist(playlistURL, type)
+            self.downloadWholeVideoPlaylist(playlistURL, type)
         return True
 
     def downoladAllConfigPlaylistsAudio(self):
@@ -525,98 +523,5 @@ class YoutubeDlConfig(YoutubeDL):
         """
         playlistList = self._configManager.getUrlOfPlaylists()
         for playlistURL in playlistList:
-            self.fastDownloadAudioPlaylist(playlistURL)
+            self.downloadWholeAudioPlaylist(playlistURL)
         return True
-
-
-class TerminalUser(YoutubeDL):  # pragma: no_cover
-    def __init__(self, configManager: ConfigParserManager, easyID3Manager: EasyID3Manager) -> None:
-        super().__init__(configManager, easyID3Manager)
-
-    def isPlaylist(self, url):
-        if url != None and "list=" in url:
-            return True
-        else:
-            return False
-
-    def ifDoubleHash(self, url):
-        if url != None and "list=" in url and "v=" in url:
-            return True
-        else:
-            return False
-
-    def downloadDoubleHashedLinkVideo(self, url, type):
-        userResponse = input("""
-        Playlist url detected.
-        If you want to download single video/audio press "s"
-        If you want to download whole playlist press "p"
-        """)
-        if userResponse == "s":
-            self.downloadVideo(url, type)
-        elif userResponse == "p":
-            self.fastDownloadVideoPlaylist(url, type)
-        else:
-            raise ValueError(
-                "Please enter 's' for single video or 'p' for playlist")
-
-    def downloadDoubleHashedLinkAudio(self, url):
-        userResponse = input("""
-        Playlist url detected.
-        If you want to download single video/audio press "s"
-        If you want to download whole playlist press "p"
-        """)
-        if userResponse == "s":
-            self.downloadAudio(url)
-        elif userResponse == "p":
-            self.fastDownloadAudioPlaylist(url)
-        else:
-            raise ValueError(
-                "Please enter 's' for single video or 'p' for playlist")
-
-    def downloadTerminal(self, url, type):
-        if url == None and type == "mp3":
-            self.downoladAllConfigPlaylistsAudio()
-            return
-        elif url == None and type != "mp3":
-            self.downoladAllConfigPlaylistsVideo(type)
-            return
-        isPlaylist = self.isPlaylist(url)
-        isDouble = self.ifDoubleHash(url)
-        if isPlaylist and isDouble:
-            if type == "mp3":
-                self.downloadDoubleHashedLinkAudio(url)
-            else:
-                self.downloadDoubleHashedLinkVideo(url, type)
-        elif isPlaylist and not isDouble:
-            if type == "mp3":
-                self.fastDownloadAudioPlaylist(url)
-            else:
-                self.fastDownloadVideoPlaylist(url, type)
-        else:
-            if type == "mp3":
-                self.downloadAudio(url)
-            else:
-                self.downloadVideo(url, type)
-
-
-def main():  # pragma: no_cover
-    parser = argparse.ArgumentParser(
-        "Program downloads mp3 form given youtube URL")
-    parser.add_argument("-u", metavar="url", dest="url",
-                        help="Link to the youtube video")
-    parser.add_argument("-t", metavar="type", dest="type",
-                        choices=["360", "480", "720", "1080", "4k", "mp3"],
-                        default="1080",
-                        help="Select downolad type --> ['360', '720', '1080', '2160', 'mp3'], default: 1080")
-    parser.add_argument("-c", metavar="config", dest="config",
-                        default="youtube_config.ini",
-                        help="Path to the config file --> default youtube_config.ini")
-    args = parser.parse_args()
-    url = args.url
-    type = args.type
-    config = args.config
-    configParserManager = ConfigParserManager(
-        config, configparser.ConfigParser())
-    easyID3Manager = EasyID3Manager()
-    terminalUser = TerminalUser(configParserManager, easyID3Manager)
-    terminalUser.downloadTerminal(url, type)
