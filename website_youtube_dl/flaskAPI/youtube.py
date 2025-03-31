@@ -196,7 +196,6 @@ def generateTitleTemplateForYoutubeDownloader(downloadedFiles,
                                               title):
     # https://www.youtube.com/playlist?list=PL6uhlddQJkfiCJfEQvnqzknbxfgBiGekb test
     counter = 1
-    app.logger.info(downloadedFiles)
     while title in downloadedFiles:
         counter += 1
         title = f"{title} ({counter})"
@@ -239,7 +238,6 @@ def sendEmitPlaylistMedia(youtubeURL):
 
 
 def downloadCorrectData(youtubeURL, formatInstance, isPlaylist):
-    print(formatInstance)
     if isPlaylist:
         fullFilePath = downloadTracksFromPlaylist(youtubeURL=youtubeURL,
                                                   formatInstance=formatInstance)
