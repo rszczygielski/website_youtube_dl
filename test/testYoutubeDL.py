@@ -7,6 +7,7 @@ from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 import website_youtube_dl.common.youtubeDL as youtubeDL
 from test.configParserMock import ConfigParserMock
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+from website_youtube_dl.common.youtubeOptions import YoutubeOptiones, PostProcessors
 
 
 class TestYoutubeDL(TestCase):
@@ -38,6 +39,8 @@ class TestYoutubeDL(TestCase):
     test_original_url2 = 'https://www.youtube.com/watch?v=_EZUfnMv3Lg'
     testId2 = '_EZUfnMv3Lg'
     test_full_path2 = f"{folder_path}/{test_title2}.webm"
+
+    list_of_formats = ['360', '480', '720', '1080', '2160']
 
     songMetaData1 = {
         MediaInfo.TITLE.value: test_title1,
@@ -174,16 +177,27 @@ class TestYoutubeDL(TestCase):
         error_msg = resultOfYoutube.get_error_info()
         self.assertEqual(error_msg, self.main_media_download_error)
 
-    def test_set_video_options(self):
-        formatBeforeChange = self.youtube_test._ydl_opts["format"]
-        listOfFormats = ['360', '480', '720', '1080', '2160', 'mp3']
-        for format_type in listOfFormats:
-            self.youtube_test.get_video_options(format_type)
-            self.assertNotEqual(formatBeforeChange,
-                                self.youtube_test._ydl_opts["format"])
+    def test_get_video_options(self):
+        original_format = self.youtube_test._ydl_opts[YoutubeOptiones.FORMAT.value]
+        for format_type in self.list_of_formats:
+            video_options = self.youtube_test._get_video_options(format_type)
+            self.assertNotEqual(original_format,
+                                video_options[YoutubeOptiones.FORMAT.value])
             self.assertEqual(
                 f'best[height={format_type}][ext=mp4]+bestaudio/bestvideo+bestaudio',
-                self.youtube_test._ydl_opts["format"])
+                video_options[YoutubeOptiones.FORMAT.value])
+
+    def test_get_audio_options(self):
+        audio_options = self.youtube_test._get_audio_options()
+        self.assertNotIn(YoutubeOptiones.POSTPROCESSORS.value,
+                         self.youtube_test._ydl_opts)
+        self.assertIn(YoutubeOptiones.POSTPROCESSORS.value, audio_options)
+        self.assertIn(PostProcessors.KEY.value,
+                      audio_options[YoutubeOptiones.POSTPROCESSORS.value][0])
+        self.assertIn(PostProcessors.PREFERREDCODEC.value,
+                      audio_options[YoutubeOptiones.POSTPROCESSORS.value][0])
+        self.assertIn(PostProcessors.PREFERREDQUALITY.value,
+                      audio_options[YoutubeOptiones.POSTPROCESSORS.value][0])
 
     def test_get_video_hash(self):
         correctVideoHash = self.testId1
