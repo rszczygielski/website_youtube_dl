@@ -1,6 +1,6 @@
 import configparser
 from website_youtube_dl.common.configKeys import ConfigKeys
-from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
 import os
 
 
@@ -17,7 +17,7 @@ class ConfigParserMockWithEmptyData(configparser.ConfigParser):
         self.read_string("")
 
 
-class ConfigManagerMock(ConfigParserManager):
+class ConfigManagerMock(BaseConfigParser):
     def __init__(self, configFilePath, configParser=ConfigParserMock()):
         self.configFilePath = configFilePath
         self.configParser = configParser

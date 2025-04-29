@@ -1,8 +1,9 @@
 import logging
 from ..common.youtubeLogKeys import YoutubeLogs
-from ..common.youtubeDL import SingleMedia, YoutubeDL
+from ..common.youtubeAPI import SingleMedia
+from ..common.youtubeDL import YoutubeDL
 from ..common.easyID3Manager import EasyID3Manager
-from ..common.youtubeConfigManager import ConfigParserManager
+from ..common.youtubeConfigManager import BaseConfigParser
 from ..common.myLogger import LoggerClass
 
 
@@ -10,9 +11,9 @@ logger = logging.getLogger(__name__)
 
 
 class YoutubeHelper():
-    def __init__(self):
+    def __init__(self, config_parser: BaseConfigParser):
         youtube_logger = LoggerClass()
-        self.config_parser_manager = ConfigParserManager()
+        self.config_parser_manager = config_parser
 
         self.youtube_downloder = YoutubeDL(
             self.config_parser_manager, youtube_logger)
@@ -21,14 +22,12 @@ class YoutubeHelper():
         return self.youtube_downloder
 
     def download_single_video(self, single_media_url, video_type):
-        # if send_full_emit:
-        #     if not send_emit_single_media_info_from_youtube(single_media_url):
-        #         return None
         single_media_info_result = self.youtube_downloder.download_video(
             single_media_url, video_type)
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
-            # handle_error(error_msg)
+            logger.error(
+                f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         directory_path = self.config_parser_manager.get_save_path()
@@ -38,13 +37,12 @@ class YoutubeHelper():
         return singleMedia.file_name
 
     def download_single_audio(self, single_media_url):
-        # if not send_emit_single_media_info_from_youtube(single_media_url):
-        #     return None
         single_media_info_result = self.youtube_downloder.download_audio(
             single_media_url)
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
-            # handle_error(error_msg)
+            logger.error(
+                f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         directory_path = self.config_parser_manager.get_save_path()
@@ -68,7 +66,8 @@ class YoutubeHelper():
             single_media_url)
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
-            # handle_error(error_msg)
+            logger.error(
+                f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         singleMedia.file_name = str(
@@ -85,3 +84,13 @@ class YoutubeHelper():
         logger.info(
             f"{YoutubeLogs.AUDIO_DOWNLOADED.value}: {singleMedia.file_name}")
         return singleMedia.file_name
+
+    def request_single_media_info(self, single_media_url):
+        return self.youtube_downloder.request_single_media_info(single_media_url)
+
+    def request_playlist_media_info(self, playlist_url):
+        return self.youtube_downloder.request_playlist_media_info(playlist_url)
+
+    def set_title_template(self, title_template):
+        self.youtube_downloder.set_title_template_one_time(
+            title_template)

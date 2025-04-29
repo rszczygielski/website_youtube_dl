@@ -16,8 +16,8 @@ from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
                                                     Format1080p,
                                                     Format2160p)
 from website_youtube_dl.flaskAPI.session import SessionDownloadData
-from website_youtube_dl.common.youtubeDL import (YoutubeDL,
-                                                 SingleMedia,
+from website_youtube_dl.common.youtubeDL import YoutubeDL
+from website_youtube_dl.common.youtubeAPI import(SingleMedia,
                                                  PlaylistMedia,
                                                  ResultOfYoutube)
 from website_youtube_dl.flaskAPI.emits import (DownloadMediaFinishEmit,

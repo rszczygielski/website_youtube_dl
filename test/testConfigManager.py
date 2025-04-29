@@ -2,7 +2,7 @@ import configparser
 import os
 from unittest import TestCase, main
 from unittest.mock import patch
-from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
 from test.configParserMock import ConfigParserMock, ConfigParserMockWithEmptyData
 
 
@@ -38,7 +38,7 @@ class Testconfig_parser_managerWithMockConfigClass(TestCase):
 
     def setUp(self):
         self.config_parser_mock = ConfigParserMock()
-        self.config = ConfigParserManager(
+        self.config = BaseConfigParser(
             TestVariables.save_config, self.config_parser_mock)
 
     @patch.object(configparser.ConfigParser, "clear")
@@ -67,7 +67,7 @@ class Testconfig_parser_managerWithMockConfigClass(TestCase):
         self.assertEqual(result, None)
 
     @patch.object(configparser.ConfigParser, "clear")
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_add_playlist(self, mock_save, mock_clear):
         self.config.get_url_of_playlists()
         plalists_list_count = len(
@@ -85,7 +85,7 @@ class Testconfig_parser_managerWithMockConfigClass(TestCase):
         self.assertEqual(mock_clear.call_count, 2)
 
     @patch.object(configparser.ConfigParser, "clear")
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_add_playlist_with_the_same_name(self, mock_save, mock_clear):
         self.config.get_url_of_playlists()
         plalists_list_count = len(
@@ -106,7 +106,7 @@ class Testconfig_parser_managerWithMockConfigClass(TestCase):
         self.assertEqual(mock_clear.call_count, 3)
 
     @patch.object(configparser.ConfigParser, "clear")
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_delete_playlist(self, mock_save, mock_clear):
         self.config.get_url_of_playlists()
         plalists_list_count = len(
@@ -120,7 +120,7 @@ class Testconfig_parser_managerWithMockConfigClass(TestCase):
         self.assertEqual(mock_clear.call_count, 2)
 
     @patch.object(configparser.ConfigParser, "clear")
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_wrong_playlist_to_delete(self, mock_save, mock_clear):
         self.config.get_url_of_playlists()
         plalists_list_count = len(
@@ -145,21 +145,21 @@ class TestConfingManagerWithEmptyConfig(TestCase):
 
     def setUp(self):
         self.config_parser_mock = ConfigParserMockWithEmptyData()
-        self.config = ConfigParserManager(
+        self.config = BaseConfigParser(
             "save_config", self.config_parser_mock)
         homePath = os.path.expanduser(TestVariables.swung_dash)
         self.musicPath = os.path.join(
             homePath, TestVariables.music)
 
     @patch.object(configparser.ConfigParser, "clear")
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_get_save_path(self, mock_save, mock_clear):
         save_path = self.config.get_save_path()
         self.assertEqual(save_path, self.musicPath)
         mock_save.assert_called_once()
         mock_clear.assert_called_once()
 
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_get_playlists(self, mock_save):
         test_playlistDict = self.config.get_playlists()
         self.assertEqual(test_playlistDict, {})
@@ -167,7 +167,7 @@ class TestConfingManagerWithEmptyConfig(TestCase):
             self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
         mock_save.assert_called_once()
 
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_get_playlist_urls(self, mock_save):
         result = self.config.get_playlist_url(
             TestVariables.test_name)
@@ -177,7 +177,7 @@ class TestConfingManagerWithEmptyConfig(TestCase):
         mock_save.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
-    @patch.object(ConfigParserManager, "save_config")
+    @patch.object(BaseConfigParser, "save_config")
     def test_get_url_of_playlists(self, mock_save, mock_clear):
         test_playlistUrls = self.config.get_url_of_playlists()
         self.assertEqual(test_playlistUrls, [])

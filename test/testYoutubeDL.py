@@ -2,9 +2,12 @@ import os
 import yt_dlp
 from unittest import TestCase, main
 from unittest.mock import patch, call, MagicMock
-from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 import website_youtube_dl.common.youtubeDL as youtubeDL
+from website_youtube_dl.common.youtubeAPI import (SingleMedia,
+                                                  MediaFromPlaylist,
+                                                  PlaylistMedia)
 from test.configParserMock import ConfigParserMock
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from website_youtube_dl.common.youtubeOptions import YoutubeOptiones, PostProcessors
@@ -92,23 +95,23 @@ class TestYoutubeDL(TestCase):
         PlaylistInfo.PLAYLIST_TRACKS.value: testEntriesList
     }
 
-    singleMediaTest = youtubeDL.SingleMedia(test_full_path1, test_title1, test_album1,
-                                            test_artist1, testId1,
-                                            test_original_url1, test_ext1)
+    singleMediaTest = SingleMedia(test_full_path1, test_title1, test_album1,
+                                  test_artist1, testId1,
+                                  test_original_url1, test_ext1)
 
-    mediaFromPlaylistTest1 = youtubeDL.MediaFromPlaylist(test_title1, testId1)
+    mediaFromPlaylistTest1 = MediaFromPlaylist(test_title1, testId1)
 
-    mediaFromPlaylistTest2 = youtubeDL.MediaFromPlaylist(test_title2, testId2)
+    mediaFromPlaylistTest2 = MediaFromPlaylist(test_title2, testId2)
 
     # pisz tak zmienne testowe MEDIA_FROM_PLAYLIST2
 
-    playlist_mediaTest = youtubeDL.PlaylistMedia(test_playlist_name, [mediaFromPlaylistTest1,
-                                                                      mediaFromPlaylistTest2])
+    playlist_mediaTest = PlaylistMedia(test_playlist_name, [mediaFromPlaylistTest1,
+                                                            mediaFromPlaylistTest2])
 
     def setUp(self):
         self.testDir = os.path.dirname(os.path.abspath(__file__))
-        config_parser_manager = ConfigParserManager(f'{self.testDir}/test_youtube_config.ini',
-                                                    ConfigParserMock())
+        config_parser_manager = BaseConfigParser(f'{self.testDir}/test_youtube_config.ini',
+                                                 ConfigParserMock())
         self.youtube_test = youtubeDL.YoutubeDL(config_parser_manager)
         self.youtubeConfigPlaylists = youtubeDL.YoutubeDlPlaylists(config_parser_manager,
                                                                    MagicMock())
@@ -315,7 +318,7 @@ class TestYoutubeDL(TestCase):
                          self.main_media_download_error)
 
     @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_audio_playlist")
-    @patch.object(youtubeDL.ConfigParserManager,
+    @patch.object(youtubeDL.BaseConfigParser,
                   "get_url_of_playlists",
                   return_value=testPlaylsitUrlsList)
     def test_download_audio_from_config_two_playlists(
@@ -326,7 +329,7 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(metaData, True)
 
     @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_audio_playlist")
-    @patch.object(youtubeDL.ConfigParserManager,
+    @patch.object(youtubeDL.BaseConfigParser,
                   "get_url_of_playlists", return_value=[])
     def test_download_audio_from_config_zero_playlists(
             self, mockGetPlaylists, mock_download_audio):
@@ -336,7 +339,7 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(metaData, True)
 
     @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_video_playlist")
-    @patch.object(youtubeDL.ConfigParserManager,
+    @patch.object(youtubeDL.BaseConfigParser,
                   "get_url_of_playlists",
                   return_value=[main_playlist_url_no_video_hash1])
     def test_download_video_from_config_one_playlists(
@@ -350,7 +353,7 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(metaData, True)
 
     @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_video_playlist")
-    @patch.object(youtubeDL.ConfigParserManager,
+    @patch.object(youtubeDL.BaseConfigParser,
                   "get_url_of_playlists",
                   return_value=testPlaylsitUrlsList)
     def test_download_video_from_config_two_playlists(

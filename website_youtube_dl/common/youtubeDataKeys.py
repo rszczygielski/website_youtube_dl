@@ -55,7 +55,7 @@ class MediaInfo(Enum):
 class YoutubeOptiones(Enum):
     FORMAT = "format"
     DOWNLOAD_ARCHIVE = "download_archive"
-    NO_OVERRIDE = "no-overwrites"
+    NO_OVERWITES = "no-overwrites"
     ADD_META_DATA = "addmetadata"
     IGNORE_ERRORS = "ignoreerrors"
     QUIET = "quiet"

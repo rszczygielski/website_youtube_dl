@@ -1,7 +1,7 @@
 import configparser
 import argparse
 import logging
-from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
 from website_youtube_dl.common.easyID3Manager import EasyID3Manager
 from website_youtube_dl.common.youtubeDL import YoutubeDlPlaylists
 
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class TerminalUser(YoutubeDlPlaylists):  # pragma: no_cover
-    def __init__(self, configManager: ConfigParserManager, easy_id3_manager: EasyID3Manager) -> None:
+    def __init__(self, configManager: BaseConfigParser, easy_id3_manager: EasyID3Manager) -> None:
         super().__init__(configManager, easy_id3_manager)
 
     def is_playlist(self, url):
@@ -94,7 +94,7 @@ def main():  # pragma: no_cover
     url = args.url
     type = args.type
     config = args.config
-    config_parser_manager = ConfigParserManager(
+    config_parser_manager = BaseConfigParser(
         config, configparser.ConfigParser())
     easy_id3_manager = EasyID3Manager()
     terminalUser = TerminalUser(config_parser_manager, easy_id3_manager)

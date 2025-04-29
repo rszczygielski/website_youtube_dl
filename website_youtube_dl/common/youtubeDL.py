@@ -1,7 +1,7 @@
 import yt_dlp
 import logging
 import os
-from .youtubeConfigManager import ConfigParserManager
+from .youtubeConfigManager import BaseConfigParser
 from .easyID3Manager import EasyID3Manager
 from .myLogger import Logger, LoggerClass
 from .youtubeDataKeys import (PlaylistInfo,
@@ -13,67 +13,13 @@ from .youtubeOptions import (YoutubeDefaultOptiones,
                              YoutubeVideoOptions,
                              VideoVerificationOptiones)
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+from website_youtube_dl.common.youtubeAPI import (SingleMedia,
+                                                  MediaFromPlaylist,
+                                                  PlaylistMedia,
+                                                  ResultOfYoutube)
 
 
 logger = logging.getLogger(__name__)
-
-
-class SingleMedia():
-    def __init__(
-            self,
-            file_name,
-            title,
-            album,
-            artist,
-            yt_hash,
-            url,
-            extension):
-        self.file_name = file_name
-        self.title = title
-        self.album = album
-        self.artist = artist
-        self.yt_hash = yt_hash
-        self.url = url
-        self.extension = extension
-
-
-class MediaFromPlaylist():
-    def __init__(self, title, yt_hash):
-        self.title = title
-        self.yt_hash = yt_hash
-
-
-class PlaylistMedia():
-    def __init__(self, playlist_name, media_from_playlist_list: list):
-        self.playlist_name = playlist_name
-        self.media_from_playlist_list = media_from_playlist_list
-
-
-class ResultOfYoutube():
-    _is_error = False
-    _error_info = None
-    data = None
-
-    def __init__(self, data=None) -> None:
-        self.set_data(data)
-
-    def set_error(self, error_info: str):
-        self._is_error = True
-        self._error_info = error_info
-
-    def set_data(self, data):
-        self._data = data
-
-    def is_error(self):
-        return self._is_error
-
-    def get_data(self):
-        if not self._is_error:
-            return self._data
-
-    def get_error_info(self):
-        if self._is_error:
-            return self._error_info
 
 
 class YoutubeDL():
@@ -82,14 +28,14 @@ class YoutubeDL():
 
     def __init__(
             self,
-            configManager: ConfigParserManager,
+            configManager: BaseConfigParser,
             ytLogger: LoggerClass = logger):
         self._configManager = configManager
         self.yt_logger = ytLogger
         self._savePath = self._configManager.get_save_path()
-        self._ydl_opts = YoutubeDefaultOptiones().to_dict()
-        self._ydl_single_info_opts = YoutubeGetSingleInfoOptiones().to_dict()
-        self._ydl_playlist_info_opts = YoutubeGetPlaylistInfoOptiones().to_dict()
+        self._ydl_opts = YoutubeDefaultOptiones()
+        self._ydl_single_info_opts = YoutubeGetSingleInfoOptiones()
+        self._ydl_playlist_info_opts = YoutubeGetPlaylistInfoOptiones()
 
     def _download_file(self, single_media_hash: str, ydl_opts=None):
         """Method used to download youtube media based on URL
@@ -102,7 +48,7 @@ class YoutubeDL():
             class: meta data form youtube
         """
         if ydl_opts is None:
-            ydl_opts = self._ydl_opts
+            ydl_opts = self._ydl_opts.to_dict()
         result_of_youtube = ResultOfYoutube()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
@@ -160,7 +106,8 @@ class YoutubeDL():
         Returns:
             ResultOfYoutube: result of youtube with metadata
         """
-        with yt_dlp.YoutubeDL(self._ydl_playlist_info_opts) as ydl:
+        yt_options = self._ydl_playlist_info_opts.to_dict()
+        with yt_dlp.YoutubeDL(yt_options) as ydl:
             try:
                 meta_data = ydl.extract_info(youtubeURL, download=False)
             except Exception as exception:
@@ -182,7 +129,8 @@ class YoutubeDL():
             dict: dict with Youtube info
         """
         youtube_hash = self._get_media_result_hash(youtubeURL)
-        with yt_dlp.YoutubeDL(self._ydl_single_info_opts) as ydl:
+        yt_options = self._ydl_single_info_opts.to_dict()
+        with yt_dlp.YoutubeDL(yt_options) as ydl:
             try:
                 meta_data = ydl.extract_info(youtube_hash, download=False)
             except Exception as exception:
@@ -250,7 +198,6 @@ class YoutubeDL():
         """
 
         ydl_opts = VideoVerificationOptiones().to_dict()
-
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
                 ydl.extract_info(yt_hash, download=False)
@@ -328,7 +275,8 @@ class YoutubeDL():
         out_template = self._savePath + \
             self.title_template + f"_{type}p" + ".%(ext)s"
         video_options_instance = YoutubeVideoOptions(out_template)
-        video_options_instance.change_format(type, "mp4")
+        video_quality = video_options_instance.convet_video_quality(type)
+        video_options_instance.change_format(video_quality=video_quality)
         return video_options_instance.to_dict()
 
     def _get_audio_options(self):
@@ -402,7 +350,7 @@ class YoutubeDL():
 
 
 class YoutubeDlPlaylists(YoutubeDL):
-    def __init__(self, configManager: ConfigParserManager,
+    def __init__(self, configManager: BaseConfigParser,
                  easy_id3_manager: EasyID3Manager,
                  ytLogger: LoggerClass = Logger):
         super().__init__(configManager, ytLogger)

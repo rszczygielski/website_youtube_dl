@@ -1,10 +1,21 @@
 from enum import Enum
 
+class VideoQuality(Enum):
+    BEST = "best"
+    Q1080 = "1080"
+    Q720 = "720"
+    Q480 = "480"
+    Q360 = "360"
+
+class VideoExtension(Enum):
+    MP4 = "mp4"
+    WEBM = "webm"
+    MKV = "mkv"
 
 class YoutubeOptiones(Enum):
     FORMAT = "format"
     DOWNLOAD_ARCHIVE = "download_archive"
-    NO_OVERRIDE = "no-overwrites"
+    NO_OVERWITES = "no-overwrites"
     ADD_META_DATA = "addmetadata"
     IGNORE_ERRORS = "ignoreerrors"
     QUIET = "quiet"
@@ -21,62 +32,86 @@ class PostProcessors(Enum):
     PREFERREDQUALITY = "preferredquality"
 
 
+class RequestArgument():
+    def __init__(self, argument_name: YoutubeOptiones, argument_value):
+        self.argument_name = argument_name
+        self.argument_value = argument_value
+
+
 class BaseOption():
     def __init__(self):
         """Initialize options from class attributes (tuples) using Enum values as dictionary keys"""
-        self.options = {
-            getattr(self, key)[0]: getattr(self, key)[1] for key in dir(self)
-            if key in YoutubeOptiones.__members__ and isinstance(getattr(self, key), tuple)
-        }
+        pass
 
     def to_dict(self):
         """Return all options as a dictionary with Enum values as keys."""
-        return self.options
+        options = {}
+        for key in dir(self):
+            class_atribute = getattr(self, key)
+            if key in YoutubeOptiones.__members__ and isinstance(class_atribute, RequestArgument):
+                options[class_atribute.argument_name] = class_atribute.argument_value
+        return options
 
-    def change_format(self, video_quality ="best", extension ="mp4"):
+
+    def convert_video_extension(self, video_extension: str):
+        """Convert video extension string to VideoExtension Enum."""
+        try:
+            return VideoExtension(video_extension.lower())
+        except KeyError:
+            raise ValueError(f"Invalid video extension: {video_extension}. Must be one of {[e.name for e in VideoExtension]}")
+
+    def change_format(self,
+                    video_quality: VideoQuality = VideoQuality.BEST,
+                    extension: VideoExtension = VideoExtension.MP4):
         """Modify the format dynamically based on user input."""
-        format_string = f"best[height={video_quality}][ext={extension}]+bestaudio/bestvideo+bestaudio"
+        format_string = f"best[height={video_quality.value}][ext={extension.value}]+bestaudio/bestvideo+bestaudio"
         self.add_new_option(YoutubeOptiones.FORMAT,
-                            format_string, overwrite =True)
+                            format_string, overwrite=True)
 
-    def overwrite_option(self, option: YoutubeOptiones, new_value):
-        """Change the value of an option dynamically using YoutubeOptiones Enum (without loop)."""
-        option_key = option.value
+    def overwrite_option(self, option_enum: YoutubeOptiones, new_value):
+        """
+        Overwrites an existing option's value.
 
-        if option_key in self.options:
-            setattr(self, option.name, (option_key, new_value))
-            self.options[option_key] = new_value
-        else:
-            raise KeyError(
-                f"Option '{option_key}' not found in {self.__class__.__name__}")
+        option_enum: Enum member from YoutubeOptiones (e.g., YoutubeOptiones.FORMAT)
+        new_value: The new value for the option
+        """
+        option_key = option_enum.value
 
-    def add_new_option(
-            self,
-            option: YoutubeOptiones,
-            option_value,
-            overwrite =False):
-        """Dynamically add a new option."""
-        option_name = option.value
+        if not hasattr(self, option_enum.name):
+            raise KeyError(f"Option '{option_key}' does not exist. Use add_new_option instead.")
 
-        if option_name in self.options and not overwrite:
-            raise KeyError(
-                f"Option '{option_name}' already exists. Use overwrite = True to modify.")
+        setattr(self, option_enum.name, RequestArgument(option_key, new_value))
 
-        setattr(self, option_name.upper(), (option_name, option_value))
+    def add_new_option(self,
+                       option_enum: YoutubeOptiones,
+                       option_value,
+                       overwrite=False):
+        """
+        Dynamically add a new option using an Enum key.
 
-        self.options[option_name] = option_value
+        option_enum: Enum member from YoutubeOptiones (e.g., YoutubeOptiones.FORMAT)
+        option_value: The value for the option
+        """
+        option_key = option_enum.value
+
+        if hasattr(self, option_enum.name) and not overwrite:
+            raise KeyError(f"Option '{option_key}' already exists. Use change_value instead.")
+
+        setattr(self, option_enum.name, RequestArgument(option_key, option_value))
 
 
 # Default YouTube options
 class YoutubeDefaultOptiones(BaseOption):
-    FORMAT = (YoutubeOptiones.FORMAT.value, "bestvideo+bestaudio")
+    format = RequestArgument(
+        YoutubeOptiones.FORMAT.value, "bestvideo+bestaudio")
     # DOWNLOAD_ARCHIVE = (
     #     YoutubeOptiones.DOWNLOAD_ARCHIVE.value, "downloaded_songs.txt")
-    NO_OVERRIDE = (YoutubeOptiones.NO_OVERRIDE.value, False)
-    ADD_META_DATA = (YoutubeOptiones.ADD_META_DATA.value, True)
-    QUIET = (YoutubeOptiones.QUIET.value, True)
-    LOGGER = (YoutubeOptiones.LOGGER.value, None)
-    OUT_TEMPLATE = (YoutubeOptiones.OUT_TEMPLATE.value, "%(title)s.%(ext)s")
+    NO_OVERWITES = RequestArgument(YoutubeOptiones.NO_OVERWITES.value, False)
+    ADD_META_DATA = RequestArgument(YoutubeOptiones.ADD_META_DATA.value, True)
+    QUIET = RequestArgument(YoutubeOptiones.QUIET.value, True)
+    LOGGER = RequestArgument(YoutubeOptiones.LOGGER.value, None)
+    OUT_TEMPLATE = RequestArgument(
+        YoutubeOptiones.OUT_TEMPLATE.value, "%(title)s.%(ext)s")
 
     def __init__(self):
         super().__init__()
@@ -84,47 +119,52 @@ class YoutubeDefaultOptiones(BaseOption):
 
 # Get Info Options for YouTube
 class YoutubeGetSingleInfoOptiones(BaseOption):
-    f_o_r_m_a_t = (YoutubeOptiones.FORMAT.value, "best/best")
-    a_d_d__m_e_t_a__d_a_t_a = (YoutubeOptiones.ADD_META_DATA.value, True)
-    i_g_n_o_r_e__e_r_r_o_r_s = (YoutubeOptiones.IGNORE_ERRORS.value, False)
-    q_u_i_e_t = (YoutubeOptiones.QUIET.value, True)
-    l_o_g_g_e_r = (YoutubeOptiones.LOGGER.value, None)
+    FORMAT = RequestArgument(YoutubeOptiones.FORMAT.value, "best/best")
+    ADD_META_DATA = RequestArgument(YoutubeOptiones.ADD_META_DATA.value, True)
+    IGNORE_ERRORS = RequestArgument(YoutubeOptiones.IGNORE_ERRORS.value, False)
+    QUIET = RequestArgument(YoutubeOptiones.QUIET.value, True)
+    LOGGER = RequestArgument(YoutubeOptiones.LOGGER.value, None)
 
     def __init__(self):
         super().__init__()
 
 
 class YoutubeGetPlaylistInfoOptiones(BaseOption):
-    EXTRACT_FLAT = (YoutubeOptiones.EXTRACT_FLAT.value, "in_playlist")
-    ADD_META_DATA = (YoutubeOptiones.ADD_META_DATA.value, True)
-    IGNORE_ERRORS = (YoutubeOptiones.IGNORE_ERRORS.value, False)
-    QUIET = (YoutubeOptiones.QUIET.value, True)
+    EXTRACT_FLAT = RequestArgument(
+        YoutubeOptiones.EXTRACT_FLAT.value, "in_playlist")
+    ADD_META_DATA = RequestArgument(YoutubeOptiones.ADD_META_DATA.value, True)
+    IGNORE_ERRORS = RequestArgument(YoutubeOptiones.IGNORE_ERRORS.value, False)
+    QUIET = RequestArgument(YoutubeOptiones.QUIET.value, True)
 
     def __init__(self):
         super().__init__()
 
 
 class VideoVerificationOptiones(BaseOption):
-    QUIET = (YoutubeOptiones.QUIET.value, True)
-    NO_PLAYLIST = (YoutubeOptiones.NO_PLAYLIST, True)
-    FORMAT = (YoutubeOptiones.FORMAT.value, "best")
+    quiet = RequestArgument(YoutubeOptiones.QUIET.value, True)
+    no_playlist = RequestArgument(YoutubeOptiones.NO_PLAYLIST, True)
+    format = RequestArgument(YoutubeOptiones.FORMAT.value, "best")
 
     def __init__(self):
         super().__init__()
 
 # Video Options for YouTube
-
-
 class YoutubeVideoOptions(YoutubeDefaultOptiones):
     def __init__(self, outTemplate):
         super().__init__()
         self.overwrite_option(YoutubeOptiones.OUT_TEMPLATE, outTemplate)
 
+    def convet_video_quality(self, video_quality: str):
+        """Convert video quality string to VideoQuality Enum."""
+        try:
+            return VideoQuality(video_quality.lower())
+        except KeyError:
+            raise ValueError(f"Invalid video quality: {video_quality}. Must be one of {[e.name for e in VideoQuality]}")
+
+
 # Audio Options for YouTube
-
-
 class YoutubeAudioOptions(YoutubeDefaultOptiones):
-    POSTPROCESSORS = (YoutubeOptiones.POSTPROCESSORS.value, [
+    POSTPROCESSORS = RequestArgument(YoutubeOptiones.POSTPROCESSORS.value, [
         {PostProcessors.KEY.value: "FFmpegExtractAudio",
          PostProcessors.PREFERREDCODEC.value: "mp3",
          PostProcessors.PREFERREDQUALITY.value: "192"}
@@ -133,25 +173,3 @@ class YoutubeAudioOptions(YoutubeDefaultOptiones):
     def __init__(self, outTemplate):
         super().__init__()
         self.overwrite_option(YoutubeOptiones.OUT_TEMPLATE, outTemplate)
-
-
-if __name__ == "__main__":
-
-    default_options = YoutubeDefaultOptiones()
-    info_options = YoutubeGetSingleInfoOptiones()
-
-    print("Before modification:")
-    print(default_options.to_dict())
-
-    default_options.change_format(video_quality=1080, extension ="mp4")
-
-    print("\nAfter modification:")
-    print(default_options.to_dict())
-
-    info_options.overwrite_option(YoutubeOptiones.FORMAT, "test000")
-
-    print("\nUpdated Info Options:")
-    print(info_options.to_dict())
-
-    audio_options = YoutubeAudioOptions("test_path")
-    print(audio_options.to_dict())

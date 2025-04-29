@@ -11,7 +11,6 @@ class FlaskMediaFromPlaylist():
         self.title = title
         self.url = url
 
-
 class FlaskPlaylistMedia():
     def __init__(self, plyalistName: str,
                  track_list: list[FlaskMediaFromPlaylist]) -> None:
