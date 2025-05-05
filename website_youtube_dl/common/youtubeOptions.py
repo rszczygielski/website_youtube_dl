@@ -2,6 +2,7 @@ from enum import Enum
 
 class VideoQuality(Enum):
     BEST = "best"
+    Q2160 = "2160"
     Q1080 = "1080"
     Q720 = "720"
     Q480 = "480"

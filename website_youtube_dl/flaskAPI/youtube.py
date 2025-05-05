@@ -85,7 +85,6 @@ def index():
     return render_template('index.html')
 
 
-
 def download_tracks_from_playlist(youtube_url, format_instance):
     playlist_media = send_emit_playlist_media(youtube_url)
     if not playlist_media:
@@ -171,7 +170,9 @@ def send_emit_playlist_media(youtube_url):
 
 
 def download_correct_data(youtube_url, format_instance, is_playlist):
+    print(f"Youtube URL: {youtube_url}")
     if is_playlist:
+
         full_zip_path = download_tracks_from_playlist(
             youtube_url=youtube_url, format_instance=format_instance)
         return full_zip_path

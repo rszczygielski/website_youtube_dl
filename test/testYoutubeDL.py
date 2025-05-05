@@ -116,8 +116,8 @@ class TestYoutubeDL(TestCase):
         self.youtubeConfigPlaylists = youtubeDL.YoutubeDlPlaylists(config_parser_manager,
                                                                    MagicMock())
         self.youtube_test._savePath = self.testDir
-        self.youtube_test._ydl_opts['outtmpl'] = self.testDir + \
-            '/%(title)s.%(ext)s'
+        self.youtube_test._ydl_opts.overwrite_option(YoutubeOptiones.OUT_TEMPLATE,
+                                                     self.testDir + '/%(title)s.%(ext)s')
 
     def check_result_single_media(self, singleMedia, singleMediaExpected):
         self.assertEqual(singleMedia.title, singleMediaExpected.title)
@@ -181,7 +181,7 @@ class TestYoutubeDL(TestCase):
         self.assertEqual(error_msg, self.main_media_download_error)
 
     def test_get_video_options(self):
-        original_format = self.youtube_test._ydl_opts[YoutubeOptiones.FORMAT.value]
+        original_format = self.youtube_test._ydl_single_info_opts.FORMAT.argument_value
         for format_type in self.list_of_formats:
             video_options = self.youtube_test._get_video_options(format_type)
             self.assertNotEqual(original_format,
@@ -193,7 +193,8 @@ class TestYoutubeDL(TestCase):
     def test_get_audio_options(self):
         audio_options = self.youtube_test._get_audio_options()
         self.assertNotIn(YoutubeOptiones.POSTPROCESSORS.value,
-                         self.youtube_test._ydl_opts)
+                         self.youtube_test._ydl_opts.to_dict())
+        audio_options = self.youtube_test._get_audio_options()
         self.assertIn(YoutubeOptiones.POSTPROCESSORS.value, audio_options)
         self.assertIn(PostProcessors.KEY.value,
                       audio_options[YoutubeOptiones.POSTPROCESSORS.value][0])
