@@ -27,7 +27,7 @@ class YoutubeHelper():
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(
-                f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {error_msg}")
+                f"{YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         directory_path = self.config_parser_manager.get_save_path()
@@ -42,7 +42,7 @@ class YoutubeHelper():
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(
-                f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {error_msg}")
+                f"{YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         directory_path = self.config_parser_manager.get_save_path()
@@ -67,7 +67,7 @@ class YoutubeHelper():
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(
-                f"{YoutubeLogs.MEDIA_INFO_DOWNLAOD_ERROR.value}: {error_msg}")
+                f"{YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         singleMedia.file_name = str(

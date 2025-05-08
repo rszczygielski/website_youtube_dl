@@ -2,7 +2,7 @@ import zipfile
 import os
 
 
-def get_files_from_dir(dirPath):
+def get_files_from_dir(dirPath): # pragma: no_cover
     return [f.split(".")[0] for f in os.listdir(dirPath)
             if os.path.isfile(os.path.join(dirPath, f))]
 

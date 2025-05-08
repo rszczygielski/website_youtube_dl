@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class YoutubeLogs(Enum):
-    MEDIA_INFO_DOWNLAOD_ERROR = "Download media info error"
+    MEDIA_INFO_DOWNLOAD_ERROR = "Download media info error"
     PLAYLIST_INFO_DOWNLAOD_ERROR = "Download playlist info error"
     DIRECTORY_PATH = "Direcotry path"
     DOWNLAOD_PLAYLIST = "Download playlist"

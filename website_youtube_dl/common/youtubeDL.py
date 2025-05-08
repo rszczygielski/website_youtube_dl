@@ -142,7 +142,7 @@ class YoutubeDL():
         single_media = self._get_media(meta_data)
         return ResultOfYoutube(single_media)
 
-    def verify_local_files(self, dirPath: str):
+    def verify_local_files(self, dirPath: str, easy_id3_manager_class: EasyID3Manager):
         """Method verifies if the local files still exists on YouTube
 
         Args:
@@ -158,8 +158,8 @@ class YoutubeDL():
             if not os.path.isfile(
                     full_file_path) or not full_file_path.endswith(".mp3"):
                 continue
-            audio_manager = EasyID3Manager.init_from_file_meta_data(
-                full_file_path)
+            audio_manager = easy_id3_manager_class(full_file_path)
+            audio_manager.read_meta_data()
             if not self.if_video_exist_on_youtube(audio_manager.website):
                 not_verified_files.append(full_file_path)
         return not_verified_files
@@ -275,7 +275,7 @@ class YoutubeDL():
         out_template = self._savePath + \
             self.title_template + f"_{type}p" + ".%(ext)s"
         video_options_instance = YoutubeVideoOptions(out_template)
-        video_quality = video_options_instance.convet_video_quality(type)
+        video_quality = video_options_instance.convert_video_quality(type)
         video_options_instance.change_format(video_quality=video_quality)
         return video_options_instance.to_dict()
 

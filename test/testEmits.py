@@ -3,7 +3,8 @@ from website_youtube_dl.flaskAPI.emits import (DownloadMediaFinishEmit,
                                                SingleMediaInfoEmit,
                                                PlaylistMediaInfoEmit,
                                                UploadPlaylistToConfigEmit,
-                                               GetPlaylistUrlEmit)
+                                               GetPlaylistUrlEmit,
+                                               PlaylistTrackFinish)
 from unittest import main, TestCase
 from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
                                                     FlaskMediaFromPlaylist,
@@ -59,6 +60,7 @@ class TestEmits(TestCase):
         self.playlist_media_info_emit = PlaylistMediaInfoEmit()
         self.upload_playlist_to_config_emit = UploadPlaylistToConfigEmit()
         self.get_playlist_url_emit = GetPlaylistUrlEmit()
+        self.playlist_track_finish_emit = PlaylistTrackFinish()
         self.config_manager_mock = MagicMock()
         app = create_app(TestingConfig, self.config_manager_mock)
         app.config["TESTING"] = True
@@ -146,6 +148,36 @@ class TestEmits(TestCase):
         self.assertIn(self.data_str, emit_data.data)
         self.assertEqual(
             {self.playlist_url_str: self.youtube_playlist_url}, emit_data.data[self.data_str])
+
+    def test_playlist_track_finish_convert_data_to_msg(self):
+        test_index = 5
+        result = self.playlist_track_finish_emit.convert_data_to_message(
+            test_index)
+        self.assertEqual({"index": test_index}, result)
+
+    def test_playlist_track_finish_send_emit(self):
+        test_index = 5
+        self.playlist_track_finish_emit.send_emit(test_index)
+        python_emit = self.socket_io_test_client.get_received()
+        received_msg = EmitData.get_emit_massage(python_emit, 0)
+        emit_data = EmitData.init_from_massage(received_msg)
+        self.assertEqual(self.playlist_track_finish_emit.emit_msg,
+                         emit_data.emit_name)
+        self.assertIn(self.data_str, emit_data.data)
+        self.assertEqual({"index": test_index}, emit_data.data[self.data_str])
+
+    def test_playlist_track_finish_send_emit_error(self):
+        test_index = 5
+        self.playlist_track_finish_emit.send_emit_error(test_index)
+        python_emit = self.socket_io_test_client.get_received()
+        received_msg = EmitData.get_emit_massage(python_emit, 0)
+        emit_data = EmitData.init_from_massage(received_msg)
+        self.assertEqual(self.playlist_track_finish_emit.emit_msg,
+                         emit_data.emit_name)
+        self.assertIn(self.playlist_track_finish_emit.error_str,
+                      emit_data.data)
+        self.assertEqual(
+            test_index, emit_data.data[self.playlist_track_finish_emit.error_str])
 
 
 if __name__ == "__main__":

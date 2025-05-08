@@ -65,6 +65,8 @@ class EasyID3Manager():  # pragma: no_cover
             self.yt_hash = audio[MetaDataType.WEBSITE.value]
         if MetaDataType.TRACK_NUMBER.value in audio:
             self.track_number = audio[MetaDataType.TRACK_NUMBER.value]
+        if MetaDataType.PLAYLIST_NAME.value in audio:
+            self.playlist_name = audio[MetaDataType.PLAYLIST_NAME.value]
 
     def _show_meta_data_info(self, path):  # pragma: no_cover
         """Method used to show Metadata info
