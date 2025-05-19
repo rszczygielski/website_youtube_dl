@@ -7,6 +7,8 @@ from .flaskAPI.session import SessionClient
 from flask import Flask, session
 from .flaskAPI.youtubeHelper import YoutubeHelper
 import logging
+from platformdirs import site_config_dir
+import os
 
 
 socketio = SocketIO()
@@ -42,5 +44,6 @@ def init_logger():
 
 
 def init_config_pareser(configParser):
-    config = "youtube_config.ini"
-    return configParser(config)
+    config_dir = site_config_dir("youtube_dl_web")
+    config_file_path = os.path.join(config_dir, "config.ini")
+    return configParser(config_file_path)

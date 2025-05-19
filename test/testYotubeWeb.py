@@ -368,7 +368,6 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube.download_tracks_from_playlist(self.actual_youtube_playlist_url1,
                                                            self.format_720p)
-        print("TEST")
         mockGetFilesFromDir.assert_called_once_with(self.test_path)
         mockSendEmitPlaylist.assert_called_once()
         calls = mockDownloadVideo.mock_calls
@@ -397,11 +396,11 @@ class testYoutubeWeb(TestCase):
         calls = mock_download_audio.mock_calls
         self.assertEqual(call(single_media_url=self.testId1,
                               playlist_name=self.test_playlist_name,
-                              index="0"),
+                              index="1"),
                          calls[0])
         self.assertEqual(call(single_media_url=self.testId2,
                               playlist_name=self.test_playlist_name,
-                              index="1"),
+                              index="2"),
                          calls[1])
         self.assertEqual(2, mock_download_audio.call_count)
         self.assertEqual(result, f"/home/test_path/{self.test_playlist_name}")

@@ -10,6 +10,8 @@ class BaseConfigParser():
     def __init__(self, configFilePath, config_parser=configparser.ConfigParser()):
         self.config_file_path = configFilePath
         self.config_parser = config_parser
+        if len(self.config_parser.sections()) == 0:
+            self.create_default_config_file()
 
     def get_save_path(self):
         self.config_parser.clear()
@@ -47,18 +49,18 @@ class BaseConfigParser():
                 self.config_parser[ConfigKeys.PLAYLISTS.value][playlist_name])
         return playlist_list
 
-
-class ConfigParserManager(BaseConfigParser):
     def create_default_config_file(self):
         self.config_parser.add_section(ConfigKeys.GLOBAL.value)
         self.config_parser.add_section(ConfigKeys.PLAYLISTS.value)
         home_path = os.path.expanduser(ConfigKeys.SWUNG_DASH.value)
         music_path = os.path.join(home_path, ConfigKeys.MUSIC.value)
-        self.handle_default_dir(music_path)
+        self._handle_default_dir(music_path)
         self.config_parser[ConfigKeys.GLOBAL.value][ConfigKeys.PATH.value] = music_path
         self.save_config()
+        logger.info(
+            f"Default config file created at {self.config_file_path}")
 
-    def handle_default_dir(self, dirPath):  # pragma: no_cover
+    def _handle_default_dir(self, dirPath):  # pragma: no_cover
         if not os.path.exists(dirPath):
             logger.info(
                 f"Default directory {dirPath} not exists, creating one")
@@ -67,6 +69,10 @@ class ConfigParserManager(BaseConfigParser):
     def save_config(self):  # pragma: no_cover
         with open(self.config_file_path, ConfigKeys.WRITE.value) as configfile:
             self.config_parser.write(configfile)
+
+
+class ConfigParserManager(BaseConfigParser):
+
 
     def add_playlist(self, playlist_name, playlist_url):
         self.config_parser.clear()
@@ -77,6 +83,7 @@ class ConfigParserManager(BaseConfigParser):
         self.config_parser[ConfigKeys.PLAYLISTS.value][playlist_name] = playlist_url
         logger.info(f"Playlist {playlist_name}: {playlist_url} added")
         self.save_config()
+        return True
 
     def delete_playlist(self, playlist_name):
         self.config_parser.clear()
@@ -87,8 +94,5 @@ class ConfigParserManager(BaseConfigParser):
         self.config_parser.remove_option(
             ConfigKeys.PLAYLISTS.value, playlist_name)
         self.save_config()
+        return True
 
-
-if __name__ == "__main__":
-    config = BaseConfigParser(
-        "/home/rszczygielski/pythonVSC/personal_classes/website/youtube_config.ini")

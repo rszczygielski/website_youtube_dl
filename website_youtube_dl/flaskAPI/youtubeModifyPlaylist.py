@@ -39,18 +39,35 @@ def download_config_playlist(formData):
 def add_plalist_config(formData):
     playlist_name = formData["playlistName"]
     playlist_url = formData["playlistURL"]
-    app.config_parser_manager.add_playlist(playlist_name, playlist_url)
-    playlist_list = list(app.config_parser_manager.get_playlists().keys())
+    result = app.config_parser_manager.add_playlist(playlist_name, playlist_url)
     upload_playlist_emit = UploadPlaylistToConfigEmit()
+    if result:
+        app.logger.info(f"Added playlist {playlist_name} to config")
+    else:
+        upload_playlist_emit.send_emit_error(
+            f"Failed to add playlist {playlist_name} to config")
+        app.logger.warning(f"Failed to add playlist {playlist_name} to config")
+        return False
+    app.logger.debug(f"Playlist URL: {playlist_url}")
+    app.logger.debug(f"Playlist name: {playlist_name}")
+    playlist_list = list(app.config_parser_manager.get_playlists().keys())
     upload_playlist_emit.send_emit(playlist_list)
 
 
 @socketio.on("deletePlaylist")
 def delete_plalist_config(formData):
     playlist_name = formData["playlistToDelete"]
-    app.config_parser_manager.deletePlaylist(playlist_name)
-    playlist_list = list(app.config_parser_manager.get_playlists().keys())
     upload_playlist_emit = UploadPlaylistToConfigEmit()
+    result = app.config_parser_manager.deletePlaylist(playlist_name)
+    if result:
+        app.logger.info(f"Deleted playlist {playlist_name} from config")
+    else:
+        upload_playlist_emit.send_emit_error(
+            f"Failed to delete playlist {playlist_name} from config")
+        app.logger.warning(f"Failed to delete playlist {playlist_name} from config")
+        return False
+    app.logger.debug(f"Playlist name: {playlist_name}")
+    playlist_list = list(app.config_parser_manager.get_playlists().keys())
     upload_playlist_emit.send_emit(playlist_list)
 
 

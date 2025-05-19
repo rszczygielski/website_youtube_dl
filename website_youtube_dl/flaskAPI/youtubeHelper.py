@@ -5,6 +5,7 @@ from ..common.youtubeDL import YoutubeDL
 from ..common.easyID3Manager import EasyID3Manager
 from ..common.youtubeConfigManager import BaseConfigParser
 from ..common.myLogger import LoggerClass
+from ..common.youtubeOptions import YoutubeAudioOptions, YoutubeVideoOptions
 
 
 logger = logging.getLogger(__name__)
@@ -21,9 +22,10 @@ class YoutubeHelper():
     def get_youtube_downloader_instance(self):
         return self.youtube_downloder
 
-    def download_single_video(self, single_media_url, video_type):
+    def download_single_video(self, single_media_url: str,
+                              options_instance: YoutubeVideoOptions):
         single_media_info_result = self.youtube_downloder.download_video(
-            single_media_url, video_type)
+            single_media_url, options_instance)
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(
@@ -36,9 +38,10 @@ class YoutubeHelper():
         logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directory_path}")
         return singleMedia.file_name
 
-    def download_single_audio(self, single_media_url):
+    def download_single_audio(self, single_media_url: str,
+                              options_instance: YoutubeAudioOptions):
         single_media_info_result = self.youtube_downloder.download_audio(
-            single_media_url)
+            single_media_url, options_instance)
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(
@@ -61,9 +64,12 @@ class YoutubeHelper():
         logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directory_path}")
         return singleMedia.file_name
 
-    def download_audio_from_playlist(self, single_media_url, playlist_name, index):
+    def download_audio_from_playlist(self, single_media_url: str,
+                                     options_instance: YoutubeAudioOptions,
+                                     playlist_name: str,
+                                     index: str):
         single_media_info_result = self.youtube_downloder.download_audio(
-            single_media_url)
+            single_media_url, options_instance)
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(

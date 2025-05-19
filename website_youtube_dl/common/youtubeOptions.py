@@ -64,9 +64,9 @@ class BaseOption():
             raise ValueError(
                 f"Invalid video extension: {video_extension}. Must be one of {[e.name for e in VideoExtension]}")
 
-    def change_format(self,
-                      video_quality: VideoQuality = VideoQuality.BEST,
-                      extension: VideoExtension = VideoExtension.MP4):
+    def set_format(self,
+                   video_quality,
+                   extension):
         """Modify the format dynamically based on user input."""
         format_string = f"best[height={video_quality.value}][ext={extension.value}]+bestaudio/bestvideo+bestaudio"
         self.add_new_option(YoutubeOptiones.FORMAT,

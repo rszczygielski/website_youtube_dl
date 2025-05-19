@@ -31,7 +31,7 @@ class TestYoutubeOptions(unittest.TestCase):
         original_format = self.video_options.to_dict()[
             YoutubeOptiones.FORMAT.value]
         for format_type in self.list_of_formats:
-            self.video_options.change_format(
+            self.video_options.set_format(
                 video_quality=VideoQuality(format_type), extension=VideoExtension.MP4
             )
             video_options_dict = self.video_options.to_dict()
@@ -157,7 +157,6 @@ class TestConvertVideoExtension(unittest.TestCase):
             str(context.exception),
         )
 
-
     def test_convert_video_quality(self):
         # Test valid video quality
         result = self.video_options.convert_video_quality(self.valid_quality)
@@ -170,6 +169,7 @@ class TestConvertVideoExtension(unittest.TestCase):
             self.invalid_quality,
             str(context.exception),
         )
+
 
 if __name__ == "__main__":
     unittest.main()

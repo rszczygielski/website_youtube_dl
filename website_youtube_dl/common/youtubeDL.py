@@ -11,7 +11,8 @@ from .youtubeOptions import (YoutubeDefaultOptiones,
                              YoutubeGetPlaylistInfoOptiones,
                              YoutubeAudioOptions,
                              YoutubeVideoOptions,
-                             VideoVerificationOptiones)
+                             VideoVerificationOptiones,
+                             VideoExtension)
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from website_youtube_dl.common.youtubeAPI import (SingleMedia,
                                                   MediaFromPlaylist,
@@ -49,6 +50,8 @@ class YoutubeDL():
         """
         if ydl_opts is None:
             ydl_opts = self._ydl_opts.to_dict()
+        else:
+            ydl_opts = ydl_opts.to_dict()
         result_of_youtube = ResultOfYoutube()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
@@ -64,7 +67,8 @@ class YoutubeDL():
             self.title_template = self.title_template_default
         return result_of_youtube
 
-    def download_video(self, youtubeURL: str, type: str) -> ResultOfYoutube:
+    def download_video(self, youtubeURL: str,
+                       options: YoutubeVideoOptions) -> ResultOfYoutube:
         """Method uded to download video type from YouTube
 
         Args:
@@ -74,23 +78,21 @@ class YoutubeDL():
             dict: dict with YouTube video meta data
         """
         media_hash = self._get_media_result_hash(youtubeURL)
-        video_options = self._get_video_options(type)
-        result_of_youtube = self._download_file(media_hash, video_options)
+        result_of_youtube = self._download_file(media_hash, options)
         if result_of_youtube.is_error():
             error_msg = result_of_youtube.get_error_info()
             logger.error(f"Download video info error: {error_msg}")
             return result_of_youtube
         return result_of_youtube
 
-    def download_audio(self, youtubeURL: str):
+    def download_audio(self, youtubeURL: str, options: YoutubeAudioOptions):
         """Method uded to download audio type from Youtube
 
         Args:
             youtubeURL (str): YouTube URL
         """
         media_hash = self._get_media_result_hash(youtubeURL)
-        ydl_opts = self._get_audio_options()
-        result_of_youtube = self._download_file(media_hash, ydl_opts)
+        result_of_youtube = self._download_file(media_hash, options)
         if result_of_youtube.is_error():
             error_msg = result_of_youtube.get_error_info()
             logger.error(f"Download audio info error: {error_msg}")
@@ -276,8 +278,10 @@ class YoutubeDL():
             self.title_template + f"_{type}p" + ".%(ext)s"
         video_options_instance = YoutubeVideoOptions(out_template)
         video_quality = video_options_instance.convert_video_quality(type)
-        video_options_instance.change_format(video_quality=video_quality)
-        return video_options_instance.to_dict()
+        video_extension = VideoExtension.MP4
+        video_options_instance.set_format(video_quality=video_quality,
+                                          extension=video_extension)
+        return video_options_instance
 
     def _get_audio_options(self):
         """Method sets audio options
@@ -285,7 +289,7 @@ class YoutubeDL():
         out_template = self._savePath + \
             f"{self.title_template}.%(ext)s"
         audio_options_instance = YoutubeAudioOptions(out_template)
-        return audio_options_instance.to_dict()
+        return audio_options_instance
 
     def _get_media_result_hash(self, url):
         """Method extracts single video hash from full url

@@ -54,3 +54,4 @@ Werkzeug==3.0.3
 wsproto==1.2.0
 yt-dlp
 pytest-html
+platformdirs==4.3.8
