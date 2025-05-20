@@ -62,12 +62,16 @@ class BaseConfigParser():
 
     def _handle_default_dir(self, dirPath):  # pragma: no_cover
         if not os.path.exists(dirPath):
-            logger.info(
-                f"Default directory {dirPath} not exists, creating one")
             os.mkdir(dirPath)
+            logger.info(
+                f"Default directory {dirPath} not exists, created one")
 
     def save_config(self):  # pragma: no_cover
+        # os.chmod(self.config_file_path, 0o644)
+        os.makedirs(os.path.dirname(self.config_file_path), mode=0o755, exist_ok=True)
         with open(self.config_file_path, ConfigKeys.WRITE.value) as configfile:
+            logger.info(
+                f"Saving config file at {self.config_file_path}")
             self.config_parser.write(configfile)
 
 
