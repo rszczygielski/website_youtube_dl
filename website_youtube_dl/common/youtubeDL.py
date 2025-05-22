@@ -38,35 +38,6 @@ class YoutubeDL():
         self._ydl_single_info_opts = YoutubeGetSingleInfoOptiones()
         self._ydl_playlist_info_opts = YoutubeGetPlaylistInfoOptiones()
 
-    def _download_file(self, single_media_hash: str, ydl_opts=None):
-        """Method used to download youtube media based on URL
-
-        Args:
-            single_media_hash (str): Hash of YouTube media
-            youtubeOptions (dict): YouTube options dict form init
-
-        Returns:
-            class: meta data form youtube
-        """
-        if ydl_opts is None:
-            ydl_opts = self._ydl_opts.to_dict()
-        else:
-            ydl_opts = ydl_opts.to_dict()
-        result_of_youtube = ResultOfYoutube()
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            try:
-                meta_data = ydl.extract_info(single_media_hash)
-            except Exception as exception:
-                error_info = str(exception)
-                logger.error(f"Download media info error {error_info}")
-                result_of_youtube.set_error(error_info)
-        if not result_of_youtube.is_error():
-            single_media = self._get_media(meta_data)
-            result_of_youtube.set_data(single_media)
-        if self.title_template != self.title_template_default:
-            self.title_template = self.title_template_default
-        return result_of_youtube
-
     def download_video(self, youtubeURL: str,
                        options: YoutubeVideoOptions) -> ResultOfYoutube:
         """Method uded to download video type from YouTube
@@ -144,7 +115,7 @@ class YoutubeDL():
         single_media = self._get_media(meta_data)
         return ResultOfYoutube(single_media)
 
-    def verify_local_files(self, dirPath: str, easy_id3_manager_class: EasyID3Manager):
+    def verify_local_mp3_files(self, dirPath: str, easy_id3_manager_class: EasyID3Manager):
         """Method verifies if the local files still exists on YouTube
 
         Args:
@@ -210,6 +181,35 @@ class YoutubeDL():
                 logger.error(
                     f"Video might be deleted from YouTube error: {error_info}")
                 return False
+
+    def _download_file(self, single_media_hash: str, ydl_opts=None):
+        """Method used to download youtube media based on URL
+
+        Args:
+            single_media_hash (str): Hash of YouTube media
+            youtubeOptions (dict): YouTube options dict form init
+
+        Returns:
+            class: meta data form youtube
+        """
+        if ydl_opts is None:
+            ydl_opts = self._ydl_opts.to_dict()
+        else:
+            ydl_opts = ydl_opts.to_dict()
+        result_of_youtube = ResultOfYoutube()
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            try:
+                meta_data = ydl.extract_info(single_media_hash)
+            except Exception as exception:
+                error_info = str(exception)
+                logger.error(f"Download media info error {error_info}")
+                result_of_youtube.set_error(error_info)
+        if not result_of_youtube.is_error():
+            single_media = self._get_media(meta_data)
+            result_of_youtube.set_data(single_media)
+        if self.title_template != self.title_template_default:
+            self.title_template = self.title_template_default
+        return result_of_youtube
 
     def _get_media(self, meta_data):
         """Method sets and returns SingleMedia instance based on meta data inptu
@@ -370,7 +370,8 @@ class YoutubeDlPlaylists(YoutubeDL):
             dict: dict with YouTube audio playlist meta data
         """
         playlist_hash = self._get_playlist_hash(youtubeURL)
-        ydl_opts = self._get_audio_options()
+        audio_options = self._get_audio_options()
+        ydl_opts = audio_options.to_dict()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:
                 meta_data = ydl.extract_info(playlist_hash)
@@ -417,7 +418,8 @@ class YoutubeDlPlaylists(YoutubeDL):
         Returns:
             dict: dict with YouTube video playlist meta data
         """
-        ydl_opts = self._get_video_options(type)
+        video_options = self._get_video_options(type)
+        ydl_opts = video_options.to_dict()
         playlist_hash = self._get_playlist_hash(youtubeURL)
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:

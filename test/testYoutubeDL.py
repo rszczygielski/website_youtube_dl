@@ -8,6 +8,8 @@ import website_youtube_dl.common.youtubeDL as youtubeDL
 from website_youtube_dl.common.youtubeAPI import (SingleMedia,
                                                   MediaFromPlaylist,
                                                   PlaylistMedia)
+from website_youtube_dl.common.youtubeOptions import (YoutubeAudioOptions,
+                                                      YoutubeVideoOptions)
 from test.configParserMock import ConfigParserMock
 from test.easyID3ManagerMock import EasyID3ManagerMock
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
@@ -109,7 +111,10 @@ class TestYoutubeDL(TestCase):
 
     mediaFromPlaylistTest2 = MediaFromPlaylist(test_title2, testId2)
 
-    # pisz tak zmienne testowe MEDIA_FROM_PLAYLIST2
+    out_template = folder_path + \
+        f"{test_title1}.%(ext)s"
+    audio_options = YoutubeAudioOptions(out_template)
+    video_options = YoutubeVideoOptions(out_template)
 
     playlist_mediaTest = PlaylistMedia(test_playlist_name, [mediaFromPlaylistTest1,
                                                             mediaFromPlaylistTest2])
@@ -234,7 +239,7 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value=songMetaData1)
     def test_download_video(self, mockDownloadFile):
-        youtubeResult = self.youtube_test.download_video(self.mainURL1, "480")
+        youtubeResult = self.youtube_test.download_video(self.mainURL1, self.video_options)
         singleMedia = youtubeResult.get_data()
         mockDownloadFile.assert_called_once_with(self.testId1)
         self.check_result_single_media(singleMedia, self.singleMediaTest)
@@ -242,7 +247,7 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   side_effect=ValueError(main_media_download_error))
     def test_download_video_with_error(self, mockDownloadFile,):
-        youtubeResult = self.youtube_test.download_video(self.mainURL1, "480")
+        youtubeResult = self.youtube_test.download_video(self.mainURL1, self.video_options)
         mockDownloadFile.assert_any_call(self.testId1)
         self.assertEqual(mockDownloadFile.mock_calls[0], call(self.testId1))
         self.assertEqual(youtubeResult.is_error(), True)
@@ -252,7 +257,7 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value={"title": test_playlist_name,
                                 "entries": testEntriesList})
-    def testdownload_whole_video_playlist(self, mockExtractinfo):
+    def test_download_whole_video_playlist(self, mockExtractinfo):
         metaData = self.youtubeConfigPlaylists.download_whole_video_playlist(
             self.main_playlist_url_no_video_hash1, "480")
         mockExtractinfo.assert_called_once_with(self.main_playlist_hash)
@@ -296,7 +301,8 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
     def test_download_audio(self, mock_save):
         single_media_info_result = self.youtube_test.download_audio(
-            self.mainURL1)
+            self.mainURL1,
+            self.audio_options)
         singleMedia = single_media_info_result.get_data()
         mock_save.assert_called_once()
         self.check_result_single_media(singleMedia, self.singleMediaTest)
@@ -304,7 +310,8 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   side_effect=ValueError(main_media_download_error))
     def test_download_audio_with_error(self, mockDownloadFile):
-        youtubeResult = self.youtube_test.download_audio(self.mainURL1)
+        youtubeResult = self.youtube_test.download_audio(self.mainURL1,
+                                                         self.audio_options)
         self.assertEqual(youtubeResult.is_error(), True)
         mockDownloadFile.assert_called_once_with(self.testId1)
         self.assertEqual(youtubeResult.get_error_info(),
@@ -419,8 +426,8 @@ class TestYoutubeDL(TestCase):
     @patch("os.listdir", return_value=[test_file_1, test_file_2, test_file_3])
     @patch("os.path.isfile", side_effect=lambda path: path.endswith(".mp3"))
     @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube", side_effect=[True, False])
-    def test_verify_local_files(self, mock_if_video_exist, mock_isfile, mock_listdir):
-        not_verified_files = self.youtube_test.verify_local_files(
+    def test_verify_local_mp3_files(self, mock_if_video_exist, mock_isfile, mock_listdir):
+        not_verified_files = self.youtube_test.verify_local_mp3_files(
             self.testDir, EasyID3ManagerMock)
         mock_listdir.assert_called_once_with(self.testDir)
         self.assertEqual(mock_isfile.call_count, 3)
@@ -433,8 +440,8 @@ class TestYoutubeDL(TestCase):
     @patch("os.listdir", return_value=[test_file_1, test_file_2])
     @patch("os.path.isfile", side_effect=lambda path: path.endswith(".mp3"))
     @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube", return_value=True)
-    def test_verify_local_files_all_verified(self, mock_if_video_exist, mock_isfile, mock_listdir):
-        not_verified_files = self.youtube_test.verify_local_files(
+    def test_verify_local_mp3_files_all_verified(self, mock_if_video_exist, mock_isfile, mock_listdir):
+        not_verified_files = self.youtube_test.verify_local_mp3_files(
             self.testDir, EasyID3ManagerMock)
 
         mock_listdir.assert_called_once_with(self.testDir)
@@ -446,8 +453,8 @@ class TestYoutubeDL(TestCase):
     @patch("os.listdir", return_value=[test_file_1, test_file_2])
     @patch("os.path.isfile", side_effect=lambda path: path.endswith(".mp3"))
     @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube", return_value=False)
-    def test_verify_local_files_none_verified(self, mock_if_video_exist, mock_isfile, mock_listdir):
-        not_verified_files = self.youtube_test.verify_local_files(
+    def test_verify_local_mp3_files_none_verified(self, mock_if_video_exist, mock_isfile, mock_listdir):
+        not_verified_files = self.youtube_test.verify_local_mp3_files(
             self.testDir, EasyID3ManagerMock)
         mock_listdir.assert_called_once_with(self.testDir)
         self.assertEqual(mock_isfile.call_count, 2)

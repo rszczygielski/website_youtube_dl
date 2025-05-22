@@ -130,8 +130,6 @@ def download_tracks_from_playlist(youtube_url, options_instance):
 
 def generate_title_template_for_youtube_downloader(downloaded_files,
                                                    title):
-    # https://www.youtube.com/playlist?list=PL6uhlddQJkfiCJfEQvnqzknbxfgBiGekb
-    # test
     counter = 1
     while title in downloaded_files:
         counter += 1
