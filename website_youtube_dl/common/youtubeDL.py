@@ -38,35 +38,21 @@ class YoutubeDL():
         self._ydl_single_info_opts = YoutubeGetSingleInfoOptiones()
         self._ydl_playlist_info_opts = YoutubeGetPlaylistInfoOptiones()
 
-    def download_video(self, youtubeURL: str,
-                       options: YoutubeVideoOptions) -> ResultOfYoutube:
-        """Method uded to download video type from YouTube
+    def download_yt_media(self, youtubeURL: str,
+                          options) -> ResultOfYoutube:
+        """Method uded to download media type from YouTube
 
         Args:
             youtubeURL (str): YouTube URL
 
         Returns:
-            dict: dict with YouTube video meta data
+            dict: dict with YouTube media meta data
         """
         media_hash = self._get_media_result_hash(youtubeURL)
         result_of_youtube = self._download_file(media_hash, options)
         if result_of_youtube.is_error():
             error_msg = result_of_youtube.get_error_info()
-            logger.error(f"Download video info error: {error_msg}")
-            return result_of_youtube
-        return result_of_youtube
-
-    def download_audio(self, youtubeURL: str, options: YoutubeAudioOptions):
-        """Method uded to download audio type from Youtube
-
-        Args:
-            youtubeURL (str): YouTube URL
-        """
-        media_hash = self._get_media_result_hash(youtubeURL)
-        result_of_youtube = self._download_file(media_hash, options)
-        if result_of_youtube.is_error():
-            error_msg = result_of_youtube.get_error_info()
-            logger.error(f"Download audio info error: {error_msg}")
+            logger.error(f"Download media info error: {error_msg}")
             return result_of_youtube
         return result_of_youtube
 

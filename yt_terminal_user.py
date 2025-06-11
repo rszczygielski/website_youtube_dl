@@ -31,7 +31,7 @@ class TerminalUser(YoutubeDlPlaylists):  # pragma: no_cover
         If you want to download whole playlist press "p"
         """)
         if userResponse == "s":
-            self.download_video(url, type)
+            self.download_yt_media(url, type)
         elif userResponse == "p":
             self.download_whole_video_playlist(url, type)
         else:
@@ -45,7 +45,7 @@ class TerminalUser(YoutubeDlPlaylists):  # pragma: no_cover
         If you want to download whole playlist press "p"
         """)
         if userResponse == "s":
-            self.download_audio(url)
+            self.download_yt_media(url)
         elif userResponse == "p":
             self.download_whole_audio_playlist(url)
         else:
@@ -73,9 +73,9 @@ class TerminalUser(YoutubeDlPlaylists):  # pragma: no_cover
                 self.download_whole_video_playlist(url, type)
         else:
             if type == "mp3":
-                self.download_audio(url)
+                self.download_yt_media(url)
             else:
-                self.download_video(url, type)
+                self.download_yt_media(url, type)
 
 
 def main():  # pragma: no_cover

@@ -239,7 +239,8 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   return_value=songMetaData1)
     def test_download_video(self, mockDownloadFile):
-        youtubeResult = self.youtube_test.download_video(self.mainURL1, self.video_options)
+        youtubeResult = self.youtube_test.download_yt_media(
+            self.mainURL1, self.video_options)
         singleMedia = youtubeResult.get_data()
         mockDownloadFile.assert_called_once_with(self.testId1)
         self.check_result_single_media(singleMedia, self.singleMediaTest)
@@ -247,7 +248,8 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   side_effect=ValueError(main_media_download_error))
     def test_download_video_with_error(self, mockDownloadFile,):
-        youtubeResult = self.youtube_test.download_video(self.mainURL1, self.video_options)
+        youtubeResult = self.youtube_test.download_yt_media(
+            self.mainURL1, self.video_options)
         mockDownloadFile.assert_any_call(self.testId1)
         self.assertEqual(mockDownloadFile.mock_calls[0], call(self.testId1))
         self.assertEqual(youtubeResult.is_error(), True)
@@ -300,7 +302,7 @@ class TestYoutubeDL(TestCase):
 
     @patch.object(yt_dlp.YoutubeDL, "extract_info", return_value=songMetaData1)
     def test_download_audio(self, mock_save):
-        single_media_info_result = self.youtube_test.download_audio(
+        single_media_info_result = self.youtube_test.download_yt_media(
             self.mainURL1,
             self.audio_options)
         singleMedia = single_media_info_result.get_data()
@@ -310,8 +312,8 @@ class TestYoutubeDL(TestCase):
     @patch.object(yt_dlp.YoutubeDL, "extract_info",
                   side_effect=ValueError(main_media_download_error))
     def test_download_audio_with_error(self, mockDownloadFile):
-        youtubeResult = self.youtube_test.download_audio(self.mainURL1,
-                                                         self.audio_options)
+        youtubeResult = self.youtube_test.download_yt_media(self.mainURL1,
+                                                            self.audio_options)
         self.assertEqual(youtubeResult.is_error(), True)
         mockDownloadFile.assert_called_once_with(self.testId1)
         self.assertEqual(youtubeResult.get_error_info(),

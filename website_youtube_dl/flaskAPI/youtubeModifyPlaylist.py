@@ -27,7 +27,7 @@ def download_config_playlist(formData):
     full_file_path = download_tracks_from_playlist(youtube_url=playlist_url,
                                                    video_type=None)
     if not full_file_path:
-        return False
+        return
     session_download_data = SessionDownloadData(full_file_path)
     genereted_hash = generate_hash()
     app.session.add_elem_to_session(genereted_hash, session_download_data)
@@ -47,7 +47,7 @@ def add_plalist_config(formData):
         upload_playlist_emit.send_emit_error(
             f"Failed to add playlist {playlist_name} to config")
         app.logger.warning(f"Failed to add playlist {playlist_name} to config")
-        return False
+        return
     app.logger.debug(f"Playlist URL: {playlist_url}")
     app.logger.debug(f"Playlist name: {playlist_name}")
     playlist_list = list(app.config_parser_manager.get_playlists().keys())
@@ -65,7 +65,7 @@ def delete_plalist_config(formData):
         upload_playlist_emit.send_emit_error(
             f"Failed to delete playlist {playlist_name} from config")
         app.logger.warning(f"Failed to delete playlist {playlist_name} from config")
-        return False
+        return
     app.logger.debug(f"Playlist name: {playlist_name}")
     playlist_list = list(app.config_parser_manager.get_playlists().keys())
     upload_playlist_emit.send_emit(playlist_list)

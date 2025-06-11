@@ -2,7 +2,6 @@ import configparser
 import os
 from unittest import TestCase, main
 from unittest.mock import patch
-from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser, ConfigParserManager
 from test.configParserMock import (ConfigParserMock,
                                    ConfigParserMockWithEmptyData,
                                    TestVariables,

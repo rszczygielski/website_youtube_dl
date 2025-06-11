@@ -109,8 +109,6 @@ class BaseOption():
 
 # Default YouTube options
 class YoutubeDefaultOptiones(BaseOption):
-    FORMAT = RequestArgument(
-        YoutubeOptiones.FORMAT.value, "bestvideo+bestaudio")
     # DOWNLOAD_ARCHIVE = (
     #     YoutubeOptiones.DOWNLOAD_ARCHIVE.value, "downloaded_songs.txt")
     NO_OVERWITES = RequestArgument(YoutubeOptiones.NO_OVERWITES.value, False)
@@ -125,7 +123,6 @@ class YoutubeDefaultOptiones(BaseOption):
 
 
 class YoutubeGetSingleInfoOptiones(BaseOption):  # pragma: no_cover
-    FORMAT = RequestArgument(YoutubeOptiones.FORMAT.value, "best/best")
     ADD_META_DATA = RequestArgument(YoutubeOptiones.ADD_META_DATA.value, True)
     IGNORE_ERRORS = RequestArgument(YoutubeOptiones.IGNORE_ERRORS.value, False)
     QUIET = RequestArgument(YoutubeOptiones.QUIET.value, True)

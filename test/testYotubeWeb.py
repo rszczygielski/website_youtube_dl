@@ -9,13 +9,13 @@ from website_youtube_dl.config import TestingConfig
 from website_youtube_dl.flaskAPI import youtube
 from website_youtube_dl.flaskAPI.youtubeHelper import YoutubeHelper
 from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
-                                                    FlaskPlaylistMedia,
-                                                    FormatMP3,
-                                                    Format360p,
-                                                    Format480p,
-                                                    Format720p,
-                                                    Format1080p,
-                                                    Format2160p)
+                                                    FlaskPlaylistMedia)
+from website_youtube_dl.common.youtubeAPI import (FormatMP3,
+                                                  Format360p,
+                                                  Format480p,
+                                                  Format720p,
+                                                  Format1080p,
+                                                  Format2160p)
 from website_youtube_dl.flaskAPI.session import SessionDownloadData
 from website_youtube_dl.common.youtubeDL import YoutubeDL
 from website_youtube_dl.common.youtubeAPI import (SingleMedia,
@@ -93,7 +93,7 @@ class testYoutubeWeb(TestCase):
                        'artist': 'Eddie Vedder',
                        'webpage_url': 'https://www.youtube.com/watch?v=ABsslEoL0-c'}
 
-    single_media1 = SingleMedia(file_name=test_full_path1,
+    single_media1 = SingleMedia(file_path=test_full_path1,
                                 title=test_title1,
                                 album=test_album1,
                                 artist=test_artist1,
@@ -101,7 +101,7 @@ class testYoutubeWeb(TestCase):
                                 url=test_original_url1,
                                 extension=test_ext1)
 
-    single_media2 = SingleMedia(file_name=test_full_path2,
+    single_media2 = SingleMedia(file_path=test_full_path2,
                                 title=test_title2,
                                 album=test_album1,
                                 artist=test_artist2,

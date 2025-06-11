@@ -3,7 +3,7 @@ from ..common.youtubeAPI import (SingleMedia,
                                 PlaylistMedia,
                                 ResultOfYoutube)
 from ..common.youtubeLogKeys import YoutubeLogs
-from ..common.youtubeOptions import YoutubeAudioOptions, YoutubeVideoOptions
+from ..common.youtubeOptions import YoutubeAudioOptions
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from flask import (send_file,
                    render_template,
@@ -16,7 +16,8 @@ from .emits import (DownloadMediaFinishEmit,
 from .session import SessionDownloadData
 from .flaskMedia import (
     FlaskPlaylistMedia,
-    FlaskSingleMedia,
+    FlaskSingleMedia)
+from ..common.youtubeAPI import (
     FormatMP3,
     Format360p,
     Format480p,
@@ -43,14 +44,15 @@ def socket_download_server(formData):
         return None
     format_type = formData[MainYoutubeKeys.DOWNLOAD_TYP.value]
     app.logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {format_type}")
-    options_instance = get_youtube_download_options(format_type)
+    request_format = get_format_instance(format_type)
     if not youtube_url:
         app.logger.warning(YoutubeLogs.NO_URL.value)
         download_error_emit.send_emit_error(YoutubeLogs.NO_URL.value)
         return None
     is_playlist = MainYoutubeKeys.URL_LIST.value in youtube_url \
         and MainYoutubeKeys.URL_VIDEO.value not in youtube_url
-    full_file_path = download_correct_data(youtube_url, options_instance,
+    full_file_path = download_correct_data(youtube_url,
+                                           request_format,
                                            is_playlist)
     if not full_file_path:
         app.logger.error("No file path returned")
@@ -86,7 +88,7 @@ def index():
     return render_template('index.html')
 
 
-def download_tracks_from_playlist(youtube_url, options_instance):
+def download_tracks_from_playlist(youtube_url, req_format):
     playlist_media = send_emit_playlist_media(youtube_url)
     if not playlist_media:
         handle_error(f"Failed to get data from {youtube_url}")
@@ -102,16 +104,16 @@ def download_tracks_from_playlist(youtube_url, options_instance):
             downloaded_files, title)
         app.youtube_helper.set_title_template(
             title_template)
-        if isinstance(options_instance, YoutubeAudioOptions):
+        if isinstance(req_format, FormatMP3):
             full_path = app.youtube_helper.download_audio_from_playlist(
                 single_media_url=playlistTrack.yt_hash,
-                options_instance=options_instance,
+                req_format=req_format,
                 playlist_name=playlist_media.playlist_name,
                 index=str(index+1))
         else:
             full_path = app.youtube_helper.download_single_video(
                                               single_media_url=playlistTrack.yt_hash,
-                                              options_instance=options_instance)
+                                              req_format=req_format)
         if full_path is None:  # napisz unittesty pod to
             app.logger.error(f"{title} song not downloaded")
             playlist_track_finish.send_emit_error(index)
@@ -168,20 +170,22 @@ def send_emit_playlist_media(youtube_url):
     return playlist_media
 
 
-def download_correct_data(youtube_url, options_instance, is_playlist):
+def download_correct_data(youtube_url,
+                          req_format,
+                          is_playlist):
     app.logger.info(f"Youtube URL: {youtube_url}")
     if is_playlist:
         full_zip_path = download_tracks_from_playlist(
-            youtube_url=youtube_url, options_instance=options_instance)
+            youtube_url=youtube_url, req_format=req_format)
         return full_zip_path
     if not send_emit_single_media_info_from_youtube(youtube_url):
         return None
-    if isinstance(options_instance, YoutubeAudioOptions) and not is_playlist:
+    if isinstance(req_format, FormatMP3) and not is_playlist:
         full_file_path = app.youtube_helper.download_single_audio(single_media_url=youtube_url,
-                                                                  options_instance=options_instance)
-    elif isinstance(options_instance, YoutubeVideoOptions) and not is_playlist:
+                                                                  req_format=req_format)
+    elif isinstance(req_format, FormatMP3) and not is_playlist:
         full_file_path = app.youtube_helper.download_single_video(single_media_url=youtube_url,
-                                                                  options_instance=options_instance)
+                                                                  req_format=req_format)
     return full_file_path
 
 
@@ -199,14 +203,6 @@ def get_format_instance(format_str):
         format_str = "mp3"
     return format_classes.get(format_str)()
 
-def get_youtube_download_options(format_str):
-    format_instance = get_format_instance(format_str)
-    if isinstance(format_instance, FormatMP3):
-        options_instance = app.youtube_helper.youtube_downloder._get_audio_options()
-    else:
-        video_type = format_instance.get_format_type()
-        options_instance = app.youtube_helper.youtube_downloder._get_video_options(video_type)
-    return options_instance
 
 def handle_error(error_msg):  # pragma: no_cover
     download_media_finish_emit = DownloadMediaFinishEmit()

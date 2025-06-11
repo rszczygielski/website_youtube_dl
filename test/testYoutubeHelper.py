@@ -33,7 +33,7 @@ class TestYoutubeHelper(TestCase):
     hd_720p = "720"
     mp3 = "mp3"
 
-    single_media1 = SingleMedia(file_name=test_full_path1,
+    single_media1 = SingleMedia(file_path=test_full_path1,
                                 title=test_title1,
                                 album=test_album1,
                                 artist=test_artist1,
@@ -62,7 +62,7 @@ class TestYoutubeHelper(TestCase):
         self.flask = app.test_client()
         self.app = app
 
-    @patch.object(YoutubeDL, "download_video", return_value=result_of_youtube_single)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
     def test_download_single_media_video(self,
                                          mock_download_video):
         with self.app.app_context():
@@ -73,7 +73,7 @@ class TestYoutubeHelper(TestCase):
             self.actual_youtube_url1, self.video_options)
         self.assertEqual(self.test_full_path1, result)
 
-    @patch.object(YoutubeDL, "download_video", return_value=result_of_youtube_single_with_error)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single_with_error)
     def test_download_single_media_video_with_error(self, mock_download_video_error):
         with self.app.app_context():
             result = self.app.youtube_helper.download_single_video(
@@ -86,7 +86,7 @@ class TestYoutubeHelper(TestCase):
         self.assertEqual(no_emit_data, 0)
 
     @patch.object(EasyID3Manager, "save_meta_data")
-    @patch.object(YoutubeDL, "download_audio", return_value=result_of_youtube_single)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
     def test_download_single_media_audio(self, mock_download_audio, mock_save_meta_data):
         with self.app.app_context():
             result = self.app.youtube_helper.download_single_audio(
@@ -97,7 +97,7 @@ class TestYoutubeHelper(TestCase):
         mock_save_meta_data.assert_called_once()
         self.assertEqual(self.test_full_path1.replace("webm", "mp3"), result)
 
-    @patch.object(YoutubeDL, "download_audio", return_value=result_of_youtube_single_with_error)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single_with_error)
     def test_download_single_media_audio_with_error(self, mock_download_audio):
         with self.app.app_context():
             result = self.app.youtube_helper.download_single_audio(
@@ -111,7 +111,7 @@ class TestYoutubeHelper(TestCase):
         self.assertEqual(no_emit_data, 0)
 
     @patch.object(EasyID3Manager, "save_meta_data")
-    @patch.object(YoutubeDL, "download_audio", return_value=result_of_youtube_single)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
     def test_download_audio_from_playlist(self, mock_download_audio, mock_save_meta_data):
         with self.app.app_context():
             result = self.app.youtube_helper.download_audio_from_playlist(
@@ -122,7 +122,7 @@ class TestYoutubeHelper(TestCase):
         mock_save_meta_data.assert_called_once()
         self.assertEqual(self.test_full_path1.replace("webm", "mp3"), result)
 
-    @patch.object(YoutubeDL, "download_audio", return_value=result_of_youtube_single_with_error)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single_with_error)
     def test_download_audio_from_playlist_with_error(self, mock_download_audio):
         with self.app.app_context():
             result = self.app.youtube_helper.download_audio_from_playlist(

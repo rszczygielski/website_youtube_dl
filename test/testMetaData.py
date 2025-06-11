@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch, call, MagicMock
+from unittest.mock import patch, call
 from unittest import TestCase, main
 from website_youtube_dl.common.easyID3Manager import EasyID3Manager
 

@@ -5,7 +5,7 @@ from .config import Config
 from .flaskAPI.session import SessionClient
 from flask import Flask, session
 from .flaskAPI.youtubeHelper import YoutubeHelper
-from platformdirs import site_config_dir, user_config_dir
+from platformdirs import user_config_dir
 import logging
 import os
 
@@ -47,7 +47,6 @@ def init_logger(logger_config=None):
 
 def init_config_pareser(configParser, config_dir=None):
     if config_dir is None:
-        # config_dir = site_config_dir("youtube_dl_web")
         config_dir = user_config_dir("youtube_dl_web")
     config_file_path = os.path.join(config_dir, "config.ini")
     return configParser(config_file_path)

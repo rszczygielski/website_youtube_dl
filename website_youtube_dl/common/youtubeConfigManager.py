@@ -7,7 +7,9 @@ logger = logging.getLogger("__main__")
 
 
 class BaseConfigParser():
-    def __init__(self, config_file_path, config_parser=configparser.ConfigParser()):
+    def __init__(self, config_file_path,
+                 config_parser=configparser.ConfigParser()):
+        print("BaseConfigParser")
         self.config_file_path = config_file_path
         self.config_parser = config_parser
         if len(self.config_parser.sections()) == 0:
@@ -61,6 +63,7 @@ class BaseConfigParser():
             f"Default config file created at {self.config_file_path}")
 
     def _handle_default_dir(self, dirPath):  # pragma: no_cover
+        print(f"Default directory: {dirPath}")
         if not os.path.exists(dirPath):
             os.mkdir(dirPath)
             logger.info(
@@ -76,7 +79,9 @@ class BaseConfigParser():
 
 
 class ConfigParserManager(BaseConfigParser):
-
+    def __init__(self, config_file_path,
+                 config_parser=configparser.ConfigParser()):
+        super().__init__(config_file_path, config_parser)
 
     def add_playlist(self, playlist_name, playlist_url):
         self.config_parser.clear()

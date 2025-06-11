@@ -44,8 +44,10 @@ class ConfigManagerMock(ConfigParserManager):
     def __init__(self, config_file_path, config_parser=ConfigParserMock()):
         self.config_file_path = config_file_path
         self.config_parser = config_parser
+        super().__init__(config_file_path, config_parser)
         homePath = os.path.expanduser(TestVariables.swung_dash)
         self.musicPath = os.path.join(homePath, TestVariables.music)
+        print("ConfigManagerMock")
 
     def create_default_config_file(self):
         pass
