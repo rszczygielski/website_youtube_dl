@@ -68,7 +68,6 @@ $(document).ready(function () {
         var table = document.getElementById("downloadInfo")
         var playlistTrackFinishReceiver = new PlaylistTrackFinishReceiver(response)
         var downloadStatus = document.createElement("td")
-        console.log("TEEEEEEST")
         if (playlistTrackFinishReceiver.isError()){
             console.log("Failed download")
             var trakcIndex = playlistTrackFinishReceiver.getError()

@@ -1,12 +1,21 @@
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
 
+/* Root Variables */
+:root {
+    --clr-neon: #fff;
+    --clr-bg: #d10d10;
+    --clr-textarea: rgba(204, 198, 255, 0.547);
+    --main-font: "Oswald";
+}
 
 /* General Styles */
 body {
+    background: #111;
+    color: #fff;
+    font-family: var(--main-font, 'Oswald', Arial, sans-serif);
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
-    background: #111; /* Dark background for contrast */
-    color: white;
 }
 
 /* Centering Main Content */
@@ -14,23 +23,60 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
 
+/* Menu Styles */
+.menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 2000px;
+    margin: 0 auto;
+    border-radius: 10px;
+    background: linear-gradient(to right top, #dd055be2, #810202);
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
-/* Table for Playlist Form */
+@media (max-width: 1024px) {
+    .menu {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .menu {
+        flex-direction: column;
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .menu {
+        padding: 8px;
+    }
+}
+
+/* Playlist Form Table */
 .table-modify-playlists {
     width: 100%;
     max-width: 600px;
     border-spacing: 10px;
+    background: #181818;
+    border-radius: 8px;
+    margin-bottom: 20px;
 }
 
 .table-modify-playlists td {
     padding: 10px;
+    vertical-align: middle;
 }
 
 /* Input Fields */
@@ -42,6 +88,8 @@ body {
     border: none;
     font-size: 16px;
     text-align: center;
+    background: #222;
+    color: #fff;
 }
 
 /* Select Dropdown */
@@ -52,6 +100,9 @@ body {
     border-radius: 5px;
     font-size: 16px;
     text-align: center;
+    background: #222;
+    color: #fff;
+    border: none;
 }
 
 /* Download Info Table */
@@ -60,111 +111,102 @@ body {
     max-width: 800px;
     border-collapse: collapse;
     margin-top: 20px;
+    background: #181818;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-#downloadInfo tr {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+#downloadInfo th, #downloadInfo td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid #333;
+    font-size: 1.1rem;
+    vertical-align: middle;
 }
 
-#downloadInfo td {
-    text-align: center;
-    padding: 8px;
-    width: auto;
-    min-width: 120px;
+#downloadInfo tr:last-child td {
+    border-bottom: none;
+}
+
+#downloadInfo tr:hover {
+    background: #222;
+}
+
+.track-info-label {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #fff;
+    margin-right: 10px;
+    display: inline-block;
+}
+
+/* Button Styles */
+.normal-button, .neon-button {
+    font-size: 1.1rem;
+    font-family: var(--main-font, 'Oswald', Arial, sans-serif);
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+    border: 2px solid #ff0055;
+    background-color: #222;
+    padding: 0.4em 1.2em;
+    border-radius: 0.3em;
+    margin: 0.2em 0.5em;
+    transition: all 0.2s;
+}
+
+.neon-button {
+    color: #fff;
+    border-color: #ff0055;
+    background: linear-gradient(90deg, #ff0055 0%, #ff7b00 100%);
+    box-shadow: 0 0 8px #ff0055, 0 0 16px #ff7b00;
+}
+
+.normal-button:hover, .neon-button:hover {
+    transform: scale(1.08);
+    background: #ff0055;
+    color: #fff;
+    box-shadow: 0 0 12px #ff0055;
 }
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+    .center-container {
+        padding: 10px;
+    }
     .menu {
         padding: 15px;
     }
 }
 
 @media (max-width: 768px) {
-    .menu {
-        padding: 10px;
-        max-width: 95%;
-    }
-
-    .table-modify-playlists {
-        max-width: 100%;
-    }
-
-    .table-modify-playlists td {
-        display: block;
-        text-align: center;
+    .center-container {
         padding: 5px;
     }
-
-    #playlistSelect {
-        width: 90%;
+    .table-modify-playlists, #downloadInfo {
+        max-width: 100%;
     }
-
-    #downloadInfo tr {
+    .input-text, #playlistSelect {
+        max-width: 95%;
+    }
+    .menu {
         flex-direction: column;
+        padding: 10px;
     }
 }
 
 @media (max-width: 480px) {
+    .center-container {
+        padding: 2px;
+    }
+    .input-text, #playlistSelect {
+        width: 90%;
+    }
+    #downloadInfo th, #downloadInfo td {
+        padding: 8px 4px;
+        font-size: 1rem;
+    }
     .menu {
         padding: 8px;
     }
-
-    .input-text {
-        width: 90%;
-    }
-
-    #downloadInfo td {
-        width: 100%;
-    }
-}
-
-
-
-
-.normal-button{
-    font-size: 1.5rem;
-    font-family: var(--main-font);
-    display: block;
-    cursor: pointer;
-    text-decoration: none;
-    color: var(--clr-neon);
-    border: var(--clr-neon) 0.125em solid;
-    background-color: var(--clr-bg);
-    padding: 0.25em 1em;
-    border-radius: 0.25em;
-}
-
-.normal-button:hover{
-    transform: scale(1.3);
-    background: var(--clr-neon);
-    color: var(--clr-bg);
-    text-shadow: none;
-}
-
-
-.neon-button {
-    font-size: 30px;
-    font-family: var(--main-font);
-    display: inline-block;
-    cursor: pointer;
-    text-decoration: none;
-    color: var(--clr-neon);
-    border: var(--clr-neon) 0.125em solid;
-    background-color: var(--clr-bg);
-    padding: 0.25em 1em;
-    border-radius: 0.25em;
-    text-shadow: 0 0 0.3em;
-
-    box-shadow: inset 0 0 0.5em 0 var(--clr-neon),
-    0 0 0.5em 0 var(--clr-neon);
-}
-
-.neon-button:hover{
-    transform: scale(1.3);
-    background: var(--clr-neon);
-    color: var(--clr-bg);
-    text-shadow: none;
 }

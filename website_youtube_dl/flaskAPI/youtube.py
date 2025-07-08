@@ -183,7 +183,7 @@ def download_correct_data(youtube_url,
     if isinstance(req_format, FormatMP3) and not is_playlist:
         full_file_path = app.youtube_helper.download_single_audio(single_media_url=youtube_url,
                                                                   req_format=req_format)
-    elif isinstance(req_format, FormatMP3) and not is_playlist:
+    elif not isinstance(req_format, FormatMP3) and not is_playlist:
         full_file_path = app.youtube_helper.download_single_video(single_media_url=youtube_url,
                                                                   req_format=req_format)
     return full_file_path
