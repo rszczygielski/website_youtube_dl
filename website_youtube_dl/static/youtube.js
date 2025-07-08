@@ -2,6 +2,10 @@ $(document).ready(function () {
     console.log("ready")
     socket.on('connect', function () {
         console.log("Connected Youtube");
+        userManager = new UserManager()
+        var seessionId = userManager.getSessionId()
+        console.log("Mój session_id:", seessionId);
+        socket.emit("userSession", seessionId)
     });
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube");
