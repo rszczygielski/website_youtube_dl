@@ -1,15 +1,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
 
 :root {
-    --clr-neon: #fff;
-    --clr-bg: #d10d10;
-    --clr-textarea: rgba(204, 198, 255, 0.547);
+    --clr-neon: #e0e0e0;
+    --clr-bg: #23272f;
+    --clr-accent: #3a7afe;
+    --clr-accent-dark: #2356a8;
+    --clr-success: #4caf50;
+    --clr-error: #e53935;
+    --clr-table-header: #2d323c;
+    --clr-table-row: #262a33;
+    --clr-table-border: #3a3f4b;
+    --clr-textarea: #23272f;
     --main-font: "Oswald";
 }
 
 body {
-    background: #111;
-    color: #fff;
+    background: var(--clr-bg);
+    color: var(--clr-neon);
     font-family: var(--main-font, 'Oswald', Arial, sans-serif);
     margin: 0;
     padding: 0;
@@ -24,7 +31,7 @@ body {
     max-width: 2000px;
     margin: 0 auto;
     border-radius: 10px;
-    background: linear-gradient(to right top, #dd055be2, #810202);
+    background: linear-gradient(to right top, var(--clr-accent-dark), var(--clr-bg));
     text-align: center;
     padding: 20px;
     box-sizing: border-box;
@@ -52,7 +59,7 @@ body {
 .track-info-label {
     font-weight: bold;
     font-size: 1.1rem;
-    color: #fff;
+    color: var(--clr-neon);
     margin-right: 10px;
     display: inline-block;
 }
@@ -63,8 +70,8 @@ body {
     cursor: pointer;
     text-decoration: none;
     color: #fff;
-    border: 2px solid #ff0055;
-    background-color: #222;
+    border: 2px solid var(--clr-accent);
+    background-color: var(--clr-accent-dark);
     padding: 0.4em 1.2em;
     border-radius: 0.3em;
     margin: 0.2em 0.5em;
@@ -73,9 +80,9 @@ body {
 
 .neon-button {
     color: #fff;
-    border-color: #ff0055;
-    background: linear-gradient(90deg, #ff0055 0%, #ff7b00 100%);
-    box-shadow: 0 0 8px #ff0055, 0 0 16px #ff7b00;
+    border-color: var(--clr-accent);
+    background: linear-gradient(90deg, var(--clr-accent) 0%, var(--clr-accent-dark) 100%);
+    box-shadow: 0 0 8px var(--clr-accent), 0 0 16px var(--clr-accent-dark);
     font-size: 1rem;
     padding: 0.3em 0.8em;
     min-width: 80px;
@@ -87,9 +94,9 @@ body {
 
 .normal-button:hover, .neon-button:hover {
     transform: scale(1.08);
-    background: #ff0055;
+    background: var(--clr-accent);
     color: #fff;
-    box-shadow: 0 0 12px #ff0055;
+    box-shadow: 0 0 12px var(--clr-accent);
 }
 
 .download-info-area {
@@ -101,6 +108,19 @@ body {
     margin: 0 auto;
     margin-top: 30px;
     margin-bottom: 30px;
+    background: var(--clr-table-header);
+    border-radius: 12px;
+    box-shadow: 0 2px 16px 0 rgba(58, 122, 254, 0.08);
+    padding: 32px 0 24px 0;
+    border: 1.5px solid var(--clr-table-border);
+}
+
+.download-info-area h2 {
+    color: var(--clr-accent);
+    font-size: 2rem;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+    font-weight: 600;
 }
 
 .download-file-area, #downloadSection {
@@ -111,6 +131,28 @@ body {
     margin: 20px 0;
 }
 
+#downloadInfo {
+    width: 100%;
+    max-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--clr-table-row);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px 0 rgba(58, 122, 254, 0.04);
+    margin-bottom: 0;
+}
+
+#downloadInfo th {
+    background: var(--clr-table-header);
+    color: var(--clr-accent);
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 16px 0;
+    border-bottom: 2px solid var(--clr-table-border);
+    text-align: left;
+}
+
 #downloadInfo td {
     padding-top: 18px;
     padding-bottom: 18px;
@@ -118,6 +160,8 @@ body {
     padding-right: 16px;
     font-size: 1.1rem;
     vertical-align: middle;
+    background: var(--clr-table-row);
+    border-bottom: 1px solid var(--clr-table-border);
 }
 
 #downloadInfo tr {
@@ -134,10 +178,15 @@ body {
 }
 
 .sucess-mark {
-    font-size: 1rem;
-    line-height: 10px;
+    font-size: 1.3rem;
+    line-height: 1.2;
     display: inline-block;
-    width: px;
+    width: 32px;
     text-align: center;
     padding: 0;
+    color: var(--clr-success);
+}
+
+.sucess-mark:contains('❌') {
+    color: var(--clr-error);
 }
