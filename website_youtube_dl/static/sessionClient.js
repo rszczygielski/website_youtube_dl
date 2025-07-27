@@ -28,6 +28,6 @@ class UserManager {
 
     clearSession() {
         localStorage.removeItem(this.STORAGE_KEY);
-        this.sessionId = this.loadOrCreateSession(); // opcjonalnie od razu nowy
+        this.sessionId = this.loadOrCreateSession();
     }
 }

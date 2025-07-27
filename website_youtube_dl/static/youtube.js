@@ -3,9 +3,9 @@ $(document).ready(function () {
     socket.on('connect', function () {
         console.log("Connected Youtube");
         userManager = new UserManager()
-        var seessionId = userManager.getSessionId()
-        console.log("Mój session_id:", seessionId);
-        socket.emit("userSession", seessionId)
+        const sessionId = userManager.getSessionId()
+        console.log("Mój session_id:", sessionId);
+        socket.emit("userSession", {"sessionId": sessionId})
     });
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube");
@@ -26,7 +26,7 @@ $(document).ready(function () {
                 break;
             }
         }
-        formData = new FormData(youtubeURL.value, downloadType)
+        formData = new FormData(youtubeURL.value, downloadType, userManager.getSessionId())
         emitFormData = new EmitFormData()
         emitFormData.sendEmit(formData)
         return true
@@ -43,7 +43,6 @@ $(document).ready(function () {
         console.log(downloadMediaFinish.hash)
         downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " class='neon-button'>Download File</a>"
     })
-
 
     socket.on(PlaylistMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")

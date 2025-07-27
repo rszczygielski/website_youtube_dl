@@ -9,16 +9,17 @@ class BaseEmit(ABC):
     track_list = "trackList"
     playlist_list = "playlistList"
     error_str = "error"
+    user_session_id = "user_session_id"
 
     def __init__(self, emit_msg) -> None:
         self.emit_msg = emit_msg
 
-    def send_emit(self, data):
+    def send_emit(self, data, target_sid):
         converted_data = self.convert_data_to_message(data)
-        socketio.emit(self.emit_msg, {self.data_str: converted_data})
+        socketio.emit(self.emit_msg, {self.data_str: converted_data}, to=target_sid)
 
-    def send_emit_error(self, error_msg):
-        socketio.emit(self.emit_msg, {self.error_str: error_msg})
+    def send_emit_error(self, error_msg, target_sid):
+        socketio.emit(self.emit_msg, {self.error_str: error_msg}, to=target_sid)
 
     @abstractmethod
     def convert_data_to_message(self):  # pragma: no_cover

@@ -30,9 +30,10 @@ class DownloadMediaFinish{
 
 class FormData{
 
-    constructor(youtubeURL, downloadType){
+    constructor(youtubeURL, downloadType, sessionId){
         this.youtubeURL = youtubeURL
         this.downloadType = downloadType
+        this.sessionId = sessionId
     }
 }
 
@@ -218,7 +219,8 @@ class EmitFormData extends BaseEmit {
     convert_data_to_message(formData){
         return {
             "youtubeURL": formData.youtubeURL,
-            "downloadType": formData.downloadType
+            "downloadType": formData.downloadType,
+            "sessionId": formData.sessionId
         }
     }
 }

@@ -7,7 +7,8 @@ from ..common.youtubeOptions import YoutubeAudioOptions
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from flask import (send_file,
                    render_template,
-                   Blueprint)
+                   Blueprint,
+                   request)
 from flask import current_app as app
 from .emits import (DownloadMediaFinishEmit,
                     SingleMediaInfoEmit,
@@ -31,6 +32,7 @@ import string
 from .. import socketio
 
 youtube = Blueprint("youtube", __name__)
+user_sessions = {}
 
 
 @socketio.on("FormData")
@@ -38,6 +40,7 @@ def socket_download_server(formData):
     app.logger.debug(formData)
     youtube_url = formData[MainYoutubeKeys.YOUTUBE_URL.value]
     download_error_emit = DownloadMediaFinishEmit()
+    target_sid = get_target_sid(formData.get("sessionId"))
     if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
         app.logger.warning(YoutubeLogs.NO_FORMAT.value)
         download_error_emit.send_emit_error(YoutubeLogs.NO_FORMAT.value)
@@ -53,7 +56,8 @@ def socket_download_server(formData):
         and MainYoutubeKeys.URL_VIDEO.value not in youtube_url
     full_file_path = download_correct_data(youtube_url,
                                            request_format,
-                                           is_playlist)
+                                           is_playlist,
+                                           target_sid)
     if not full_file_path:
         app.logger.error("No file path returned")
         handle_error(f"Failed download from {youtube_url} - try again")
@@ -62,7 +66,14 @@ def socket_download_server(formData):
     genereted_hash = generate_hash()
     app.session.add_elem_to_session(genereted_hash, session_download_data)
     emit_download_finish = DownloadMediaFinishEmit()
-    emit_download_finish.send_emit(genereted_hash)
+    emit_download_finish.send_emit(genereted_hash, target_sid)
+
+
+@socketio.on("userSession")
+def handle_user_session(data):
+    session_id = data["sessionId"]
+    user_sessions[request.sid] = session_id
+    print(f"Mapping {request.sid} -> {session_id}")
 
 
 @youtube.route("/downloadFile/<name>")
@@ -141,7 +152,7 @@ def generate_title_template_for_youtube_downloader(downloaded_files,
     return "/%(title)s"
 
 
-def send_emit_single_media_info_from_youtube(single_media_url):
+def send_emit_single_media_info_from_youtube(single_media_url, target_sid):
     single_media_info_result: ResultOfYoutube = app.youtube_helper.request_single_media_info(
         single_media_url)
     if single_media_info_result.is_error():
@@ -151,7 +162,7 @@ def send_emit_single_media_info_from_youtube(single_media_url):
                                           mediaInfo.artist,
                                           mediaInfo.url)
     media_info_emit = SingleMediaInfoEmit()
-    media_info_emit.send_emit(flask_single_media)
+    media_info_emit.send_emit(flask_single_media, target_sid)
     return True
 
 
@@ -172,13 +183,14 @@ def send_emit_playlist_media(youtube_url):
 
 def download_correct_data(youtube_url,
                           req_format,
-                          is_playlist):
+                          is_playlist,
+                          target_sid):
     app.logger.info(f"Youtube URL: {youtube_url}")
     if is_playlist:
         full_zip_path = download_tracks_from_playlist(
             youtube_url=youtube_url, req_format=req_format)
         return full_zip_path
-    if not send_emit_single_media_info_from_youtube(youtube_url):
+    if not send_emit_single_media_info_from_youtube(youtube_url, target_sid):
         return None
     if isinstance(req_format, FormatMP3) and not is_playlist:
         full_file_path = app.youtube_helper.download_single_audio(single_media_url=youtube_url,
@@ -188,6 +200,12 @@ def download_correct_data(youtube_url,
                                                                   req_format=req_format)
     return full_file_path
 
+def get_target_sid(user_session_id):
+    target_sid = user_sessions.get(user_session_id)
+    if not target_sid:
+        app.logger.warning(f"No sid for user_session_id {user_session_id}")
+        return None
+    return target_sid
 
 def get_format_instance(format_str):
     format_classes = {

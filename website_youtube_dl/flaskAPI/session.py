@@ -52,5 +52,5 @@ class SessionClient():
     def get_all_session_keys(self):  # pragma: no_cover
         return self.session.keys()
 
-    # def __del__(self):
-    #     self.clear_session()
+    def __del__(self):
+        self.clear_session()
