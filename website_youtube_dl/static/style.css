@@ -123,3 +123,21 @@ body {
 #downloadInfo tr {
     height: 56px;
 }
+
+#downloadInfo td.status-cell {
+    width: 40px;
+    min-width: 36px;
+    max-width: 56px;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
+}
+
+.sucess-mark {
+    font-size: 1rem;
+    line-height: 10px;
+    display: inline-block;
+    width: px;
+    text-align: center;
+    padding: 0;
+}

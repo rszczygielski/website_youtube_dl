@@ -53,12 +53,9 @@ $(document).ready(function () {
         for (singleMedia of playlistMedia.trackList) {
             var row = table.insertRow()
             var full_row_html = `
-            <td>
-                ${singleMedia.title}
-            </td>
-            <td>
-                <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
-            </td>
+            <td>${singleMedia.title}</td>
+            <td><a class="neon-button" target="_blank" href="${singleMedia.url}">url</a></td>
+            <td class="status-cell"></td>
             `
             row.innerHTML = full_row_html
         }
@@ -67,19 +64,22 @@ $(document).ready(function () {
     socket.on(PlaylistTrackFinishReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
         var playlistTrackFinishReceiver = new PlaylistTrackFinishReceiver(response)
-        var downloadStatus = document.createElement("td")
+        var trakcIndex;
+        var markHtml;
         if (playlistTrackFinishReceiver.isError()){
             console.log("Failed download")
-            var trakcIndex = playlistTrackFinishReceiver.getError()
-            downloadStatus.innerHTML = "<div class=sucess-mark>❌</div>";
+            trakcIndex = playlistTrackFinishReceiver.getError()
+            markHtml = "<div class=sucess-mark>❌</div>";
         } else {
-            var trakcIndex = playlistTrackFinishReceiver.getData().index
-            downloadStatus.innerHTML = "<div class=sucess-mark>✔</div>"
+            trakcIndex = playlistTrackFinishReceiver.getData().index
+            markHtml = "<div class=sucess-mark>✔</div>"
         }
         var row = table.rows[trakcIndex]
-        var finishCell = row.insertCell()
-        finishCell.appendChild(downloadStatus)
-})
+        var statusCell = row.querySelector('.status-cell');
+        if (statusCell) {
+            statusCell.innerHTML = markHtml;
+        }
+    })
 
     socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
