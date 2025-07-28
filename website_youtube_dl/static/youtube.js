@@ -54,7 +54,7 @@ $(document).ready(function () {
             var row = table.insertRow()
             var full_row_html = `
             <td>${singleMedia.title}</td>
-            <td><a class="neon-button" target="_blank" href="${singleMedia.url}">url</a></td>
+            <td class="url-cell"><a class="neon-button" target="_blank" href="${singleMedia.url}">url</a></td>
             <td class="status-cell"></td>
             `
             row.innerHTML = full_row_html
@@ -97,7 +97,7 @@ $(document).ready(function () {
             ${singleMedia.artist} ${singleMedia.title}
             </label>
         </td>
-        <td>
+        <td class="url-cell">
             <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
         </td>
         `

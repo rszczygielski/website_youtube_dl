@@ -154,14 +154,26 @@ body {
 }
 
 #downloadInfo td {
-    padding-top: 18px;
-    padding-bottom: 18px;
+    height: 67px;
+    padding-top: 0;
+    padding-bottom: 0;
     padding-left: 16px;
     padding-right: 16px;
     font-size: 1.1rem;
     vertical-align: middle;
     background: var(--clr-table-row);
     border-bottom: 1px solid var(--clr-table-border);
+    white-space: nowrap;
+}
+
+
+#downloadInfo td.url-cell {
+    min-width: 1px;
+    max-width: 48px;
+    text-align: center;
+    padding-left: 2px;
+    padding-right: 2px;
+    white-space: nowrap;
 }
 
 #downloadInfo tr {
@@ -178,7 +190,7 @@ body {
 }
 
 .sucess-mark {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     line-height: 1.2;
     display: inline-block;
     width: 32px;
