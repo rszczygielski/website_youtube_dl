@@ -1,9 +1,8 @@
 from flask import current_app as app
-
 import os
 
 
-class SessionDownloadData():
+class DownloadFileInfoSession():
     file_name = None
     file_directory_path = None
 

@@ -32,9 +32,10 @@ class YoutubeHelper():
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
         directory_path = self.config_parser_manager.get_save_path()
-        logger.info(
-            f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {singleMedia.file_path}")
+
+        logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {singleMedia.file_path}")
         logger.debug(f"{YoutubeLogs.DIRECTORY_PATH.value}: {directory_path}")
+
         return singleMedia.file_path
 
     def download_single_audio(self, single_media_url: str,
