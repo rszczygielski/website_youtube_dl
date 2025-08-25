@@ -12,15 +12,17 @@ class FlaskMediaFromPlaylist():
         self.url = url
 
 class FlaskPlaylistMedia():
-    def __init__(self, plyalistName: str,
+    def __init__(self, playlistName: str,
+                 session_hash: str,
                  track_list: list[FlaskMediaFromPlaylist]) -> None:
-        self.playlist_name = plyalistName
+        self.playlist_name = playlistName
+        self.session_hash = session_hash
         self.track_list = track_list
 
     @classmethod
-    def init_from_playlist_media(cls, playlist_name, track_list):
+    def init_from_playlist_media(cls, playlist_name, session_hash, track_list):
         flask_single_media_list = []
         for track in track_list:
             flask_single_media_list.append(FlaskMediaFromPlaylist(track.title,
                                                                   track.yt_hash))
-        return cls(playlist_name, flask_single_media_list)
+        return cls(playlist_name, session_hash, flask_single_media_list)

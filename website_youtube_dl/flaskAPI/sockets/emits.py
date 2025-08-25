@@ -2,24 +2,25 @@ from abc import ABC, abstractmethod
 from ...common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from ... import socketio
 
-
 class BaseEmit(ABC):
     data_str = "data"
     playlist_name = "playlistName"
     track_list = "trackList"
     playlist_list = "playlistList"
     error_str = "error"
-    user_session_id = "user_session_id"
+    session_hash = "sessionHash"
 
     def __init__(self, emit_msg) -> None:
         self.emit_msg = emit_msg
 
     def send_emit(self, data, target_sid):
         converted_data = self.convert_data_to_message(data)
-        socketio.emit(self.emit_msg, {self.data_str: converted_data}, to=target_sid)
+        socketio.emit(self.emit_msg, {
+                      self.data_str: converted_data}, to=target_sid)
 
     def send_emit_error(self, error_msg, target_sid):
-        socketio.emit(self.emit_msg, {self.error_str: error_msg}, to=target_sid)
+        socketio.emit(self.emit_msg, {
+                      self.error_str: error_msg}, to=target_sid)
 
     @abstractmethod
     def convert_data_to_message(self):  # pragma: no_cover
@@ -57,6 +58,7 @@ class PlaylistMediaInfoEmit(BaseEmit):
 
     def convert_data_to_message(self, flask_playlist_media):
         playlist_name = flask_playlist_media.playlist_name
+        session_hash = flask_playlist_media.session_hash
         playlist_track_list = []
         for track in flask_playlist_media.track_list:
             track_info_dict = {
@@ -65,6 +67,7 @@ class PlaylistMediaInfoEmit(BaseEmit):
             }
             playlist_track_list.append(track_info_dict)
         return {self.playlist_name: playlist_name,
+                self.session_hash: session_hash,
                 self.track_list: playlist_track_list}
 
 
@@ -99,3 +102,13 @@ class PlaylistTrackFinish(BaseEmit):
 
     def send_emit_error(self, index: int):
         socketio.emit(self.emit_msg, {self.error_str: index})
+
+
+class HistoryEmit(BaseEmit):
+    def __init__(self):
+        emit_msg = "historyInfo"
+        super().__init__(emit_msg)
+
+    def convert_data_to_message(self, history_list):
+        return {self.data_str: history_list}
+

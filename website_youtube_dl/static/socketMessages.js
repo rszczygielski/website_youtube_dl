@@ -16,8 +16,9 @@ class SingleMediaFromPlaylist {
 }
 
 class PlaylistMedia {
-    constructor(playlistName, trackList){
+    constructor(playlistName, sessionHash, trackList){
         this.playlistName = playlistName;
+        this.sessionHash = sessionHash;
         this.trackList = trackList;
     }
 }
@@ -69,6 +70,12 @@ class PlaylistIndex{
     }
 }
 
+class HistoryInfo {
+    constructor(trackList) {
+        this.trackList = trackList;
+    }
+}
+
 class BaseReceiver{
     constructor (requestJson){
         this.requestJson = requestJson;
@@ -97,6 +104,23 @@ class BaseReceiver{
     }
 }
 
+class HistoryInfoEmitReceiver extends BaseReceiver {
+    static emitMsg = "historyInfo";
+
+    constructor(requestJson) {
+        super(requestJson);
+    }
+
+    convertMessageToData(data) {
+        // data to lista obiektów {title, url}
+        var singleMediaArr = [];
+        for (var track of data) {
+            singleMediaArr.push(new SingleMediaFromPlaylist(track["title"], track["url"]));
+        }
+        return new HistoryInfo(singleMediaArr);
+    }
+}
+
 class PlaylistMediaEmitReceiver extends BaseReceiver {
     static emitMsg = "playlistMediaInfo"
 
@@ -107,18 +131,16 @@ class PlaylistMediaEmitReceiver extends BaseReceiver {
     convertMessageToData(data) {
         var playlistName = data["playlistName"]
         var trackList = data["trackList"]
-        console.log("TTTTTTTTTT")
-        console.log(trackList)
+        var sessionHash = data["sessionHash"]
+
+
         var singleMediaArr = []
-        console.log(trackList)
-        console.log(typeof(trackList))
-        console.log(Array.isArray(trackList))
         for (var track of trackList) {
             console.log(track)
             singleMediaArr.push(new SingleMediaFromPlaylist(track["title"],
                                             track["url"]))
         }
-        return new PlaylistMedia(playlistName, singleMediaArr)
+        return new PlaylistMedia(playlistName, sessionHash, singleMediaArr)
     }
 }
 

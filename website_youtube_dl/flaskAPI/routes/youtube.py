@@ -10,15 +10,16 @@ from flask import (
 )
 from flask import current_app as app
 from ..sockets.emits import (
-    DownloadMediaFinishEmit, SingleMediaInfoEmit, PlaylistMediaInfoEmit, PlaylistTrackFinish
+    DownloadMediaFinishEmit, SingleMediaInfoEmit, PlaylistMediaInfoEmit, PlaylistTrackFinish, HistoryEmit
 )
-from ..sessions.session import DownloadFileInfoSession
-from ..services.flaskMedia import FlaskPlaylistMedia, FlaskSingleMedia
+from ..sessions.session import DownloadFileInfo
+from ..services.flaskMedia import FlaskPlaylistMedia, FlaskSingleMedia, FlaskMediaFromPlaylist
 from ... import socketio
 from ..sockets.socket_manager import SocketManager
 from ..utils.general_functions import (get_format_instance, generate_hash,
                                        get_files_from_dir, zip_all_files_in_list,
                                        generate_title_template_for_youtube_downloader)
+
 # --- Globals ---
 youtube = Blueprint("youtube", __name__)
 socket_manager = SocketManager()
@@ -66,7 +67,7 @@ def send_emit_single_media_info_from_youtube(single_media_url, target_sid):
     return True
 
 
-def send_emit_playlist_media(youtube_url, target_sid):
+def send_emit_playlist_media(youtube_url, target_sid, session_hash):
     app.logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
     playlist_media_info_result = app.youtube_helper.request_playlist_media_info(
         youtube_url)
@@ -75,7 +76,7 @@ def send_emit_playlist_media(youtube_url, target_sid):
     playlist_media: PlaylistMedia = playlist_media_info_result.get_data()
     playlist_name = playlist_media.playlist_name
     flask_playlist_media = FlaskPlaylistMedia.init_from_playlist_media(
-        playlist_name, playlist_media.media_from_playlist_list)
+        playlist_name, session_hash, playlist_media.media_from_playlist_list)
     socket_manager.process_emit(data=flask_playlist_media,
                                 emit_type=PlaylistMediaInfoEmit,
                                 user_browser_id=target_sid)
@@ -119,8 +120,8 @@ def process_playlist_track(playlistTrack,
     return full_path, title_template
 
 
-def download_tracks_from_playlist(youtube_url, req_format, target_sid):
-    playlist_media = send_emit_playlist_media(youtube_url, target_sid)
+def download_tracks_from_playlist(youtube_url, req_format, target_sid, genereted_hash):
+    playlist_media = send_emit_playlist_media(youtube_url, target_sid, genereted_hash)
     if not playlist_media:
         handle_error(error_msg=f"Failed to get data from {youtube_url}",
                      target_sid=target_sid)
@@ -138,6 +139,14 @@ def download_tracks_from_playlist(youtube_url, req_format, target_sid):
         if full_path:
             file_paths.append(full_path)
             downloaded_files.append(title_template)
+            # Dodaj info o pobranym utworze do historii
+            download_file_info = DownloadFileInfo(full_path, FlaskMediaFromPlaylist(
+                playlistTrack.title, playlistTrack.yt_hash))
+            socket_manager.add_msg_to_users_queue(
+                user_browser_id=target_sid,
+                hash=genereted_hash,
+                session_download_data=download_file_info
+            )
     zip_name_file = zip_all_files_in_list(
         directory_path, playlist_media.playlist_name, file_paths)
     app.logger.info(
@@ -170,12 +179,13 @@ def validate_and_prepare_download(formData):
     return youtube_url, request_format, is_playlist, target_sid
 
 
-def download_correct_data(youtube_url, req_format, is_playlist, target_sid):
+def download_correct_data(youtube_url, req_format, is_playlist, target_sid, genereted_hash):
     app.logger.info(f"Youtube URL: {youtube_url}")
     if is_playlist:
         return download_tracks_from_playlist(youtube_url=youtube_url,
                                              req_format=req_format,
-                                             target_sid=target_sid)
+                                             target_sid=target_sid,
+                                             genereted_hash=genereted_hash)
     if not send_emit_single_media_info_from_youtube(youtube_url, target_sid):
         return None
     if isinstance(req_format, FormatMP3) and not is_playlist:
@@ -193,26 +203,16 @@ def socket_download_server(formData):
     app.logger.debug(formData)
     youtube_url, request_format, is_playlist, target_sid = validate_and_prepare_download(
         formData)
-    print(socket_manager.get_all_user_sessions())
-    print(socket_manager.get_user_session_data(target_sid))
-    print(socket_manager.get_all_user_sessions())
     if not youtube_url:
         return None
+    genereted_hash = generate_hash()
     full_file_path = download_correct_data(
-        youtube_url, request_format, is_playlist, target_sid)
+        youtube_url, request_format, is_playlist, target_sid, genereted_hash)
     if not full_file_path:
         app.logger.error("No file path returned")
         handle_error(error_msg=f"Failed download from {youtube_url} - try again",
                      target_sid=target_sid)
         return None
-    print(full_file_path, "FULL PATH")
-    session_download_data = DownloadFileInfoSession(full_file_path)
-    genereted_hash = generate_hash()
-    print(genereted_hash)
-    # Dodaj do sesji przez socket_manager
-    socket_manager.add_msg_to_users_queue(
-        target_sid, genereted_hash, session_download_data)
-    # Emituj zakończenie przez socket_manager
     socket_manager.process_emit(data=genereted_hash,
                                 emit_type=DownloadMediaFinishEmit,
                                 user_browser_id=target_sid)
@@ -224,6 +224,28 @@ def handle_user_session(data):
     socket_manager.add_user_session(request.sid, session_id)
     app.logger.info(f"Mapping {request.sid} -> {session_id}")
 
+
+@socketio.on("getHistory")
+def handle_get_history(data):
+    session_id = data.get("sessionId")
+    hash = data.get("hash")
+    user_browser_id = socket_manager.get_browser_id_by_session(session_id)
+    user_data = socket_manager.get_user_session_data(user_browser_id)
+    history = []
+    download_fileinfo_list = user_data.get(hash, [])
+    for download_info in download_fileinfo_list:
+        media = download_info.media_from_playlist
+        if media:
+            history.append({
+                "title": getattr(media, "title", None),
+                "url": getattr(media, "url", None)
+            })
+    print("History:", history)
+    socket_manager.process_emit(
+        data=history,
+        emit_type=HistoryEmit,
+        user_browser_id=user_browser_id
+    )
 
 
 # --- Error Handling ---

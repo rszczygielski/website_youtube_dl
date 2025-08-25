@@ -2,8 +2,7 @@ from flask_socketio import SocketIO
 from flask_session import Session
 from .common.youtubeConfigManager import BaseConfigParser
 from .config import Config
-from .flaskAPI.sessions.session import SessionClient
-from flask import Flask, session
+from flask import Flask
 from .flaskAPI.services.youtubeHelper import YoutubeHelper
 from platformdirs import user_config_dir
 import logging
@@ -28,7 +27,6 @@ def create_app(config_class=Config, config_parser=BaseConfigParser, config_dir=N
     app.register_blueprint(youtube)
     app.register_blueprint(youtube_playlist)
     socketio.init_app(app, manage_session=False)
-    app.session = SessionClient(session)
     return app
 
 

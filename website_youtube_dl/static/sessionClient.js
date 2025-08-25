@@ -1,6 +1,7 @@
 class UserManager {
     constructor() {
         this.STORAGE_KEY = "session_id";
+        this.HASH_KEY = "last_playlist_hash";
         this.sessionId = this.loadOrCreateSession();
     }
 
@@ -24,6 +25,18 @@ class UserManager {
 
     getSessionId() {
         return this.sessionId;
+    }
+
+    setLastPlaylistHash(hash) {
+        localStorage.setItem(this.HASH_KEY, hash);
+    }
+
+    getLastPlaylistHash() {
+        return localStorage.getItem(this.HASH_KEY);
+    }
+
+    clearLastPlaylistHash() {
+        localStorage.removeItem(this.HASH_KEY);
     }
 
     clearSession() {

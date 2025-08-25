@@ -33,8 +33,14 @@ class SocketManager:
                                session_download_data):
         if user_browser_id not in self.user_session_data:
             self.user_session_data[user_browser_id] = {}
-        self.user_session_data[user_browser_id][hash] = session_download_data
-        self.hash_to_session_data[hash] = session_download_data
+        if hash not in self.user_session_data[user_browser_id]:
+            self.user_session_data[user_browser_id][hash] = []
+        self.user_session_data[user_browser_id][hash].append(
+            session_download_data)
+
+        if hash not in self.hash_to_session_data:
+            self.hash_to_session_data[hash] = []
+        self.hash_to_session_data[hash].append(session_download_data)
 
     def get_user_session_data(self, user_browser_id: str):
         return self.user_session_data.get(user_browser_id, {})

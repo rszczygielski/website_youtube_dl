@@ -2,11 +2,11 @@ from flask import Blueprint, render_template
 from flask import current_app as app
 from ... import socketio
 from ..sockets.emits import (DownloadMediaFinishEmit,
-                    UploadPlaylistToConfigEmit,
-                    GetPlaylistUrlEmit)
+                             UploadPlaylistToConfigEmit,
+                             GetPlaylistUrlEmit)
 from .youtube import download_tracks_from_playlist
 from ...common import utils
-from ..sessions.session import DownloadFileInfoSession
+from ..sessions.session import DownloadFileInfo
 
 
 youtube_playlist = Blueprint("youtube_playlist", __name__)
@@ -29,7 +29,7 @@ def download_config_playlist(formData):
                                                    video_type=None)
     if not full_file_path:
         return
-    session_download_data = DownloadFileInfoSession(full_file_path)
+    session_download_data = DownloadFileInfo(full_file_path)
     generated_hash = utils.generate_hash()
     app.session.add_elem_to_session(generated_hash, session_download_data)
     emit_download_finish = DownloadMediaFinishEmit()
