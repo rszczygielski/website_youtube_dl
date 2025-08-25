@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase, main
 from unittest.mock import patch, MagicMock
-from website_youtube_dl.flaskAPI.youtubeHelper import YoutubeHelper
+from website_youtube_dl.flaskAPI.services.youtubeHelper import YoutubeHelper
 from website_youtube_dl.common.youtubeDL import YoutubeDL
 from website_youtube_dl.common.easyID3Manager import EasyID3Manager
 from website_youtube_dl import create_app, socketio

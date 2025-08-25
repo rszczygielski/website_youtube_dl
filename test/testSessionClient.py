@@ -1,9 +1,9 @@
-from website_youtube_dl.flaskAPI.session import SessionClient
+from website_youtube_dl.flaskAPI.sessions.session import SessionClient
 from unittest import main, TestCase
 from unittest.mock import patch
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl import create_app
-from website_youtube_dl.flaskAPI.session import SessionDownloadData
+from website_youtube_dl.flaskAPI.sessions.session import DownloadFileInfoSession
 from unittest.mock import MagicMock
 import os
 
@@ -63,7 +63,7 @@ class SessionTest(TestCase):
 
     @patch.object(os.path, "isfile", return_value=True)
     def test_init_session_download_data(self, mock_is_file):
-        session_data = SessionDownloadData(self.test_path)
+        session_data = DownloadFileInfoSession(self.test_path)
         mock_is_file.assert_called_once_with(self.test_path)
         splieted_test_path = self.test_path.split("/")
         file_name = splieted_test_path[-1]

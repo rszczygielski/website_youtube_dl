@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from ..common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from .. import socketio
+from ...common.youtubeDataKeys import PlaylistInfo, MediaInfo
+from ... import socketio
 
 
 class BaseEmit(ABC):

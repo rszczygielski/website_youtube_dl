@@ -2,9 +2,9 @@ from flask_socketio import SocketIO
 from flask_session import Session
 from .common.youtubeConfigManager import BaseConfigParser
 from .config import Config
-from .flaskAPI.session import SessionClient
+from .flaskAPI.sessions.session import SessionClient
 from flask import Flask, session
-from .flaskAPI.youtubeHelper import YoutubeHelper
+from .flaskAPI.services.youtubeHelper import YoutubeHelper
 from platformdirs import user_config_dir
 import logging
 import os
@@ -22,8 +22,8 @@ def create_app(config_class=Config, config_parser=BaseConfigParser, config_dir=N
 
     Session(app)
 
-    from .flaskAPI.youtube import youtube
-    from .flaskAPI.youtubeModifyPlaylist import youtube_playlist
+    from .flaskAPI.routes.youtube import youtube
+    from .flaskAPI.routes.youtubeModifyPlaylist import youtube_playlist
 
     app.register_blueprint(youtube)
     app.register_blueprint(youtube_playlist)

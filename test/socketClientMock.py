@@ -1,4 +1,4 @@
-from website_youtube_dl.flaskAPI.session import SessionClient
+from website_youtube_dl.flaskAPI.sessions.session import SessionClient
 
 
 class SessionClientMock(SessionClient):

@@ -1,12 +1,12 @@
 from test.emitData import EmitData
-from website_youtube_dl.flaskAPI.emits import (DownloadMediaFinishEmit,
+from website_youtube_dl.flaskAPI.sockets.emits import (DownloadMediaFinishEmit,
                                                SingleMediaInfoEmit,
                                                PlaylistMediaInfoEmit,
                                                UploadPlaylistToConfigEmit,
                                                GetPlaylistUrlEmit,
                                                PlaylistTrackFinish)
 from unittest import main, TestCase
-from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
+from website_youtube_dl.flaskAPI.services.flaskMedia import (FlaskSingleMedia,
                                                     FlaskMediaFromPlaylist,
                                                     FlaskPlaylistMedia)
 from website_youtube_dl.common.youtubeDataKeys import MediaInfo

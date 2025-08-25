@@ -6,9 +6,9 @@ from website_youtube_dl.common import utils
 from unittest import TestCase, main
 from unittest.mock import patch, call
 from website_youtube_dl.config import TestingConfig
-from website_youtube_dl.flaskAPI import youtube
-from website_youtube_dl.flaskAPI.youtubeHelper import YoutubeHelper
-from website_youtube_dl.flaskAPI.flaskMedia import (FlaskSingleMedia,
+from website_youtube_dl.flaskAPI.routes import youtube
+from website_youtube_dl.flaskAPI.services.youtubeHelper import YoutubeHelper
+from website_youtube_dl.flaskAPI.services.flaskMedia import (FlaskSingleMedia,
                                                     FlaskPlaylistMedia)
 from website_youtube_dl.common.youtubeAPI import (FormatMP3,
                                                   Format360p,
@@ -16,17 +16,17 @@ from website_youtube_dl.common.youtubeAPI import (FormatMP3,
                                                   Format720p,
                                                   Format1080p,
                                                   Format2160p)
-from website_youtube_dl.flaskAPI.session import SessionDownloadData
+from website_youtube_dl.flaskAPI.sessions.session import DownloadFileInfoSession
 from website_youtube_dl.common.youtubeDL import YoutubeDL
 from website_youtube_dl.common.youtubeAPI import (SingleMedia,
                                                   PlaylistMedia,
                                                   ResultOfYoutube)
-from website_youtube_dl.flaskAPI.emits import (DownloadMediaFinishEmit,
+from website_youtube_dl.flaskAPI.sockets.emits import (DownloadMediaFinishEmit,
                                                SingleMediaInfoEmit,
                                                PlaylistMediaInfoEmit)
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from website_youtube_dl.flaskAPI import emits
-from website_youtube_dl.flaskAPI import youtubeModifyPlaylist
+from website_youtube_dl.flaskAPI.sockets import emits
+from website_youtube_dl.flaskAPI.routes import youtubeModifyPlaylist
 from test.socketClientMock import SessionClientMock
 from test.emitData import EmitData
 from unittest.mock import MagicMock
@@ -160,7 +160,7 @@ class testYoutubeWeb(TestCase):
     @patch.object(youtube, "send_file")
     @patch.object(os.path, "isfile", return_value=True)
     def test_download_file(self, is_file_mock, send_file_mock):
-        session_data = SessionDownloadData(self.test_path)
+        session_data = DownloadFileInfoSession(self.test_path)
         test_key = "test_key"
         self.app.session.add_elem_to_session(test_key, session_data)
         response = self.flask.get('/downloadFile/test_key')
@@ -171,7 +171,7 @@ class testYoutubeWeb(TestCase):
 
     def test_session_wrong_path(self):
         with self.assertRaises(FileNotFoundError) as context:
-            session_data = SessionDownloadData(self.test_path)
+            session_data = DownloadFileInfoSession(self.test_path)
             self.assertTrue(
                 self.fileNotFoundError in str(context.exception))
 
@@ -231,7 +231,7 @@ class testYoutubeWeb(TestCase):
                          YoutubeLogs.NO_URL.value)
 
     @patch.object(youtube, "generate_hash", return_value=test_generated_hash)
-    @patch.object(SessionDownloadData, "set_session_download_data")
+    @patch.object(DownloadFileInfoSession, "set_session_download_data")
     @patch.object(youtube, "download_correct_data")
     @patch.object(youtube, "get_youtube_download_options", return_value=audio_options)
     def test_socket_download_playlist_audio(self,
