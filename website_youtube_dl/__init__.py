@@ -5,6 +5,7 @@ from .config import Config
 from flask import Flask
 from .flaskAPI.services.youtubeHelper import YoutubeHelper
 from platformdirs import user_config_dir
+from .flaskAPI.sockets.socket_manager import SocketManager
 import logging
 import os
 
@@ -18,6 +19,7 @@ def create_app(config_class=Config, config_parser=BaseConfigParser, config_dir=N
     app.config_parser_manager = init_config_pareser(config_parser, config_dir)
     app.youtube_helper = YoutubeHelper(app.config_parser_manager)
     app.logger = init_logger(logger_config)
+    app.socket_manager = SocketManager()
 
     Session(app)
 

@@ -46,3 +46,5 @@ def zip_all_files_in_list(direcoryPath, playlist_name, listOfFilePaths):  # prag
         for filePath in listOfFilePaths:
             zipInstance.write(filePath, filePath.split("/")[-1])
     return f"{zip_file_full_path.split('/')[-1]}.{type_of_compres}"
+
+

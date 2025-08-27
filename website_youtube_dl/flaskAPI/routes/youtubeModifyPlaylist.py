@@ -4,7 +4,7 @@ from ... import socketio
 from ..sockets.emits import (DownloadMediaFinishEmit,
                              UploadPlaylistToConfigEmit,
                              GetPlaylistUrlEmit)
-from .youtube import download_tracks_from_playlist
+from ..handlers.youtube_download import download_tracks_from_playlist
 from ...common import utils
 from ..sessions.session import DownloadFileInfo
 
