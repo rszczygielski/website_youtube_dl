@@ -9,6 +9,7 @@ class BaseEmit(ABC):
     playlist_list = "playlistList"
     error_str = "error"
     session_hash = "sessionHash"
+    history_data = "history_data"
 
     def __init__(self, emit_msg) -> None:
         self.emit_msg = emit_msg
@@ -110,5 +111,5 @@ class HistoryEmit(BaseEmit):
         super().__init__(emit_msg)
 
     def convert_data_to_message(self, history_list):
-        return {self.data_str: history_list}
+        return {self.history_data: history_list}
 

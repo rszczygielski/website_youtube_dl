@@ -112,9 +112,9 @@ class HistoryInfoEmitReceiver extends BaseReceiver {
     }
 
     convertMessageToData(data) {
-        // data to lista obiektów {title, url}
+        var historyData = data["history_data"]
         var singleMediaArr = [];
-        for (var track of data) {
+        for (var track of historyData) {
             singleMediaArr.push(new SingleMediaFromPlaylist(track["title"], track["url"]));
         }
         return new HistoryInfo(singleMediaArr);
@@ -152,7 +152,6 @@ class SingleMediaEmitReceiver extends BaseReceiver {
     }
 
     convertMessageToData(data) {
-        console.log(data)
         return new SingleMedia(data["title"],
                            data["artist"],
                            data["webpage_url"])

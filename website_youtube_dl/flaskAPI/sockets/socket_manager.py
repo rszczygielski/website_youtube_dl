@@ -1,21 +1,30 @@
+import time
+
 class SocketManager:
 
     def __init__(self):
-        self.user_sessions = {}
+        self.user_sessions = {}  # browser_id -> session_id
+        self.session_id_to_browser = {}
         self.user_session_data = {}
         self.hash_to_session_data = {}
 
     def add_user_session(self, user_browser_id, session_id):
         self.user_sessions[user_browser_id] = session_id
+        now = time.time()
+        if session_id not in self.session_id_to_browser:
+            self.session_id_to_browser[session_id] = []
+        self.session_id_to_browser[session_id].append((user_browser_id, now))
 
     def get_user_session(self, user_browser_id):
         return self.user_sessions.get(user_browser_id)
 
     def get_browser_id_by_session(self, session_id):
-        for browser_id, sess_id in self.user_sessions.items():
-            if sess_id == session_id:
-                return browser_id
-        return None
+        browser_list = self.session_id_to_browser.get(session_id, [])
+        if not browser_list:
+            return None
+        browser_list_sorted = sorted(
+            browser_list, key=lambda x: x[1], reverse=True)
+        return browser_list_sorted[0][0]
 
     def remove_user_session(self, user_browser_id):
         if user_browser_id in self.user_sessions:
@@ -42,8 +51,8 @@ class SocketManager:
             self.hash_to_session_data[hash] = []
         self.hash_to_session_data[hash].append(session_download_data)
 
-    def get_user_session_data(self, user_browser_id: str):
-        return self.user_session_data.get(user_browser_id, {})
+    def get_session_data_by_hash(self, hash: str):
+        return self.hash_to_session_data.get(hash, {})
 
     def clear_user_session_data(self, user_browser_id: str):
         if user_browser_id in self.user_session_data:

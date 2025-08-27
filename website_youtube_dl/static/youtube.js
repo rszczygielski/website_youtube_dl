@@ -11,6 +11,7 @@ $(document).ready(function () {
         const lastHash = userManager.getLastPlaylistHash();
         console.log("Last playlist hash:", lastHash);
         if (lastHash) {
+            console.log("Sending getHistory");
             socket.emit("getHistory", {
                 sessionId: sessionId,
                 hash: lastHash
@@ -86,7 +87,6 @@ $(document).ready(function () {
         var table = document.getElementById("downloadInfo")
         var playlistTrackFinishReceiver = new PlaylistTrackFinishReceiver(response)
         var downloadStatus = document.createElement("td")
-        console.log("TEEEEEEST")
         if (playlistTrackFinishReceiver.isError()){
             console.log("Failed download")
             var trakcIndex = playlistTrackFinishReceiver.getError()
@@ -124,9 +124,8 @@ $(document).ready(function () {
     })
 
     socket.on(HistoryInfoEmitReceiver.emitMsg, function (response) {
+        console.log("Getting history info");
         var table = document.getElementById("downloadInfo");
-        // Wyczyść tabelę
-        table.innerHTML = "";
         console.log("HISTORY RESPONSE:", response);
         var historyInfoEmitReceiver = new HistoryInfoEmitReceiver(response);
         if (historyInfoEmitReceiver.isError()) {

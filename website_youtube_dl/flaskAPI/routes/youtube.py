@@ -221,8 +221,9 @@ def socket_download_server(formData):
 @socketio.on("userSession")
 def handle_user_session(data):
     session_id = data["sessionId"]
-    socket_manager.add_user_session(request.sid, session_id)
-    app.logger.info(f"Mapping {request.sid} -> {session_id}")
+    request_sid = request.sid
+    socket_manager.add_user_session(request_sid, session_id)
+    app.logger.info(f"Mapping {request_sid} -> {session_id}")
 
 
 @socketio.on("getHistory")
@@ -230,17 +231,18 @@ def handle_get_history(data):
     session_id = data.get("sessionId")
     hash = data.get("hash")
     user_browser_id = socket_manager.get_browser_id_by_session(session_id)
-    user_data = socket_manager.get_user_session_data(user_browser_id)
+    user_data = socket_manager.get_session_data_by_hash(hash)
+    app.logger.info(session_id, "<-- session_id")
+    app.logger.info(user_browser_id, "<-- user_browser_id")
+    app.logger.info(user_data, "<-- user_data")
     history = []
-    download_fileinfo_list = user_data.get(hash, [])
-    for download_info in download_fileinfo_list:
+    for download_info in user_data:
         media = download_info.media_from_playlist
         if media:
             history.append({
                 "title": getattr(media, "title", None),
                 "url": getattr(media, "url", None)
             })
-    print("History:", history)
     socket_manager.process_emit(
         data=history,
         emit_type=HistoryEmit,
