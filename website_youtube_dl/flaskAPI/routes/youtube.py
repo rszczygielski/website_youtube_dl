@@ -16,7 +16,7 @@ from ..sessions.session import DownloadFileInfo
 from ..services.flaskMedia import FlaskPlaylistMedia, FlaskSingleMedia, FlaskMediaFromPlaylist
 from ... import socketio
 from ..sockets.socket_manager import SocketManager
-from ..utils.general_functions import (get_format_instance, generate_hash,
+from ..utils.youtube_utils import (get_format_instance, generate_hash,
                                        get_files_from_dir, zip_all_files_in_list,
                                        generate_title_template_for_youtube_downloader)
 
@@ -121,7 +121,8 @@ def process_playlist_track(playlistTrack,
 
 
 def download_tracks_from_playlist(youtube_url, req_format, target_sid, genereted_hash):
-    playlist_media = send_emit_playlist_media(youtube_url, target_sid, genereted_hash)
+    playlist_media = send_emit_playlist_media(
+        youtube_url, target_sid, genereted_hash)
     if not playlist_media:
         handle_error(error_msg=f"Failed to get data from {youtube_url}",
                      target_sid=target_sid)
@@ -156,58 +157,84 @@ def download_tracks_from_playlist(youtube_url, req_format, target_sid, genereted
     return full_zip_path
 
 
-def validate_and_prepare_download(formData):
-    youtube_url = formData[MainYoutubeKeys.YOUTUBE_URL.value]
-    session_id = formData.get("sessionId")
-    target_sid = socket_manager.get_browser_id_by_session(session_id)
-    if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
-        app.logger.warning(YoutubeLogs.NO_FORMAT.value)
-        socket_manager.process_emit(data=YoutubeLogs.NO_FORMAT.value,
-                                    emit_type=DownloadMediaFinishEmit,
-                                    user_browser_id=target_sid)
-        return None, None, None, None
-    format_type = formData[MainYoutubeKeys.DOWNLOAD_TYP.value]
-    app.logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {format_type}")
-    request_format = get_format_instance(format_type)
+# --- Walidatory i ekstraktory ---
+def extract_youtube_url(formData):
+    youtube_url = formData.get(MainYoutubeKeys.YOUTUBE_URL.value)
     if not youtube_url:
+        session_id = formData.get("sessionId")
+        target_sid = socket_manager.get_browser_id_by_session(session_id)
         app.logger.warning(YoutubeLogs.NO_URL.value)
         socket_manager.process_emit(data=YoutubeLogs.NO_URL.value,
                                     emit_type=DownloadMediaFinishEmit,
                                     user_browser_id=target_sid)
-        return None, None, None, None
-    is_playlist = MainYoutubeKeys.URL_LIST.value in youtube_url and MainYoutubeKeys.URL_VIDEO.value not in youtube_url
-    return youtube_url, request_format, is_playlist, target_sid
+        return None
+    return youtube_url
 
 
-def download_correct_data(youtube_url, req_format, is_playlist, target_sid, genereted_hash):
-    app.logger.info(f"Youtube URL: {youtube_url}")
-    if is_playlist:
-        return download_tracks_from_playlist(youtube_url=youtube_url,
-                                             req_format=req_format,
-                                             target_sid=target_sid,
-                                             genereted_hash=genereted_hash)
+def extract_request_format(formData):
+    if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
+        session_id = formData.get("sessionId")
+        target_sid = socket_manager.get_browser_id_by_session(session_id)
+        app.logger.warning(YoutubeLogs.NO_FORMAT.value)
+        socket_manager.process_emit(data=YoutubeLogs.NO_FORMAT.value,
+                                    emit_type=DownloadMediaFinishEmit,
+                                    user_browser_id=target_sid)
+        return None
+    format_type = formData[MainYoutubeKeys.DOWNLOAD_TYP.value]
+    app.logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {format_type}")
+    request_format = get_format_instance(format_type)
+    return request_format
+
+
+def extract_is_playlist(youtube_url):
+    if not youtube_url:
+        return None
+    return MainYoutubeKeys.URL_LIST.value in youtube_url and MainYoutubeKeys.URL_VIDEO.value not in youtube_url
+
+
+def extract_target_sid(formData):
+    session_id = formData.get("sessionId")
+    target_sid = socket_manager.get_browser_id_by_session(session_id)
+    return target_sid
+
+
+def download_playlist_data(youtube_url, req_format, target_sid, genereted_hash):
+    app.logger.info(f"Youtube URL: {youtube_url} (playlist)")
+    return download_tracks_from_playlist(youtube_url=youtube_url,
+                                         req_format=req_format,
+                                         target_sid=target_sid,
+                                         genereted_hash=genereted_hash)
+
+
+def download_single_track_data(youtube_url, req_format, target_sid):
+    app.logger.info(f"Youtube URL: {youtube_url} (single track)")
     if not send_emit_single_media_info_from_youtube(youtube_url, target_sid):
         return None
-    if isinstance(req_format, FormatMP3) and not is_playlist:
+    if isinstance(req_format, FormatMP3):
         return app.youtube_helper.download_single_audio(single_media_url=youtube_url,
                                                         req_format=req_format)
-    elif not isinstance(req_format, FormatMP3) and not is_playlist:
+    else:
         return app.youtube_helper.download_single_video(single_media_url=youtube_url,
                                                         req_format=req_format)
-    return None
 
 
 # --- SocketIO Handlers ---
 @socketio.on("FormData")
 def socket_download_server(formData):
     app.logger.debug(formData)
-    youtube_url, request_format, is_playlist, target_sid = validate_and_prepare_download(
-        formData)
-    if not youtube_url:
+    youtube_url = extract_youtube_url(formData)
+    request_format = extract_request_format(formData)
+    if not youtube_url or not request_format:
         return None
+    is_playlist = extract_is_playlist(youtube_url)
+    target_sid = extract_target_sid(formData)
     genereted_hash = generate_hash()
-    full_file_path = download_correct_data(
-        youtube_url, request_format, is_playlist, target_sid, genereted_hash)
+    if is_playlist:
+        full_file_path = download_playlist_data(
+            youtube_url, request_format, target_sid, genereted_hash)
+    else:
+        full_file_path = download_single_track_data(
+            youtube_url, request_format, target_sid)
     if not full_file_path:
         app.logger.error("No file path returned")
         handle_error(error_msg=f"Failed download from {youtube_url} - try again",
