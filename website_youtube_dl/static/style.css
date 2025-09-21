@@ -168,8 +168,7 @@ body {
 
 
 #downloadInfo td.url-cell {
-    min-width: 1px;
-    max-width: 48px;
+    width: 35px;
     text-align: center;
     padding-left: 2px;
     padding-right: 2px;
@@ -181,7 +180,7 @@ body {
 }
 
 #downloadInfo td.status-cell {
-    width: 40px;
+    width: 60px;
     min-width: 36px;
     max-width: 56px;
     text-align: center;
