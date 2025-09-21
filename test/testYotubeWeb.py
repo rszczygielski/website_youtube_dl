@@ -16,7 +16,8 @@ from website_youtube_dl.common.youtubeAPI import (FormatMP3,
                                                   Format720p,
                                                   Format1080p,
                                                   Format2160p)
-from website_youtube_dl.flaskAPI.sessions.session import DownloadFileInfo
+from website_youtube_dl.flaskAPI.sockets.session_data import DownloadFileInfo
+from website_youtube_dl.flaskAPI.sockets.socket_manager import SocketManager
 from website_youtube_dl.common.youtubeDL import YoutubeDL
 from website_youtube_dl.common.youtubeAPI import (SingleMedia,
                                                   PlaylistMedia,
@@ -27,7 +28,6 @@ from website_youtube_dl.flaskAPI.sockets.emits import (DownloadMediaFinishEmit,
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from website_youtube_dl.flaskAPI.sockets import emits
 from website_youtube_dl.flaskAPI.routes import youtubeModifyPlaylist
-from test.socketClientMock import SessionClientMock
 from test.emitData import EmitData
 from unittest.mock import MagicMock
 from website_youtube_dl.common.youtubeOptions import (YoutubeAudioOptions,
@@ -142,7 +142,7 @@ class testYoutubeWeb(TestCase):
         self.socket_io_test_client = socketio.test_client(app)
         self.flask = app.test_client()
         self.app = app
-        self.app.session = SessionClientMock(session_dict)
+        self.app.session = SocketManager(session_dict)
 
     def create_flask_single_media(self, data):
         title = data["title"]

@@ -13,7 +13,6 @@ class FlaskMediaFromPlaylist():
 
 class FlaskPlaylistMedia():
     def __init__(self, playlistName: str,
-                 session_hash: str,
                  track_list: list[FlaskMediaFromPlaylist]) -> None:
         self.playlist_name = playlistName
         self.track_list = track_list
