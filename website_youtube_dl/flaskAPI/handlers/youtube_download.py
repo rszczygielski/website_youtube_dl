@@ -3,8 +3,6 @@ from flask import current_app as app
 from ...common.youtubeAPI import FormatMP3
 from ...common.youtubeLogKeys import YoutubeLogs
 from ..sockets.socket_manager import SocketManager
-from ..sessions.session import DownloadFileInfo
-from ..services.flaskMedia import FlaskMediaFromPlaylist
 from ..sockets.emits import PlaylistTrackFinish
 from ..utils.general_funcions import get_files_from_dir, zip_all_files_in_list, generate_title_template_for_youtube_downloader
 from ..handlers.youtube_emit import send_emit_playlist_media, handle_error, send_emit_single_media_info_from_youtube
@@ -14,7 +12,7 @@ socket_manager = SocketManager()
 
 def process_playlist_track(playlistTrack,
                            req_format,
-                           target_sid,
+                           user_browser_id,
                            playlist_media,
                            index,
                            downloaded_files):
@@ -34,25 +32,23 @@ def process_playlist_track(playlistTrack,
             req_format=req_format)
     if full_path is None:
         app.logger.error(f"{title} song not downloaded")
-        user_browser_id = target_sid
         app.socket_manager.process_emit(data=index,
                                         emit_type=PlaylistTrackFinish,
                                         user_browser_id=user_browser_id)
         return None, title_template
 
-    user_browser_id = target_sid
     app.socket_manager.process_emit(data=index,
                                     emit_type=PlaylistTrackFinish,
                                     user_browser_id=user_browser_id)
     return full_path, title_template
 
 
-def download_tracks_from_playlist(youtube_url, req_format, target_sid, genereted_hash):
+def download_tracks_from_playlist(youtube_url, req_format, user_browser_id):
     playlist_media = send_emit_playlist_media(
-        youtube_url, target_sid, genereted_hash)
+        youtube_url, user_browser_id)
     if not playlist_media:
         handle_error(error_msg=f"Failed to get data from {youtube_url}",
-                     target_sid=target_sid)
+                     user_browser_id=user_browser_id)
         return None
     file_paths = []
     directory_path = app.config_parser_manager.get_save_path()
@@ -60,21 +56,13 @@ def download_tracks_from_playlist(youtube_url, req_format, target_sid, genereted
     for index, playlistTrack in enumerate(playlist_media.media_from_playlist_list):
         full_path, title_template = process_playlist_track(playlistTrack,
                                                            req_format,
-                                                           target_sid,
+                                                           user_browser_id,
                                                            playlist_media,
                                                            index,
                                                            downloaded_files)
         if full_path:
             file_paths.append(full_path)
             downloaded_files.append(title_template)
-            # Dodaj info o pobranym utworze do historii
-            download_file_info = DownloadFileInfo(full_path, FlaskMediaFromPlaylist(
-                playlistTrack.title, playlistTrack.yt_hash))
-            app.socket_manager.add_msg_to_users_queue(
-                user_browser_id=target_sid,
-                hash=genereted_hash,
-                session_download_data=download_file_info
-            )
     zip_name_file = zip_all_files_in_list(
         directory_path, playlist_media.playlist_name, file_paths)
     app.logger.info(
@@ -84,17 +72,16 @@ def download_tracks_from_playlist(youtube_url, req_format, target_sid, genereted
     return full_zip_path
 
 
-def download_playlist_data(youtube_url, req_format, target_sid, genereted_hash):
+def download_playlist_data(youtube_url, req_format, user_browser_id):
     app.logger.info(f"Youtube URL: {youtube_url} (playlist)")
     return download_tracks_from_playlist(youtube_url=youtube_url,
                                          req_format=req_format,
-                                         target_sid=target_sid,
-                                         genereted_hash=genereted_hash)
+                                         user_browser_id=user_browser_id)
 
 
-def download_single_track_data(youtube_url, req_format, target_sid):
+def download_single_track_data(youtube_url, req_format, user_browser_id):
     app.logger.info(f"Youtube URL: {youtube_url} (single track)")
-    if not send_emit_single_media_info_from_youtube(youtube_url, target_sid):
+    if not send_emit_single_media_info_from_youtube(youtube_url, user_browser_id):
         return None
     if isinstance(req_format, FormatMP3):
         return app.youtube_helper.download_single_audio(single_media_url=youtube_url,

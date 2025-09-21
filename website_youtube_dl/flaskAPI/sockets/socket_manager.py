@@ -1,80 +1,79 @@
+import threading
 import time
+import time
+from flask import current_app as app
+
+# user_browser_id - lives longer so it should be the key
+
 
 class SocketManager:
+    SESSION_TIMEOUT = 1800
 
     def __init__(self):
-        self.user_sessions = {}  # browser_id -> session_id
-        self.session_id_to_browser = {}
+        self.browser_sessions = {}
         self.user_session_data = {}
-        self.hash_to_session_data = {}
+        self.session_data_by_hash = {}
+        self._start_cleanup_thread()
+
+    def _start_cleanup_thread(self):
+        def cleanup_loop():
+            while True:
+                now = time.time()
+                to_remove = []
+                for user_browser_id, (session_id, last_ts) in list(self.browser_sessions.items()):
+                    if now - last_ts > self.SESSION_TIMEOUT:
+                        to_remove.append(user_browser_id)
+                for user_browser_id in to_remove:
+                    self.browser_sessions.pop(user_browser_id, None)
+                    self.user_session_data.pop(user_browser_id, None)
+                time.sleep(60)
+        t = threading.Thread(target=cleanup_loop, daemon=True)
+        t.start()
+
+    def __init__(self):
+        self.browser_sessions = {}
+        self.user_session_data = {}
+        self.session_data_by_hash = {}
 
     def add_user_session(self, user_browser_id, session_id):
-        self.user_sessions[user_browser_id] = session_id
         now = time.time()
-        if session_id not in self.session_id_to_browser:
-            self.session_id_to_browser[session_id] = []
-        self.session_id_to_browser[session_id].append((user_browser_id, now))
+        if user_browser_id in self.browser_sessions:
+            app.logger.debug(
+                f"Updating session for user_browser_id: {user_browser_id}")
+        self.browser_sessions[user_browser_id] = (session_id, now)
 
-    def get_user_session(self, user_browser_id):
-        return self.user_sessions.get(user_browser_id)
-
-    def get_browser_id_by_session(self, session_id):
-        browser_list = self.session_id_to_browser.get(session_id, [])
-        if not browser_list:
-            return None
-        browser_list_sorted = sorted(
-            browser_list, key=lambda x: x[1], reverse=True)
-        return browser_list_sorted[0][0]
-
-    def remove_user_session(self, user_browser_id):
-        if user_browser_id in self.user_sessions:
-            del self.user_sessions[user_browser_id]
-
-    def has_user_session(self, user_browser_id: str) -> bool:
-        return user_browser_id in self.user_sessions
-
-    def get_all_user_sessions(self):
-        return list(self.user_sessions.keys())
-
-    def add_msg_to_users_queue(self,
-                               user_browser_id: str,
-                               hash: str,
-                               session_download_data):
+    def add_msg_to_users_queue(self, user_browser_id, emit_type, data):
         if user_browser_id not in self.user_session_data:
-            self.user_session_data[user_browser_id] = {}
-        if hash not in self.user_session_data[user_browser_id]:
-            self.user_session_data[user_browser_id][hash] = []
-        self.user_session_data[user_browser_id][hash].append(
-            session_download_data)
-
-        if hash not in self.hash_to_session_data:
-            self.hash_to_session_data[hash] = []
-        self.hash_to_session_data[hash].append(session_download_data)
-
-    def get_session_data_by_hash(self, hash: str):
-        return self.hash_to_session_data.get(hash, {})
-
-    def clear_user_session_data(self, user_browser_id: str):
-        if user_browser_id in self.user_session_data:
-            self.user_session_data.pop(user_browser_id, None)
-
-    def clear_user_msg_queue(self, user_browser_id: str):
-        if user_browser_id in self.user_session_data:
             self.user_session_data[user_browser_id] = []
+        self.user_session_data[user_browser_id].append((emit_type, data))
+        # update activity timestamp
+        if user_browser_id in self.browser_sessions:
+            session_id, _ = self.browser_sessions[user_browser_id]
+            self.browser_sessions[user_browser_id] = (session_id, time.time())
 
-    def clear_all_sessions(self):
-        self.user_sessions.clear()
-        self.user_session_data.clear()
+    def get_user_messages(self, user_browser_id):
+        return self.user_session_data.get(user_browser_id, [])
 
-    def get_session_data_by_hash(self, hash: str):
-        return self.hash_to_session_data.get(hash)
+    def add_message_to_session_hash(self, genereted_hash, download_file_info):
+        self.session_data_by_hash[genereted_hash] = download_file_info
 
-    def remove_session_data_by_hash(self, hash: str):
-        self.hash_to_session_data.pop(hash, None)
+    def get_session_data_by_hash(self, genereted_hash):
+        return self.session_data_by_hash.get(genereted_hash, None)
+
+    def get_user_browser_id_by_session(self, session_id):
+        for user_browser_id, sessions in self.browser_sessions.items():
+            if sessions[0] == session_id:
+                return user_browser_id
+        return None
+
+    def get_session_id_by_user_browser_id(self, user_browser_id):
+        return self.browser_sessions.get(user_browser_id, (None,))[0]
 
     def process_emit(self,
                      data,
                      emit_type,
                      user_browser_id: str):
         process_emit_type = emit_type()
-        process_emit_type.send_emit(data, user_browser_id)
+        self.add_msg_to_users_queue(user_browser_id, emit_type, data)
+        session_id = self.get_session_id_by_user_browser_id(user_browser_id)
+        process_emit_type.send_emit(data, session_id)

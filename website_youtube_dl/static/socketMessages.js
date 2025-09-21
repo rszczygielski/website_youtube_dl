@@ -70,12 +70,6 @@ class PlaylistIndex{
     }
 }
 
-class HistoryInfo {
-    constructor(trackList) {
-        this.trackList = trackList;
-    }
-}
-
 class BaseReceiver{
     constructor (requestJson){
         this.requestJson = requestJson;
@@ -101,23 +95,6 @@ class BaseReceiver{
         if ("data" in this.requestJson){
             return this.convertMessageToData(this.requestJson["data"])
         }
-    }
-}
-
-class HistoryInfoEmitReceiver extends BaseReceiver {
-    static emitMsg = "historyInfo";
-
-    constructor(requestJson) {
-        super(requestJson);
-    }
-
-    convertMessageToData(data) {
-        var historyData = data["history_data"]
-        var singleMediaArr = [];
-        for (var track of historyData) {
-            singleMediaArr.push(new SingleMediaFromPlaylist(track["title"], track["url"]));
-        }
-        return new HistoryInfo(singleMediaArr);
     }
 }
 

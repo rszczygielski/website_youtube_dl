@@ -6,7 +6,7 @@ from ..sockets.emits import (DownloadMediaFinishEmit,
                              GetPlaylistUrlEmit)
 from ..handlers.youtube_download import download_tracks_from_playlist
 from ...common import utils
-from ..sessions.session import DownloadFileInfo
+from ..sockets.session_data import DownloadFileInfo
 
 
 youtube_playlist = Blueprint("youtube_playlist", __name__)

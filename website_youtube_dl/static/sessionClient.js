@@ -2,10 +2,10 @@ class UserManager {
     constructor() {
         this.STORAGE_KEY = "session_id";
         this.HASH_KEY = "last_playlist_hash";
-        this.sessionId = this.loadOrCreateSession();
+        this.userBrowserId = this.loadOrCreateSession();
     }
 
-    generateSessionId() {
+    generateUserBrowserId() {
         return (
             Math.random().toString(36).substring(2, 15) +
             Math.random().toString(36).substring(2, 15)
@@ -17,14 +17,14 @@ class UserManager {
         if (existingId) {
             return existingId;
         } else {
-            const newId = this.generateSessionId();
+            const newId = this.generateUserBrowserId();
             localStorage.setItem(this.STORAGE_KEY, newId);
             return newId;
         }
     }
 
-    getSessionId() {
-        return this.sessionId;
+    getUserBrowserId() {
+        return this.userBrowserId;
     }
 
     setLastPlaylistHash(hash) {
@@ -41,6 +41,6 @@ class UserManager {
 
     clearSession() {
         localStorage.removeItem(this.STORAGE_KEY);
-        this.sessionId = this.loadOrCreateSession();
+        this.userBrowserId = this.loadOrCreateSession();
     }
 }

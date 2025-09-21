@@ -6,16 +6,17 @@ from flask import (
 )
 from flask import current_app as app
 from ..sockets.emits import (
-    DownloadMediaFinishEmit, HistoryEmit
+    DownloadMediaFinishEmit
 )
 from ..utils.general_funcions import  generate_hash
 from ..handlers.youtube_download import (
     download_playlist_data, download_single_track_data)
 from ..handlers.youtube_utils import (
     extract_youtube_url, extract_request_format,
-    extract_is_playlist, extract_target_sid
+    extract_is_playlist
 )
 from ..handlers.youtube_emit import handle_error
+from ..sockets.session_data import DownloadFileInfo
 
 # --- Globals ---
 youtube = Blueprint("youtube", __name__)
@@ -54,58 +55,57 @@ def index():
 @socketio.on("FormData")
 def socket_download_server(formData):
     app.logger.debug(formData)
-    youtube_url = extract_youtube_url(formData)
-    request_format = extract_request_format(formData)
+    user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
+    app.logger.debug(f"{user_browser_id} <-- user_browser_id {request.sid} <-- request.sid")
+    youtube_url = extract_youtube_url(formData, user_browser_id)
+    request_format = extract_request_format(formData, user_browser_id)
+
     if not youtube_url or not request_format:
         return None
     is_playlist = extract_is_playlist(youtube_url)
-    target_sid = extract_target_sid(formData)
-    genereted_hash = generate_hash()
     if is_playlist:
         full_file_path = download_playlist_data(
-            youtube_url, request_format, target_sid, genereted_hash)
+            youtube_url, request_format, user_browser_id)
     else:
         full_file_path = download_single_track_data(
-            youtube_url, request_format, target_sid)
+            youtube_url, request_format, user_browser_id)
     if not full_file_path:
         app.logger.error("No file path returned")
-        handle_error(error_msg=f"Failed download from {youtube_url} - try again",
-                     target_sid=target_sid)
+        handle_error(error_msg=f"Failed download from {youtube_url} - try again")
         return None
+    genereted_hash = generate_hash()
+    # zapisz genereted_hash do sesji z filepath w klasie DownloadFileInfo
+    app.socket_manager.add_message_to_session_hash(
+        genereted_hash,
+        DownloadFileInfo(
+            full_file_path, is_playlist
+        )
+    )
     app.socket_manager.process_emit(data=genereted_hash,
                                     emit_type=DownloadMediaFinishEmit,
-                                    user_browser_id=target_sid)
+                                    user_browser_id=user_browser_id)
 
 
 @socketio.on("userSession")
 def handle_user_session(data):
-    session_id = data["sessionId"]
+    app.logger.debug(data)
+    user_browser_id = data["userBrowserId"]
     request_sid = request.sid
-    app.socket_manager.add_user_session(request_sid, session_id)
-    app.logger.info(f"Mapping {request_sid} -> {session_id}")
+    app.socket_manager.add_user_session(user_browser_id, request_sid)
+    app.logger.info(f"Mapping {request_sid} -> {user_browser_id}")
 
 
 @socketio.on("getHistory")
 def handle_get_history(data):
-    session_id = data.get("sessionId")
-    hash = data.get("hash")
-    user_browser_id = app.socket_manager.get_browser_id_by_session(session_id)
-    user_data = app.socket_manager.get_session_data_by_hash(hash)
-    app.logger.info(session_id, "<-- session_id")
-    app.logger.info(user_browser_id, "<-- user_browser_id")
-    app.logger.info(user_data, "<-- user_data")
-    history = []
-    for download_info in user_data:
-        media = download_info.media_from_playlist
-        if media:
-            history.append({
-                "title": getattr(media, "title", None),
-                "url": getattr(media, "url", None)
-            })
-    app.socket_manager.process_emit(
-        data=history,
-        emit_type=HistoryEmit,
-        user_browser_id=user_browser_id
-    )
+    app.logger.debug(data)
+    user_browser_id = data.get("userBrowserId")
+    user_data = app.socket_manager.get_user_messages(user_browser_id)
+    app.logger.debug(f"{user_browser_id} <-- user_browser_id")
+    app.logger.debug(f"{user_data} <-- user_data")
+
+    for emit_type, data in user_data:
+        emit = emit_type()
+        session_id = app.socket_manager.get_session_id_by_user_browser_id(user_browser_id)
+        emit.send_emit(data, session_id)
 
 

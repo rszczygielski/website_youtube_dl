@@ -14,14 +14,14 @@ class BaseEmit(ABC):
     def __init__(self, emit_msg) -> None:
         self.emit_msg = emit_msg
 
-    def send_emit(self, data, target_sid):
+    def send_emit(self, data, session_id):
         converted_data = self.convert_data_to_message(data)
         socketio.emit(self.emit_msg, {
-                      self.data_str: converted_data}, to=target_sid)
+                      self.data_str: converted_data}, to=session_id)
 
-    def send_emit_error(self, error_msg, target_sid):
+    def send_emit_error(self, error_msg, session_id):
         socketio.emit(self.emit_msg, {
-                      self.error_str: error_msg}, to=target_sid)
+                      self.error_str: error_msg}, to=session_id)
 
     @abstractmethod
     def convert_data_to_message(self):  # pragma: no_cover
@@ -103,13 +103,3 @@ class PlaylistTrackFinish(BaseEmit):
 
     def send_emit_error(self, index: int):
         socketio.emit(self.emit_msg, {self.error_str: index})
-
-
-class HistoryEmit(BaseEmit):
-    def __init__(self):
-        emit_msg = "historyInfo"
-        super().__init__(emit_msg)
-
-    def convert_data_to_message(self, history_list):
-        return {self.history_data: history_list}
-

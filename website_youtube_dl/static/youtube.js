@@ -3,21 +3,13 @@ $(document).ready(function () {
     socket.on('connect', function () {
         console.log("Connected Youtube");
         userManager = new UserManager()
-        const sessionId = userManager.getSessionId()
-        console.log("Mój session_id:", sessionId);
-        socket.emit("userSession", {"sessionId": sessionId})
-
-        // After refreshing the page, send getHistory with the last hash
-        const lastHash = userManager.getLastPlaylistHash();
-        console.log("Last playlist hash:", lastHash);
-        if (lastHash) {
-            console.log("Sending getHistory");
-            socket.emit("getHistory", {
-                sessionId: sessionId,
-                hash: lastHash
+        const userBrowserId = userManager.getUserBrowserId()
+        console.log("Mój userBrowserId:", userBrowserId);
+        socket.emit("userSession", {"userBrowserId": userBrowserId})
+        socket.emit("getHistory", {
+                "userBrowserId": userBrowserId
             });
-        }
-    });
+        });
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube");
     });
@@ -37,7 +29,7 @@ $(document).ready(function () {
                 break;
             }
         }
-        formData = new FormData(youtubeURL.value, downloadType, userManager.getSessionId())
+        formData = new FormData(youtubeURL.value, downloadType)
         emitFormData = new EmitFormData()
         emitFormData.sendEmit(formData)
         return true
@@ -122,28 +114,4 @@ $(document).ready(function () {
         `
         row.innerHTML = full_row_html
     })
-
-    socket.on(HistoryInfoEmitReceiver.emitMsg, function (response) {
-        console.log("Getting history info");
-        var table = document.getElementById("downloadInfo");
-        console.log("HISTORY RESPONSE:", response);
-        var historyInfoEmitReceiver = new HistoryInfoEmitReceiver(response);
-        if (historyInfoEmitReceiver.isError()) {
-            console.log(historyInfoEmitReceiver.getError());
-            return;
-        }
-        var historyInfo = historyInfoEmitReceiver.getData();
-        for (singleMedia of historyInfo.trackList) {
-            var row = table.insertRow();
-            var full_row_html = `
-            <td>
-                ${singleMedia.title}
-            </td>
-            <td>
-                <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
-            </td>
-            `;
-            row.innerHTML = full_row_html;
-        }
-    });
 });
