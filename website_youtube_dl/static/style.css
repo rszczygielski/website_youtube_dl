@@ -168,7 +168,7 @@ body {
 
 
 #downloadInfo td.url-cell {
-    width: 35px;
+    width: 90px;
     text-align: center;
     padding-left: 2px;
     padding-right: 2px;
@@ -186,6 +186,13 @@ body {
     text-align: center;
     padding-left: 0;
     padding-right: 0;
+}
+
+#downloadInfo td.download-title-cell {
+    max-width: 400px;
+    overflow-x: auto;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .sucess-mark {
