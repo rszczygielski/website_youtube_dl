@@ -1,35 +1,26 @@
-/* @import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Danfo&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Danfo&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap'); */
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pixelify+Sans&family=Danfo&family=Jaro:opsz@6..72&family=Shadows+Into+Light&family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&display=swap');
 
-:root{
-    --clr-neon: white;
-    --clr-bg: rgb(209, 13, 16);
-    --clr-textarea: rgb(204, 198, 255, 0.547);
+:root {
+    --clr-neon: #e0e0e0;
+    --clr-bg: #23272f;
+    --clr-accent: #3a7afe;
+    --clr-accent-dark: #2356a8;
+    --clr-success: #4caf50;
+    --clr-error: #e53935;
+    --clr-table-header: #2d323c;
+    --clr-table-row: #262a33;
+    --clr-table-border: #3a3f4b;
+    --clr-textarea: #23272f;
     --main-font: "Oswald";
 }
 
-
-::placeholder {
-    color: rgb(0, 0, 0);
-    opacity: 1;
-  }
-
-
-#background
-{
-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-background-position: top;
-background-attachment: fixed;
-background-size: cover;
-/* background: linear-gradient(to right, #247cce , rgb(1, 27, 41)); */
-/* background: white; */
-background: rgba(0, 0, 0, 0.925);
+body {
+    background: var(--clr-bg);
+    color: var(--clr-neon);
+    font-family: var(--main-font, 'Oswald', Arial, sans-serif);
+    margin: 0;
+    padding: 0;
 }
-
-
 
 .menu {
     display: flex;
@@ -39,11 +30,8 @@ background: rgba(0, 0, 0, 0.925);
     width: 100%;
     max-width: 2000px;
     margin: 0 auto;
-    border-width: 1px;
     border-radius: 10px;
-    border-style: solid;
-    background-size: cover;
-    background: linear-gradient(to right top, #dd055be2, #810202);
+    background: linear-gradient(to right top, var(--clr-accent-dark), var(--clr-bg));
     text-align: center;
     padding: 20px;
     box-sizing: border-box;
@@ -68,198 +56,155 @@ background: rgba(0, 0, 0, 0.925);
     }
 }
 
+.track-info-label {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--clr-neon);
+    margin-right: 10px;
+    display: inline-block;
+}
 
-.track-info {
-    display: block;
-    align-items: center;
-    width: 100%;
-    max-width: 500px;
+.neon-button, .normal-button {
+    font-size: 1.1rem;
+    font-family: var(--main-font, 'Oswald', Arial, sans-serif);
+    cursor: pointer;
+    text-decoration: none;
+    color: #fff;
+    border: 2px solid var(--clr-accent);
+    background-color: var(--clr-accent-dark);
+    padding: 0.4em 1.2em;
+    border-radius: 0.3em;
+    margin: 0.2em 0.5em;
+    transition: all 0.2s;
+}
+
+.neon-button {
+    color: #fff;
+    border-color: var(--clr-accent);
+    background: linear-gradient(90deg, var(--clr-accent) 0%, var(--clr-accent-dark) 100%);
+    box-shadow: 0 0 8px var(--clr-accent), 0 0 16px var(--clr-accent-dark);
+    font-size: 1rem;
+    padding: 0.3em 0.8em;
+    min-width: 80px;
+    max-width: 120px;
+    white-space: nowrap;
+    margin-left: 10px;
+    margin-right: 0;
+}
+
+.normal-button:hover, .neon-button:hover {
+    transform: scale(1.08);
+    background: var(--clr-accent);
+    color: #fff;
+    box-shadow: 0 0 12px var(--clr-accent);
 }
 
 .download-info-area {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     width: 100%;
-    max-width: 2500px;
     margin: 0 auto;
-    border-width: 1px;
-    border-style: solid;
-    border-radius: 10px;
-    background-size: cover;
-    background: linear-gradient(to right top, #dd055be2, #810202);
-    text-align: center;
-    padding: 20px;
-    box-sizing: border-box;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    background: var(--clr-table-header);
+    border-radius: 12px;
+    box-shadow: 0 2px 16px 0 rgba(58, 122, 254, 0.08);
+    padding: 32px 0 24px 0;
+    border: 1.5px solid var(--clr-table-border);
 }
 
-#downloadInfo tr {
+.download-info-area h2 {
+    color: var(--clr-accent);
+    font-size: 2rem;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.download-file-area, #downloadSection {
     display: flex;
+    justify-content: center;
     align-items: center;
     width: 100%;
-    max-width: 1500px;
+    margin: 20px 0;
+}
+
+#downloadInfo {
+    width: 100%;
+    max-width: 700px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--clr-table-row);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px 0 rgba(58, 122, 254, 0.04);
+    margin-bottom: 0;
+}
+
+#downloadInfo th {
+    background: var(--clr-table-header);
+    color: var(--clr-accent);
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 16px 0;
+    border-bottom: 2px solid var(--clr-table-border);
+    text-align: left;
 }
 
 #downloadInfo td {
-    display: flex;
+    height: 67px;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+    font-size: 1.1rem;
+    vertical-align: middle;
+    background: var(--clr-table-row);
+    border-bottom: 1px solid var(--clr-table-border);
     white-space: nowrap;
-    padding: 10px 15px;
-    width: 100%;
-    max-width: 1500px;
 }
 
 
-.download-file-area{
-    display: flex;
-    justify-content: center;
-}
-
-
-.normal-button{
-    font-size: 1.5rem;
-    font-family: var(--main-font);
-    display: block;
-    cursor: pointer;
-    text-decoration: none;
-    color: var(--clr-neon);
-    border: var(--clr-neon) 0.125em solid;
-    background-color: var(--clr-bg);
-    padding: 0.25em 1em;
-    border-radius: 0.25em;
-}
-
-.normal-button:hover{
-    transform: scale(1.3);
-    background: var(--clr-neon);
-    color: var(--clr-bg);
-    text-shadow: none;
-}
-
-
-.neon-button {
-    font-size: 30px;
-    font-family: var(--main-font);
-    display: inline-block;
-    cursor: pointer;
-    text-decoration: none;
-    color: var(--clr-neon);
-    border: var(--clr-neon) 0.125em solid;
-    background-color: var(--clr-bg);
-    padding: 0.25em 1em;
-    border-radius: 0.25em;
-    text-shadow: 0 0 0.3em;
-
-    box-shadow: inset 0 0 0.5em 0 var(--clr-neon),
-    0 0 0.5em 0 var(--clr-neon);
-}
-
-.neon-button:hover{
-    transform: scale(1.3);
-    background: var(--clr-neon);
-    color: var(--clr-bg);
-    text-shadow: none;
-}
-
-.post a:hover,
-.post a:active {
-  transform: scale(1.1);
-  background-color: #390281;
-  color: white;
-}
-.table-form{
-    border :rgb(4, 133, 253);
-    border-style:solid;
-    border-width: 3px;
-    border-radius: 5px;
-    margin: 15px 0;
-    min-width: 400px;
-    text-shadow: 0 0 0.3em;
-
-    box-shadow: inset 0 0 0.5em 0 var(--clr-neon),
-    0 0 0.5em 0 var(--clr-neon);
-    position: relative;
-}
-
-.youtube-label{
-    display: block;
-    font-family: var(--main-font);
-    font-size: 100px;
-    color: white;
-    margin-bottom: 10px;
-}
-
-.neon-label{
-    font-size: 50px;
-    color: var(--clr-neon);
-    text-shadow: 0 0 0.3em;
-}
-
-.table-download-info{
-    margin-left: auto;
-    margin-right: auto;
-    display: inline-block;
+#downloadInfo td.url-cell {
+    width: 90px;
     text-align: center;
-    padding: 0 15px;
-    border-spacing: 40px;
-    font-size: 30px;
-    color: var(--clr-neon);
-}
-
-.table-modify-playlists{
-    width: 50%;
-    margin: 0 auto;
-}
-
-.table-modify-playlists td {
-    padding: 10px;
-    width: 150px;
+    padding-left: 2px;
+    padding-right: 2px;
     white-space: nowrap;
-    min-width: 180px;
 }
 
-.neon-button-container {
-    display: flex;
-    justify-content: center; /* Moves the button to the right */
-    width: 100%;
-    padding-top: 30px;
+#downloadInfo tr {
+    height: 56px;
 }
 
-
-
-
-.input-table td {
-    padding: 10px;
-    border: 1px solid #ccc;
+#downloadInfo td.status-cell {
+    width: 60px;
+    min-width: 36px;
+    max-width: 56px;
+    text-align: center;
+    padding-left: 0;
+    padding-right: 0;
 }
 
-
-.input-text{
-    margin-left: auto;
-    margin-right: auto;
-    font-family: Jaro;
-    font-style: oblique;
-    font-size: 30px;
-    cursor: pointer;
-    background-color: var(--clr-textarea);
-    border-radius: 0.25em;
-    padding: 0.25em 1em;
-}
-
-.radio-buttons-label{
-    color: white;
-    font-size: 70px;
-    font-family: var(--main-font);
-}
-
-.radio-buttons-label::after{
-    color: black;
-    font-size: 70px;
-    font-family: var(--main-font);
+#downloadInfo td.download-title-cell {
+    max-width: 400px;
+    overflow-x: auto;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .sucess-mark {
-    font-size: 50px;
-    padding-right: 45px;
-    padding-bottom: 4px;
-    color: rgb(0, 255, 0);
-  }
+    font-size: 1.5rem;
+    line-height: 1.2;
+    display: inline-block;
+    width: 32px;
+    text-align: center;
+    padding: 0;
+    color: var(--clr-success);
+}
+
+.sucess-mark:contains('❌') {
+    color: var(--clr-error);
+}
