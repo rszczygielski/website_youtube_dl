@@ -1,5 +1,4 @@
 from flask_socketio import SocketIO
-from flask_session import Session
 from .common.youtubeConfigManager import BaseConfigParser
 from .config import Config
 from flask import Flask
@@ -21,7 +20,6 @@ def create_app(config_class=Config, config_parser=BaseConfigParser, config_dir=N
     app.logger = init_logger(logger_config)
     app.socket_manager = SocketManager()
 
-    Session(app)
 
     from .flaskAPI.routes.youtube import youtube
     from .flaskAPI.routes.youtubeModifyPlaylist import youtube_playlist
