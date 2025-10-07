@@ -15,7 +15,7 @@ from ..handlers.youtube_utils import (
     extract_youtube_url, extract_request_format,
     is_playlist_in_url
 )
-from ..handlers.youtube_emit import handle_error
+from ..handlers.youtube_emit import send_emit_media_finish_error
 from ..sockets.session_data import DownloadFileInfo
 
 # --- Globals ---
@@ -67,16 +67,21 @@ def socket_download_server(formData):
     if not youtube_url or not request_format:
         return None
     is_playlist = is_playlist_in_url(youtube_url)
+    app.logger.debug(f"Is playlist: {is_playlist}")
     if is_playlist:
+
         full_file_path = download_playlist_data(
             youtube_url, request_format, user_browser_id)
+        app.logger.debug(f"Downloaded playlist to: {full_file_path}")
     else:
         full_file_path = download_single_track_data(
             youtube_url, request_format, user_browser_id)
+        app.logger.debug(f"Downloaded single track to: {full_file_path}")
     if not full_file_path:
         app.logger.error("No file path returned")
-        handle_error(
-            error_msg=f"Failed download from {youtube_url} - try again")
+        send_emit_media_finish_error(
+            error_msg=f"Failed download from {youtube_url} - try again",
+            user_browser_id=user_browser_id)
         return None
     genereted_hash = generate_hash()
     # zapisz genereted_hash do sesji z filepath w klasie DownloadFileInfo TODO

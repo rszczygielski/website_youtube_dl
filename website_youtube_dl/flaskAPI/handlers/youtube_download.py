@@ -5,7 +5,7 @@ from ...common.youtubeLogKeys import YoutubeLogs
 from ..sockets.socket_manager import SocketManager
 from ..sockets.emits import PlaylistTrackFinish
 from ..utils.general_funcions import get_files_from_dir, zip_all_files_in_list, generate_title_template_for_youtube_downloader
-from ..handlers.youtube_emit import send_emit_playlist_media, handle_error, send_emit_single_media_info_from_youtube
+from ..handlers.youtube_emit import send_emit_playlist_media, send_emit_media_finish_error, send_emit_single_media_info_from_youtube
 
 socket_manager = SocketManager()
 
@@ -47,8 +47,8 @@ def download_tracks_from_playlist(youtube_url, req_format, user_browser_id):
     playlist_media = send_emit_playlist_media(
         youtube_url, user_browser_id)
     if not playlist_media:
-        handle_error(error_msg=f"Failed to get data from {youtube_url}",
-                     user_browser_id=user_browser_id)
+        send_emit_media_finish_error(error_msg=f"Failed to get data from {youtube_url}",
+                                     user_browser_id=user_browser_id)
         return None
     file_paths = []
     directory_path = app.config_parser_manager.get_save_path()

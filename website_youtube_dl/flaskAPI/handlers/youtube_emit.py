@@ -46,11 +46,6 @@ def send_emit_playlist_media(youtube_url, user_browser_id):
 
 def send_emit_media_finish_error(error_msg, user_browser_id):
         app.logger.warning(error_msg)
-        app.socket_manager.process_emit(data=error_msg,
+        app.socket_manager.process_emit_error(error_msg=error_msg,
                                         emit_type=DownloadMediaFinishEmit,
                                         user_browser_id=user_browser_id)
-
-def handle_error(error_msg, user_browser_id):  # pragma: no_cover
-    app.socket_manager.process_emit(data=error_msg,
-                                    emit_type=DownloadMediaFinishEmit,
-                                    user_browser_id=user_browser_id)

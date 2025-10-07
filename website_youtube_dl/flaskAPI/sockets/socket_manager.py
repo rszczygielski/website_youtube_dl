@@ -74,6 +74,7 @@ class SocketManager:
     def clear_user_data(self, user_browser_id):
         self.user_session_data[user_browser_id] = []
 
+    # TODO unify those to methids into one
     def process_emit(self,
                      data,
                      emit_type,
@@ -83,3 +84,13 @@ class SocketManager:
         self.add_msg_to_users_queue(user_browser_id, emit_type, data)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit(data, session_id)
+
+    def process_emit_error(self,
+                     error_msg,
+                     emit_type,
+                     user_browser_id: str):
+        process_emit_type = emit_type()
+        app.logger.debug(f'Processing error emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
+        self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg)
+        session_id = self.get_session_id_by_user_browser_id(user_browser_id)
+        process_emit_type.send_emit_error(error_msg, session_id)
