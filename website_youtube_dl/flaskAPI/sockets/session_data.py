@@ -3,11 +3,11 @@ import os
 class DownloadFileInfo():
     file_name = None
     file_directory_path = None
-    media_from_playlist = None
+    is_playlist = None
 
-    def __init__(self, fullFilePath: str, media_from_playlist) -> None:
+    def __init__(self, fullFilePath: str, is_playlist: bool) -> None:
         self.set_file_download_data(fullFilePath)
-        self.media_from_playlist = media_from_playlist
+        self.is_playlist = is_playlist
 
     def set_file_download_data(self, fullFilePath):
         if not os.path.isfile(fullFilePath):

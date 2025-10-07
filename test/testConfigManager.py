@@ -107,19 +107,17 @@ class TestConfigParserManager(TestCase):
         }, test_playlistDict)
 
 
-class TestConfingManagerWithEmptyConfig(TestCase):
+class TestConfigManagerWithEmptyConfig(TestCase):
 
     def setUp(self):
+        self.musicPath = ConfigManagerMock._get_home_music_path()
         self.config_parser_mock = ConfigParserMockWithEmptyData()
         self.config = ConfigManagerMock(
             "save_config", self.config_parser_mock)
-        homePath = os.path.expanduser(TestVariables.swung_dash)
-        self.musicPath = os.path.join(
-            homePath, TestVariables.music)
 
     def test_get_save_path(self):
         save_path = self.config.get_save_path()
-        self.assertIsNone(save_path)
+        self.assertEqual(save_path, self.musicPath)
 
     def test_get_playlists(self):
         test_playlistDict = self.config.get_playlists()
@@ -127,6 +125,7 @@ class TestConfingManagerWithEmptyConfig(TestCase):
         self.assertEqual(
             self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
 
+    @patch.object(configparser.ConfigParser, "clear")
     def test_get_playlist_urls(self,  mock_clear):
         result = self.config.get_playlist_url(
             TestVariables.test_name)
@@ -144,16 +143,16 @@ class TestConfingManagerWithEmptyConfig(TestCase):
 
     @patch.object(configparser.ConfigParser, "clear")
     def test_add_playlist(self, mock_clear):
-        add_plyalist_flag = self.config.add_playlist(
+        add_playlist_flag = self.config.add_playlist(
             TestVariables.new_test_playlist, TestVariables.test_url)
-        self.assertFalse(add_plyalist_flag)
+        self.assertTrue(add_playlist_flag)
         mock_clear.assert_called_once()
 
     @patch.object(configparser.ConfigParser, "clear")
     def test_delete_playlist(self, mock_clear):
         delete_playlist_flag = self.config.delete_playlist(
             TestVariables.playlist_name)
-        self.assertFalse(delete_playlist_flag)
+        self.assertTrue(delete_playlist_flag)
         mock_clear.assert_called_once()
 
 

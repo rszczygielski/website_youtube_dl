@@ -2,6 +2,8 @@ import threading
 import time
 import time
 from flask import current_app as app
+from ..sockets.session_data import DownloadFileInfo
+
 
 # user_browser_id - lives longer so it should be the key
 
@@ -54,7 +56,7 @@ class SocketManager:
     def get_user_messages(self, user_browser_id):
         return self.user_session_data.get(user_browser_id, [])
 
-    def add_message_to_session_hash(self, genereted_hash, download_file_info):
+    def add_message_to_session_hash(self, genereted_hash, download_file_info: DownloadFileInfo):
         self.session_data_by_hash[genereted_hash] = download_file_info
 
     def get_session_data_by_hash(self, genereted_hash):
@@ -69,11 +71,15 @@ class SocketManager:
     def get_session_id_by_user_browser_id(self, user_browser_id):
         return self.browser_sessions.get(user_browser_id, (None,))[0]
 
+    def clear_user_data(self, user_browser_id):
+        self.user_session_data[user_browser_id] = []
+
     def process_emit(self,
                      data,
                      emit_type,
                      user_browser_id: str):
         process_emit_type = emit_type()
+        app.logger.debug(f'Processing emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
         self.add_msg_to_users_queue(user_browser_id, emit_type, data)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit(data, session_id)

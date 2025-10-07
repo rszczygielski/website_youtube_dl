@@ -44,18 +44,24 @@ class ConfigManagerMock(ConfigParserManager):
     def __init__(self, config_file_path, config_parser=ConfigParserMock()):
         self.config_file_path = config_file_path
         self.config_parser = config_parser
+        self.musicPath = ConfigManagerMock._get_home_music_path()
         super().__init__(config_file_path, config_parser)
+
+    @staticmethod
+    def _get_home_music_path():
         homePath = os.path.expanduser(TestVariables.swung_dash)
-        self.musicPath = os.path.join(homePath, TestVariables.music)
-        print("ConfigManagerMock")
+        return os.path.join(homePath, TestVariables.music)
 
     def create_default_config_file(self):
-        pass
+        self.config_parser.add_section(TestVariables.global_var)
+        self.config_parser.add_section(TestVariables.playlists)
+        self.config_parser[TestVariables.global_var][TestVariables.path] = ConfigManagerMock._get_home_music_path()
 
     def get_save_path(self):
         self.config_parser.clear()
         self.config_parser.read(self.config_file_path)
         if len(self.config_parser.sections()) == 0:
+            print("Created default config file.")
             self.create_default_config_file()
         return self.config_parser[TestVariables.global_var][TestVariables.path]
 

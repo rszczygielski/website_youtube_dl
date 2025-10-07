@@ -79,9 +79,12 @@ def download_playlist_data(youtube_url, req_format, user_browser_id):
                                          user_browser_id=user_browser_id)
 
 
-def download_single_track_data(youtube_url, req_format, user_browser_id):
+def download_single_track_data(youtube_url,
+                               req_format,
+                               user_browser_id):
     app.logger.info(f"Youtube URL: {youtube_url} (single track)")
     if not send_emit_single_media_info_from_youtube(youtube_url, user_browser_id):
+        app.logger.error("Failed to send emit for single media info")
         return None
     if isinstance(req_format, FormatMP3):
         return app.youtube_helper.download_single_audio(single_media_url=youtube_url,

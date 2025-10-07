@@ -1,14 +1,14 @@
 from test.emitData import EmitData
 from website_youtube_dl.flaskAPI.sockets.emits import (DownloadMediaFinishEmit,
-                                               SingleMediaInfoEmit,
-                                               PlaylistMediaInfoEmit,
-                                               UploadPlaylistToConfigEmit,
-                                               GetPlaylistUrlEmit,
-                                               PlaylistTrackFinish)
+                                                       SingleMediaInfoEmit,
+                                                       PlaylistMediaInfoEmit,
+                                                       UploadPlaylistToConfigEmit,
+                                                       GetPlaylistUrlEmit,
+                                                       PlaylistTrackFinish)
 from unittest import main, TestCase
 from website_youtube_dl.flaskAPI.services.flaskMedia import (FlaskSingleMedia,
-                                                    FlaskMediaFromPlaylist,
-                                                    FlaskPlaylistMedia)
+                                                             FlaskMediaFromPlaylist,
+                                                             FlaskPlaylistMedia)
 from website_youtube_dl.common.youtubeDataKeys import MediaInfo
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl import create_app, socketio
@@ -67,6 +67,7 @@ class TestEmits(TestCase):
         self.socket_io_test_client = socketio.test_client(app)
         self.flask = app.test_client()
         self.app = app
+        self.session_id = "12345"
 
     def test_download_media_finish_emit_convert_data_to_msg(self):
         result = self.download_media_finish_emit.convert_data_to_message(
@@ -78,15 +79,19 @@ class TestEmits(TestCase):
         return fullEmit[msgNumber]
 
     def test_download_media_finish_emit_send_emit(self):
-        self.download_media_finish_emit.send_emit(self.test_hash)
-        python_emit = self.socket_io_test_client.get_received()
-        received_msg = EmitData.get_emit_massage(python_emit, 0)
-        emit_data = EmitData.init_from_massage(received_msg)
-        self.assertEqual(self.download_media_finish_emit.emit_msg,
-                         emit_data.emit_name)
-        self.assertIn(self.data_str, emit_data.data)
-        self.assertIn(MainYoutubeKeys.HASH.value,
-                      emit_data.data[self.data_str])
+        with self.app.app_context():
+            session_id = self.socket_io_test_client.sid
+            self.download_media_finish_emit.send_emit(
+                self.test_hash, session_id)
+            python_emit = self.socket_io_test_client.get_received()
+            print(python_emit)
+            received_msg = EmitData.get_emit_massage(python_emit, 0)
+            emit_data = EmitData.init_from_massage(received_msg)
+            self.assertEqual(self.download_media_finish_emit.emit_msg,
+                             emit_data.emit_name)
+            self.assertIn(self.data_str, emit_data.data)
+            self.assertIn(MainYoutubeKeys.HASH.value,
+                          emit_data.data[self.data_str])
 
     def test_single_media_info_emit_convert_data_to_msg(self):
         result = self.single_media_info_emit.convert_data_to_message(

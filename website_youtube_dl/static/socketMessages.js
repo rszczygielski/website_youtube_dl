@@ -16,9 +16,8 @@ class SingleMediaFromPlaylist {
 }
 
 class PlaylistMedia {
-    constructor(playlistName, sessionHash, trackList){
+    constructor(playlistName, trackList){
         this.playlistName = playlistName;
-        this.sessionHash = sessionHash;
         this.trackList = trackList;
     }
 }
@@ -108,7 +107,6 @@ class PlaylistMediaEmitReceiver extends BaseReceiver {
     convertMessageToData(data) {
         var playlistName = data["playlistName"]
         var trackList = data["trackList"]
-        var sessionHash = data["sessionHash"]
 
 
         var singleMediaArr = []
@@ -117,7 +115,7 @@ class PlaylistMediaEmitReceiver extends BaseReceiver {
             singleMediaArr.push(new SingleMediaFromPlaylist(track["title"],
                                             track["url"]))
         }
-        return new PlaylistMedia(playlistName, sessionHash, singleMediaArr)
+        return new PlaylistMedia(playlistName, singleMediaArr)
     }
 }
 

@@ -57,7 +57,6 @@ $(document).ready(function () {
         var playlistMedia = playlistMediaEmitReceiver.getData()
         console.log(playlistMedia.trackList)
         console.log(playlistMedia.sessionHash)
-
         // save last playlist hash
         userManager.setLastPlaylistHash(playlistMedia.sessionHash);
 

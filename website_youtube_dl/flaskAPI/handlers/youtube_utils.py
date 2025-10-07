@@ -4,6 +4,7 @@ from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from ...common.youtubeLogKeys import YoutubeLogs
 from ..utils.general_funcions import get_format_instance
 
+
 def extract_youtube_url(formData, user_browser_id):
     youtube_url = formData.get(MainYoutubeKeys.YOUTUBE_URL.value)
     if not youtube_url:
@@ -17,7 +18,8 @@ def extract_youtube_url(formData, user_browser_id):
 def extract_request_format(formData, user_browser_id):
     if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
         app.logger.warning(YoutubeLogs.NO_FORMAT.value)
-        send_emit_media_finish_error(YoutubeLogs.NO_FORMAT.value, user_browser_id)
+        send_emit_media_finish_error(
+            YoutubeLogs.NO_FORMAT.value, user_browser_id)
         return None
     format_type = formData[MainYoutubeKeys.DOWNLOAD_TYP.value]
     app.logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {format_type}")
@@ -25,8 +27,7 @@ def extract_request_format(formData, user_browser_id):
     return request_format
 
 
-def extract_is_playlist(youtube_url):
+def is_playlist_in_url(youtube_url):
     if not youtube_url:
         return None
     return MainYoutubeKeys.URL_LIST.value in youtube_url and MainYoutubeKeys.URL_VIDEO.value not in youtube_url
-

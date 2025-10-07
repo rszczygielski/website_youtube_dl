@@ -138,11 +138,10 @@ class testYoutubeWeb(TestCase):
         app.config_parser_manager.get_save_path = MagicMock(
             return_value=self.test_path)
         app.config["TESTING"] = True
-        session_dict = {}
         self.socket_io_test_client = socketio.test_client(app)
         self.flask = app.test_client()
         self.app = app
-        self.app.session = SocketManager(session_dict)
+        self.app.socket_manager = SocketManager()
 
     def create_flask_single_media(self, data):
         title = data["title"]
@@ -160,11 +159,11 @@ class testYoutubeWeb(TestCase):
     @patch.object(youtube, "send_file")
     @patch.object(os.path, "isfile", return_value=True)
     def test_download_file(self, is_file_mock, send_file_mock):
-        session_data = DownloadFileInfo(self.test_path)
+        session_data = DownloadFileInfo(self.test_path, False)
         test_key = "test_key"
-        self.app.session.add_elem_to_session(test_key, session_data)
+        self.app.socket_manager.add_message_to_session_hash(test_key, session_data)
         response = self.flask.get('/downloadFile/test_key')
-        self.assertEqual(len(is_file_mock.mock_calls), 2)
+        self.assertEqual(len(is_file_mock.mock_calls), 1)
         send_file_mock.assert_called_once_with(
             self.test_path, as_attachment=True)
         self.assertEqual(response.status_code, 200)

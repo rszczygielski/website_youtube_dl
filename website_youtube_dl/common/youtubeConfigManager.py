@@ -9,7 +9,6 @@ logger = logging.getLogger("__main__")
 class BaseConfigParser():
     def __init__(self, config_file_path,
                  config_parser=configparser.ConfigParser()):
-        print("BaseConfigParser")
         self.config_file_path = config_file_path
         self.config_parser = config_parser
         if len(self.config_parser.sections()) == 0:

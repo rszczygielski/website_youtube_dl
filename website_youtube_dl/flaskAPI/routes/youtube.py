@@ -8,12 +8,12 @@ from flask import current_app as app
 from ..sockets.emits import (
     DownloadMediaFinishEmit
 )
-from ..utils.general_funcions import  generate_hash
+from ..utils.general_funcions import generate_hash
 from ..handlers.youtube_download import (
     download_playlist_data, download_single_track_data)
 from ..handlers.youtube_utils import (
     extract_youtube_url, extract_request_format,
-    extract_is_playlist
+    is_playlist_in_url
 )
 from ..handlers.youtube_emit import handle_error
 from ..sockets.session_data import DownloadFileInfo
@@ -55,14 +55,18 @@ def index():
 @socketio.on("FormData")
 def socket_download_server(formData):
     app.logger.debug(formData)
-    user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
-    app.logger.debug(f"{user_browser_id} <-- user_browser_id {request.sid} <-- request.sid")
+    user_browser_id = app.socket_manager.get_user_browser_id_by_session(
+        request.sid)
+    app.logger.debug(
+        f"{user_browser_id} <-- user_browser_id {request.sid} <-- request.sid")
+    app.socket_manager.clear_user_data(user_browser_id)
+    app.logger.info(f"Cleared user data: {user_browser_id}")
     youtube_url = extract_youtube_url(formData, user_browser_id)
     request_format = extract_request_format(formData, user_browser_id)
 
     if not youtube_url or not request_format:
         return None
-    is_playlist = extract_is_playlist(youtube_url)
+    is_playlist = is_playlist_in_url(youtube_url)
     if is_playlist:
         full_file_path = download_playlist_data(
             youtube_url, request_format, user_browser_id)
@@ -71,10 +75,11 @@ def socket_download_server(formData):
             youtube_url, request_format, user_browser_id)
     if not full_file_path:
         app.logger.error("No file path returned")
-        handle_error(error_msg=f"Failed download from {youtube_url} - try again")
+        handle_error(
+            error_msg=f"Failed download from {youtube_url} - try again")
         return None
     genereted_hash = generate_hash()
-    # zapisz genereted_hash do sesji z filepath w klasie DownloadFileInfo
+    # zapisz genereted_hash do sesji z filepath w klasie DownloadFileInfo TODO
     app.socket_manager.add_message_to_session_hash(
         genereted_hash,
         DownloadFileInfo(
@@ -88,7 +93,6 @@ def socket_download_server(formData):
 
 @socketio.on("userSession")
 def handle_user_session(data):
-    app.logger.debug(data)
     user_browser_id = data["userBrowserId"]
     request_sid = request.sid
     app.socket_manager.add_user_session(user_browser_id, request_sid)
@@ -97,15 +101,12 @@ def handle_user_session(data):
 
 @socketio.on("getHistory")
 def handle_get_history(data):
-    app.logger.debug(data)
     user_browser_id = data.get("userBrowserId")
     user_data = app.socket_manager.get_user_messages(user_browser_id)
     app.logger.debug(f"{user_browser_id} <-- user_browser_id")
-    app.logger.debug(f"{user_data} <-- user_data")
 
     for emit_type, data in user_data:
         emit = emit_type()
-        session_id = app.socket_manager.get_session_id_by_user_browser_id(user_browser_id)
+        session_id = app.socket_manager.get_session_id_by_user_browser_id(
+            user_browser_id)
         emit.send_emit(data, session_id)
-
-

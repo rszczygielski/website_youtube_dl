@@ -38,17 +38,20 @@ class YoutubeHelper():
 
         return singleMedia.file_path
 
-    def download_single_audio(self, single_media_url: str,
+    def download_single_audio(self,
+                              single_media_url: str,
                               req_format):
         youtube_options = self.get_youtube_download_options(req_format)
         single_media_info_result = self.youtube_downloder.download_yt_media(
             single_media_url, youtube_options)
+        logger.debug(f"Single media info result: {single_media_info_result}")
         if single_media_info_result.is_error():
             error_msg = single_media_info_result.get_error_info()
             logger.error(
                 f"{YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
+        logger.debug(f"Single media: {singleMedia}")
         directory_path = self.config_parser_manager.get_save_path()
         singleMedia.file_path = str(
             singleMedia.file_path).replace(".webm", ".mp3")\

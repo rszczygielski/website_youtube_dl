@@ -2,7 +2,12 @@ import random
 import string
 import zipfile
 import os
-from website_youtube_dl.common.youtubeAPI import FormatMP3, Format360p, Format480p, Format720p, Format1080p, Format2160p
+from website_youtube_dl.common.youtubeAPI import (FormatMP3,
+                                                  Format360p,
+                                                  Format480p,
+                                                  Format720p,
+                                                  Format1080p,
+                                                  Format2160p)
 from flask import current_app as app
 
 def get_format_instance(format_str):

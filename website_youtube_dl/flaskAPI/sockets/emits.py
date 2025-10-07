@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from ...common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from ... import socketio
+from flask import current_app as app
 
 class BaseEmit(ABC):
     data_str = "data"
@@ -16,6 +17,7 @@ class BaseEmit(ABC):
 
     def send_emit(self, data, session_id):
         converted_data = self.convert_data_to_message(data)
+        app.logger.debug(f'Sending emit {self.emit_msg} to session {session_id} with data {converted_data}')
         socketio.emit(self.emit_msg, {
                       self.data_str: converted_data}, to=session_id)
 
@@ -59,7 +61,6 @@ class PlaylistMediaInfoEmit(BaseEmit):
 
     def convert_data_to_message(self, flask_playlist_media):
         playlist_name = flask_playlist_media.playlist_name
-        session_hash = flask_playlist_media.session_hash
         playlist_track_list = []
         for track in flask_playlist_media.track_list:
             track_info_dict = {
@@ -68,7 +69,6 @@ class PlaylistMediaInfoEmit(BaseEmit):
             }
             playlist_track_list.append(track_info_dict)
         return {self.playlist_name: playlist_name,
-                self.session_hash: session_hash,
                 self.track_list: playlist_track_list}
 
 

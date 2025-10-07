@@ -7,7 +7,9 @@ from website_youtube_dl.common.easyID3Manager import EasyID3Manager
 from website_youtube_dl import create_app, socketio
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl.common.youtubeAPI import (SingleMedia,
-                                                  ResultOfYoutube)
+                                                  ResultOfYoutube,
+                                                  Format360p,
+                                                  FormatMP3)
 from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs
 
 from website_youtube_dl.common.youtubeOptions import (YoutubeAudioOptions,
@@ -50,6 +52,8 @@ class TestYoutubeHelper(TestCase):
         f"{test_title1}.%(ext)s"
     audio_options = YoutubeAudioOptions(out_template)
     video_options = YoutubeVideoOptions(out_template)
+    format_mp3 = FormatMP3()
+    format_360p = Format360p()
 
     def setUp(self):
         app = create_app(TestingConfig)
@@ -62,79 +66,121 @@ class TestYoutubeHelper(TestCase):
         self.flask = app.test_client()
         self.app = app
 
-    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
-    def test_download_single_media_video(self,
-                                         mock_download_video):
+    def _run_download_single_media_video_test(self,
+                                              expected_result,
+                                              expected_emit_count=0):
+        """
+        Helper to test download_single_video with different download return values and expected results.
+        """
         with self.app.app_context():
             result = self.app.youtube_helper.download_single_video(
-                self.actual_youtube_url1, self.video_options)
+                self.actual_youtube_url1, self.format_360p)
+        python_emit = self.socket_io_test_client.get_received()
+        no_emit_data = len(python_emit)
+        self.assertEqual(result, expected_result)
+        self.assertEqual(no_emit_data, expected_emit_count)
+
+    @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=video_options)
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
+    def test_download_single_media_video(self, mock_download_video, mock_get_video_options):
+        self._run_download_single_media_video_test(
+            expected_result=self.test_full_path1,
+            expected_emit_count=0
+        )
         self.app.config_parser_manager.get_save_path.assert_called_once()
         mock_download_video.assert_called_once_with(
             self.actual_youtube_url1, self.video_options)
-        self.assertEqual(self.test_full_path1, result)
+        mock_get_video_options.assert_called_once_with(self.format_360p)
 
+    @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=video_options)
     @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single_with_error)
-    def test_download_single_media_video_with_error(self, mock_download_video_error):
-        with self.app.app_context():
-            result = self.app.youtube_helper.download_single_video(
-                self.actual_youtube_url1, self.video_options)
+    def test_download_single_media_video_with_error(self, mock_download_video_error,
+                                                    mock_get_video_options):
+        self._run_download_single_media_video_test(
+            expected_result=None,
+            expected_emit_count=0
+        )
         mock_download_video_error.assert_called_once_with(
             self.actual_youtube_url1, self.video_options)
-        python_emit = self.socket_io_test_client.get_received()
-        no_emit_data = len(python_emit)
-        self.assertFalse(result)
-        self.assertEqual(no_emit_data, 0)
+        mock_get_video_options.assert_called_once_with(self.format_360p)
 
-    @patch.object(EasyID3Manager, "save_meta_data")
-    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
-    def test_download_single_media_audio(self, mock_download_audio, mock_save_meta_data):
+    def _run_download_single_media_audio_test(self,
+                                              expected_result,
+                                              expected_emit_count=0):
+        """
+        Helper to test download_single_audio with different download return values and expected results.
+        """
         with self.app.app_context():
             result = self.app.youtube_helper.download_single_audio(
-                self.actual_youtube_url1, self.audio_options)
+                self.actual_youtube_url1, self.format_mp3)
+        python_emit = self.socket_io_test_client.get_received()
+        no_emit_data = len(python_emit)
+        self.assertEqual(result, expected_result)
+        self.assertEqual(no_emit_data, expected_emit_count)
+
+    @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=audio_options)
+    @patch.object(EasyID3Manager, "save_meta_data")
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
+    def test_download_single_media_audio(self, mock_download_audio, mock_save_meta_data, mock_get_audio_options):
+        self._run_download_single_media_audio_test(
+            expected_result=self.test_full_path1.replace("webm", "mp3"),
+            expected_emit_count=0
+        )
         self.app.config_parser_manager.get_save_path.assert_called_once()
         mock_download_audio.assert_called_once_with(
             self.actual_youtube_url1, self.audio_options)
         mock_save_meta_data.assert_called_once()
-        self.assertEqual(self.test_full_path1.replace("webm", "mp3"), result)
+        mock_get_audio_options.assert_called_once_with(self.format_mp3)
 
+    @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=audio_options)
     @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single_with_error)
-    def test_download_single_media_audio_with_error(self, mock_download_audio):
-        with self.app.app_context():
-            result = self.app.youtube_helper.download_single_audio(
-                self.actual_youtube_url1, self.audio_options)
-        self.assertIsNone(result)
+    def test_download_single_media_audio_with_error(self, mock_download_audio, mock_get_audio_options):
+        self._run_download_single_media_audio_test(
+            expected_result=None,
+            expected_emit_count=0
+        )
         mock_download_audio.assert_called_once_with(
             self.actual_youtube_url1, self.audio_options)
-        python_emit = self.socket_io_test_client.get_received()
-        no_emit_data = len(python_emit)
-        self.assertFalse(result)
-        self.assertEqual(no_emit_data, 0)
+        mock_get_audio_options.assert_called_once_with(self.format_mp3)
 
-    @patch.object(EasyID3Manager, "save_meta_data")
-    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
-    def test_download_audio_from_playlist(self, mock_download_audio, mock_save_meta_data):
+    def _run_download_audio_from_playlist_test(self,
+                                               expected_result,
+                                               expected_emit_count=0):
+        """
+        Helper to test download_audio_from_playlist with different download return values and expected results.
+        """
         with self.app.app_context():
             result = self.app.youtube_helper.download_audio_from_playlist(
-                self.actual_youtube_url1, self.audio_options, self.test_playlist_name, 1
+                self.actual_youtube_url1, self.format_mp3, self.test_playlist_name, 1
             )
+        python_emit = self.socket_io_test_client.get_received()
+        no_emit_data = len(python_emit)
+        self.assertEqual(result, expected_result)
+        self.assertEqual(no_emit_data, expected_emit_count)
+
+    @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=audio_options)
+    @patch.object(EasyID3Manager, "save_meta_data")
+    @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
+    def test_download_audio_from_playlist(self, mock_download_audio, mock_save_meta_data, mock_get_audio_options):
+        self._run_download_audio_from_playlist_test(
+            expected_result=self.test_full_path1.replace("webm", "mp3"),
+            expected_emit_count=0
+        )
         mock_download_audio.assert_called_once_with(
             self.actual_youtube_url1, self.audio_options)
         mock_save_meta_data.assert_called_once()
-        self.assertEqual(self.test_full_path1.replace("webm", "mp3"), result)
+        mock_get_audio_options.assert_called_once_with(self.format_mp3)
 
+    @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=audio_options)
     @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single_with_error)
-    def test_download_audio_from_playlist_with_error(self, mock_download_audio):
-        with self.app.app_context():
-            result = self.app.youtube_helper.download_audio_from_playlist(
-                self.actual_youtube_url1, self.audio_options, self.test_playlist_name, 1
-            )
+    def test_download_audio_from_playlist_with_error(self, mock_download_audio, mock_get_audio_options):
+        self._run_download_audio_from_playlist_test(
+            expected_result=None,
+            expected_emit_count=0
+        )
         mock_download_audio.assert_called_once_with(
             self.actual_youtube_url1, self.audio_options)
-        python_emit = self.socket_io_test_client.get_received()
-        no_emit_data = len(python_emit)
-        self.assertFalse(result)
-        self.assertEqual(no_emit_data, 0)
-
+        mock_get_audio_options.assert_called_once_with(self.format_mp3)
 
 if __name__ == "__main__":
     main()
