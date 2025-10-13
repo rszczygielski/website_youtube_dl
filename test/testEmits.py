@@ -67,7 +67,6 @@ class TestEmits(TestCase):
         self.socket_io_test_client = socketio.test_client(app)
         self.flask = app.test_client()
         self.app = app
-        self.session_id = "12345"
 
     def test_download_media_finish_emit_convert_data_to_msg(self):
         result = self.download_media_finish_emit.convert_data_to_message(
@@ -80,9 +79,8 @@ class TestEmits(TestCase):
 
     def test_download_media_finish_emit_send_emit(self):
         with self.app.app_context():
-            session_id = self.socket_io_test_client.sid
             self.download_media_finish_emit.send_emit(
-                self.test_hash, session_id)
+                self.test_hash, None)
             python_emit = self.socket_io_test_client.get_received()
             print(python_emit)
             received_msg = EmitData.get_emit_massage(python_emit, 0)
@@ -103,19 +101,20 @@ class TestEmits(TestCase):
         }, result)
 
     def test_single_media_info_emit_send_emit(self):
-        self.single_media_info_emit.send_emit(self.flask_single_media)
-        python_emit = self.socket_io_test_client.get_received()
-        received_msg = EmitData.get_emit_massage(python_emit, 0)
-        emit_data = EmitData.init_from_massage(received_msg)
-        self.assertEqual(self.single_media_info_emit.emit_msg,
-                         emit_data.emit_name)
-        self.assertIn(self.data_str, emit_data.data)
-        data = emit_data.data[self.data_str]
-        self.assertEqual({
-            MediaInfo.TITLE.value: self.flask_single_media.title,
-            MediaInfo.ARTIST.value: self.flask_single_media.artist,
-            MediaInfo.URL.value: self.flask_single_media.url
-        }, data)
+        with self.app.app_context():
+            self.single_media_info_emit.send_emit(self.flask_single_media, None)
+            python_emit = self.socket_io_test_client.get_received()
+            received_msg = EmitData.get_emit_massage(python_emit, 0)
+            emit_data = EmitData.init_from_massage(received_msg)
+            self.assertEqual(self.single_media_info_emit.emit_msg,
+                            emit_data.emit_name)
+            self.assertIn(self.data_str, emit_data.data)
+            data = emit_data.data[self.data_str]
+            self.assertEqual({
+                MediaInfo.TITLE.value: self.flask_single_media.title,
+                MediaInfo.ARTIST.value: self.flask_single_media.artist,
+                MediaInfo.URL.value: self.flask_single_media.url
+            }, data)
 
     def test_playlist_media_info_emit_convert_data_to_msg(self):
         result = self.playlist_media_info_emit.convert_data_to_message(
@@ -124,18 +123,19 @@ class TestEmits(TestCase):
                           self.playlist_media_info_emit.track_list: self.track_list_with_dict}, result)
 
     def test_playlist_media_info_emit_convert_send_emit(self):
-        self.playlist_media_info_emit.send_emit(self.flask_playlist_media)
-        python_emit = self.socket_io_test_client.get_received()
-        received_msg = EmitData.get_emit_massage(python_emit, 0)
-        emit_data = EmitData.init_from_massage(received_msg)
-        self.assertEqual(self.playlist_media_info_emit.emit_msg,
-                         emit_data.emit_name)
-        self.assertIn(self.data_str, emit_data.data)
-        self.assertEqual(self.playlist_media_info_emit.playlist_name,
-                         emit_data.data[self.data_str][self.playlist_media_info_emit.playlist_name])
-        print(emit_data.data)
-        self.assertEqual(self.track_list_with_dict,
-                         emit_data.data[self.data_str][self.track_list])
+        with self.app.app_context():
+            self.playlist_media_info_emit.send_emit(self.flask_playlist_media, None)
+            python_emit = self.socket_io_test_client.get_received()
+            received_msg = EmitData.get_emit_massage(python_emit, 0)
+            emit_data = EmitData.init_from_massage(received_msg)
+            self.assertEqual(self.playlist_media_info_emit.emit_msg,
+                            emit_data.emit_name)
+            self.assertIn(self.data_str, emit_data.data)
+            self.assertEqual(self.playlist_media_info_emit.playlist_name,
+                            emit_data.data[self.data_str][self.playlist_media_info_emit.playlist_name])
+            print(emit_data.data)
+            self.assertEqual(self.track_list_with_dict,
+                            emit_data.data[self.data_str][self.track_list])
 
     def test_get_playlist_url_emit_config_emit_convert_data_to_msg(self):
         result = self.get_playlist_url_emit.convert_data_to_message(
@@ -144,15 +144,16 @@ class TestEmits(TestCase):
             {self.playlist_url_str: self.youtube_playlist_url}, result)
 
     def test_get_playlist_url_emit_config_emit_send_emit(self):
-        self.get_playlist_url_emit.send_emit(self.youtube_playlist_url)
-        python_emit = self.socket_io_test_client.get_received()
-        received_msg = EmitData.get_emit_massage(python_emit, 0)
-        emit_data = EmitData.init_from_massage(received_msg)
-        self.assertEqual(self.get_playlist_url_emit.emit_msg,
-                         emit_data.emit_name)
-        self.assertIn(self.data_str, emit_data.data)
-        self.assertEqual(
-            {self.playlist_url_str: self.youtube_playlist_url}, emit_data.data[self.data_str])
+        with self.app.app_context():
+            self.get_playlist_url_emit.send_emit(self.youtube_playlist_url, None)
+            python_emit = self.socket_io_test_client.get_received()
+            received_msg = EmitData.get_emit_massage(python_emit, 0)
+            emit_data = EmitData.init_from_massage(received_msg)
+            self.assertEqual(self.get_playlist_url_emit.emit_msg,
+                            emit_data.emit_name)
+            self.assertIn(self.data_str, emit_data.data)
+            self.assertEqual(
+                {self.playlist_url_str: self.youtube_playlist_url}, emit_data.data[self.data_str])
 
     def test_playlist_track_finish_convert_data_to_msg(self):
         test_index = 5
@@ -161,15 +162,16 @@ class TestEmits(TestCase):
         self.assertEqual({"index": test_index}, result)
 
     def test_playlist_track_finish_send_emit(self):
-        test_index = 5
-        self.playlist_track_finish_emit.send_emit(test_index)
-        python_emit = self.socket_io_test_client.get_received()
-        received_msg = EmitData.get_emit_massage(python_emit, 0)
-        emit_data = EmitData.init_from_massage(received_msg)
-        self.assertEqual(self.playlist_track_finish_emit.emit_msg,
-                         emit_data.emit_name)
-        self.assertIn(self.data_str, emit_data.data)
-        self.assertEqual({"index": test_index}, emit_data.data[self.data_str])
+        with self.app.app_context():
+            test_index = 5
+            self.playlist_track_finish_emit.send_emit(test_index, None)
+            python_emit = self.socket_io_test_client.get_received()
+            received_msg = EmitData.get_emit_massage(python_emit, 0)
+            emit_data = EmitData.init_from_massage(received_msg)
+            self.assertEqual(self.playlist_track_finish_emit.emit_msg,
+                            emit_data.emit_name)
+            self.assertIn(self.data_str, emit_data.data)
+            self.assertEqual({"index": test_index}, emit_data.data[self.data_str])
 
     def test_playlist_track_finish_send_emit_error(self):
         test_index = 5

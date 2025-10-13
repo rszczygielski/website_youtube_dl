@@ -44,10 +44,10 @@ class SocketManager:
                 f"Updating session for user_browser_id: {user_browser_id}")
         self.browser_sessions[user_browser_id] = (session_id, now)
 
-    def add_msg_to_users_queue(self, user_browser_id, emit_type, data):
+    def add_msg_to_users_queue(self, user_browser_id, emit_type, data, is_error=False):
         if user_browser_id not in self.user_session_data:
             self.user_session_data[user_browser_id] = []
-        self.user_session_data[user_browser_id].append((emit_type, data))
+        self.user_session_data[user_browser_id].append((emit_type, data, is_error))
         # update activity timestamp
         if user_browser_id in self.browser_sessions:
             session_id, _ = self.browser_sessions[user_browser_id]
@@ -78,19 +78,24 @@ class SocketManager:
     def process_emit(self,
                      data,
                      emit_type,
-                     user_browser_id: str):
+                     user_browser_id: str,
+                     add_to_queue=True):
         process_emit_type = emit_type()
         app.logger.debug(f'Processing emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
-        self.add_msg_to_users_queue(user_browser_id, emit_type, data)
+        if add_to_queue:
+            self.add_msg_to_users_queue(user_browser_id, emit_type, data)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit(data, session_id)
 
     def process_emit_error(self,
                      error_msg,
                      emit_type,
-                     user_browser_id: str):
+                     user_browser_id: str,
+                     add_to_queue=True):
         process_emit_type = emit_type()
         app.logger.debug(f'Processing error emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
-        self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg)
+        if add_to_queue:
+            self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg, is_error=True)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit_error(error_msg, session_id)
+

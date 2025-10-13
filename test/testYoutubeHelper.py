@@ -25,11 +25,11 @@ class TestYoutubeHelper(TestCase):
     test_title1 = "Society"
     test_album1 = "Into The Wild"
     test_artist1 = "Eddie Vedder"
-    test_ext1 = "webm"
+    test_ext1 = "mp4"
     test_playlistIndex1 = 1
     test_original_url1 = 'https://www.youtube.com/watch?v=ABsslEoL0-c'
     testId1 = 'ABsslEoL0-c'
-    test_full_path1 = f"{folder_path}/{test_title1}.webm"
+    test_full_path1 = f"{folder_path}/{test_title1}.{test_ext1}"
     test_playlist_name = "playlistName"
     test_generated_hash = "Kpdwgh"
     hd_720p = "720"
@@ -77,6 +77,7 @@ class TestYoutubeHelper(TestCase):
                 self.actual_youtube_url1, self.format_360p)
         python_emit = self.socket_io_test_client.get_received()
         no_emit_data = len(python_emit)
+        print(result)
         self.assertEqual(result, expected_result)
         self.assertEqual(no_emit_data, expected_emit_count)
 
@@ -123,7 +124,7 @@ class TestYoutubeHelper(TestCase):
     @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
     def test_download_single_media_audio(self, mock_download_audio, mock_save_meta_data, mock_get_audio_options):
         self._run_download_single_media_audio_test(
-            expected_result=self.test_full_path1.replace("webm", "mp3"),
+            expected_result=self.test_full_path1.replace("mp4", "mp3"),
             expected_emit_count=0
         )
         self.app.config_parser_manager.get_save_path.assert_called_once()
@@ -151,7 +152,10 @@ class TestYoutubeHelper(TestCase):
         """
         with self.app.app_context():
             result = self.app.youtube_helper.download_audio_from_playlist(
-                self.actual_youtube_url1, self.format_mp3, self.test_playlist_name, 1
+                single_media_url=self.actual_youtube_url1,
+                req_format=self.format_mp3,
+                playlist_name=self.test_playlist_name,
+                index=1
             )
         python_emit = self.socket_io_test_client.get_received()
         no_emit_data = len(python_emit)
@@ -161,7 +165,10 @@ class TestYoutubeHelper(TestCase):
     @patch.object(YoutubeHelper, "get_youtube_download_options", return_value=audio_options)
     @patch.object(EasyID3Manager, "save_meta_data")
     @patch.object(YoutubeDL, "download_yt_media", return_value=result_of_youtube_single)
-    def test_download_audio_from_playlist(self, mock_download_audio, mock_save_meta_data, mock_get_audio_options):
+    def test_download_audio_from_playlist(self,
+                                          mock_download_audio,
+                                          mock_save_meta_data,
+                                          mock_get_audio_options):
         self._run_download_audio_from_playlist_test(
             expected_result=self.test_full_path1.replace("webm", "mp3"),
             expected_emit_count=0

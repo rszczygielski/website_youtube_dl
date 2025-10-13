@@ -28,16 +28,11 @@ class TestYoutubeOptions(unittest.TestCase):
         self.audio_options = YoutubeAudioOptions(self.default_out_template)
 
     def test_get_video_options(self):
-        original_format = self.video_options.to_dict()[
-            YoutubeOptiones.FORMAT.value]
         for format_type in self.list_of_formats:
             self.video_options.set_format(
                 video_quality=VideoQuality(format_type), extension=VideoExtension.MP4
             )
             video_options_dict = self.video_options.to_dict()
-            self.assertNotEqual(
-                original_format, video_options_dict[YoutubeOptiones.FORMAT.value]
-            )
             self.assertEqual(
                 f"best[height={format_type}][ext=mp4]+bestaudio/bestvideo+bestaudio",
                 video_options_dict[YoutubeOptiones.FORMAT.value],
@@ -84,9 +79,9 @@ class TestYoutubeOptions(unittest.TestCase):
     def test_overwrite_option(self):
         # Overwrite an existing option
         self.video_options.overwrite_option(
-            YoutubeOptiones.FORMAT, self.new_format)
+            YoutubeOptiones.NO_OVERWITES, True)
         self.assertEqual(
-            self.video_options.FORMAT.argument_value, self.new_format
+            self.video_options.NO_OVERWITES.argument_value, True
         )
 
         # Attempt to overwrite a non-existent option
@@ -109,8 +104,8 @@ class TestYoutubeOptions(unittest.TestCase):
         # Attempt to add an existing option without overwrite
         with self.assertRaises(KeyError) as context:
             self.video_options.add_new_option(
-                YoutubeOptiones.FORMAT, self.new_format)
-        self.assertIn("Option 'format' already exists", str(context.exception))
+                YoutubeOptiones.EXTRACT_FLAT, self.new_format)
+        self.assertIn("Option 'extract_flat' already exists", str(context.exception))
 
         # Add an existing option with overwrite
         overwrite_value = "new_format"

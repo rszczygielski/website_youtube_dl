@@ -20,9 +20,13 @@ class YoutubeHelper():
     def get_youtube_downloader_instance(self):
         return self.youtube_downloder
 
-    def download_single_video(self, single_media_url: str,
+    def download_single_video(self,
+                              single_media_url: str,
                               req_format):
+        print(req_format)
         youtube_options = self.get_youtube_download_options(req_format)
+        print(youtube_options)
+        print(dir(youtube_options))
         single_media_info_result = self.youtube_downloder.download_yt_media(
             single_media_url, youtube_options)
         if single_media_info_result.is_error():
@@ -31,6 +35,7 @@ class YoutubeHelper():
                 f"{YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
+        print(singleMedia.file_path)
         directory_path = self.config_parser_manager.get_save_path()
 
         logger.info(f"{YoutubeLogs.VIDEO_DOWNLOADED.value}: {singleMedia.file_path}")
