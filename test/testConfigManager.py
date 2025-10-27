@@ -11,23 +11,25 @@ from test.configParserMock import (ConfigParserMock,
 class TestConfigParserManager(TestCase):
 
     def setUp(self):
+        self.clear_patcher = patch.object(configparser.ConfigParser, "clear")
+        self.mock_clear = self.clear_patcher.start()
+        self.addCleanup(self.clear_patcher.stop)
+
         self.config_parser_mock = ConfigParserMock()
         self.main_config = ConfigManagerMock(
             TestVariables.config_file, self.config_parser_mock)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_get_save_path(self, mock_clear):
+    def test_get_save_path(self):
         save_path = self.main_config.get_save_path()
         self.assertEqual(
             save_path, TestVariables.download_path)
-        mock_clear.assert_called_once()
+        self.mock_clear.assert_called_once()
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_get_url_of_playlists(self, mock_clear):
+    def test_get_url_of_playlists(self):
         test_playlistLists = self.main_config.get_url_of_playlists()
         self.assertEqual([TestVariables.url_test_playlist,
                           TestVariables.url_nowy_swiat], test_playlistLists)
-        mock_clear.assert_called_once()
+        self.mock_clear.assert_called_once()
 
     def test_get_playlist_url(self):
         result = self.main_config.get_playlist_url(
@@ -40,8 +42,7 @@ class TestConfigParserManager(TestCase):
             TestVariables.wrong_url)
         self.assertEqual(result, None)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_add_playlist(self, mock_clear):
+    def test_add_playlist(self):
         self.main_config.get_url_of_playlists()
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
@@ -54,10 +55,9 @@ class TestConfigParserManager(TestCase):
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
         self.assertEqual(plalists_list_count, 3)
-        self.assertEqual(mock_clear.call_count, 2)
+        self.assertEqual(self.mock_clear.call_count, 2)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_add_playlist_with_the_same_name(self, mock_clear):
+    def test_add_playlist_with_the_same_name(self):
         self.main_config.get_url_of_playlists()
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
@@ -73,10 +73,9 @@ class TestConfigParserManager(TestCase):
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
         self.assertEqual(plalists_list_count, 3)
-        self.assertEqual(mock_clear.call_count, 3)
+        self.assertEqual(self.mock_clear.call_count, 3)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_delete_playlist(self,  mock_clear):
+    def test_delete_playlist(self):
         self.main_config.get_url_of_playlists()
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
@@ -85,10 +84,9 @@ class TestConfigParserManager(TestCase):
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
         self.assertEqual(plalists_list_count, 1)
-        self.assertEqual(mock_clear.call_count, 2)
+        self.assertEqual(self.mock_clear.call_count, 2)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_wrong_playlist_to_delete(self,  mock_clear):
+    def test_wrong_playlist_to_delete(self):
         self.main_config.get_url_of_playlists()
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
@@ -97,7 +95,7 @@ class TestConfigParserManager(TestCase):
         plalists_list_count = len(
             self.config_parser_mock[TestVariables.playlists])
         self.assertEqual(plalists_list_count, 2)
-        self.assertEqual(mock_clear.call_count, 2)
+        self.assertEqual(self.mock_clear.call_count, 2)
 
     def test_get_playlists(self):
         test_playlistDict = self.main_config.get_playlists()
@@ -110,6 +108,10 @@ class TestConfigParserManager(TestCase):
 class TestConfigManagerWithEmptyConfig(TestCase):
 
     def setUp(self):
+        self.clear_patcher = patch.object(configparser.ConfigParser, "clear")
+        self.mock_clear = self.clear_patcher.start()
+        self.addCleanup(self.clear_patcher.stop)
+
         self.musicPath = ConfigManagerMock._get_home_music_path()
         self.config_parser_mock = ConfigParserMockWithEmptyData()
         self.config = ConfigManagerMock(
@@ -125,35 +127,31 @@ class TestConfigManagerWithEmptyConfig(TestCase):
         self.assertEqual(
             self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_get_playlist_urls(self,  mock_clear):
+    def test_get_playlist_urls(self):
         result = self.config.get_playlist_url(
             TestVariables.test_name)
         self.assertEqual(None, result)
         self.assertEqual(
             self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_get_url_of_playlists(self,  mock_clear):
+    def test_get_url_of_playlists(self):
         test_playlistUrls = self.config.get_url_of_playlists()
         self.assertEqual(test_playlistUrls, [])
         self.assertEqual(
             self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
-        mock_clear.assert_called_once()
+        self.mock_clear.assert_called_once()
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_add_playlist(self, mock_clear):
+    def test_add_playlist(self):
         add_playlist_flag = self.config.add_playlist(
             TestVariables.new_test_playlist, TestVariables.test_url)
         self.assertTrue(add_playlist_flag)
-        mock_clear.assert_called_once()
+        self.mock_clear.assert_called_once()
 
-    @patch.object(configparser.ConfigParser, "clear")
-    def test_delete_playlist(self, mock_clear):
+    def test_delete_playlist(self):
         delete_playlist_flag = self.config.delete_playlist(
             TestVariables.playlist_name)
         self.assertTrue(delete_playlist_flag)
-        mock_clear.assert_called_once()
+        self.mock_clear.assert_called_once()
 
 
 if __name__ == "__main__":

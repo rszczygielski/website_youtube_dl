@@ -82,7 +82,6 @@ class TestEmits(TestCase):
             self.download_media_finish_emit.send_emit(
                 self.test_hash, None)
             python_emit = self.socket_io_test_client.get_received()
-            print(python_emit)
             received_msg = EmitData.get_emit_massage(python_emit, 0)
             emit_data = EmitData.init_from_massage(received_msg)
             self.assertEqual(self.download_media_finish_emit.emit_msg,
@@ -133,7 +132,6 @@ class TestEmits(TestCase):
             self.assertIn(self.data_str, emit_data.data)
             self.assertEqual(self.playlist_media_info_emit.playlist_name,
                             emit_data.data[self.data_str][self.playlist_media_info_emit.playlist_name])
-            print(emit_data.data)
             self.assertEqual(self.track_list_with_dict,
                             emit_data.data[self.data_str][self.track_list])
 
