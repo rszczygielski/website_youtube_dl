@@ -8,6 +8,8 @@ from test.configParserMock import (ConfigParserMock,
                                    ConfigManagerMock)
 
 
+# wrzucić self.assertEqual(plalists_list_count, 3) self.assertEqual(self.mock_clear.call_count, 2) do funkcji pomocniczej
+
 class TestConfigParserManager(TestCase):
 
     def setUp(self):

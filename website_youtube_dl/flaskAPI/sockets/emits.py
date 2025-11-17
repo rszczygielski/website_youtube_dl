@@ -100,6 +100,3 @@ class PlaylistTrackFinish(BaseEmit):
 
     def convert_data_to_message(self, index):
         return {"index": index}
-
-    def send_emit_error(self, index: int):
-        socketio.emit(self.emit_msg, {self.error_str: index})

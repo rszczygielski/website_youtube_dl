@@ -21,6 +21,7 @@ def process_playlist_track(playlistTrack,
         downloaded_files, title)
     app.youtube_helper.set_title_template(title_template)
     if isinstance(req_format, FormatMP3):
+        app.logger.debug(f"Downloading audio for track: {title}")
         full_path = app.youtube_helper.download_audio_from_playlist(
             single_media_url=playlistTrack.yt_hash,
             req_format=req_format,
@@ -32,9 +33,9 @@ def process_playlist_track(playlistTrack,
             req_format=req_format)
     if full_path is None:
         app.logger.error(f"{title} song not downloaded")
-        app.socket_manager.process_emit(data=index,
-                                        emit_type=PlaylistTrackFinish,
-                                        user_browser_id=user_browser_id)
+        app.socket_manager.process_emit_error(error_msg=index, # zrobić unittest pod to
+                                             emit_type=PlaylistTrackFinish,
+                                             user_browser_id=user_browser_id)
         return None, title_template
 
     app.socket_manager.process_emit(data=index,

@@ -43,7 +43,6 @@ $(document).ready(function () {
 
     socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
-        console.log("TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT")
         var singleMediaEmitReceiver = new SingleMediaEmitReceiver(response)
         console.log(singleMediaEmitReceiver)
         if (singleMediaEmitReceiver.isError()){

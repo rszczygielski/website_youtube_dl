@@ -175,6 +175,8 @@ class YoutubeAudioOptions(YoutubeDefaultOptiones):
          PostProcessors.PREFERREDCODEC.value: "mp3",
          PostProcessors.PREFERREDQUALITY.value: "192"}
     ])
+    FORMAT = RequestArgument(
+        YoutubeOptiones.FORMAT.value, "bestaudio/best")
 
     def __init__(self, outTemplate):
         super().__init__()

@@ -182,6 +182,7 @@ class YoutubeDL():
             ydl_opts = self._ydl_opts.to_dict()
         else:
             ydl_opts = ydl_opts.to_dict()
+        logger.debug(f"Using YouTube DL options: {ydl_opts}")
         result_of_youtube = ResultOfYoutube()
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             try:

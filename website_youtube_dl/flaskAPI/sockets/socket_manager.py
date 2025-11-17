@@ -74,7 +74,6 @@ class SocketManager:
     def clear_user_data(self, user_browser_id):
         self.user_session_data[user_browser_id] = []
 
-    # TODO unify those to methids into one
     def process_emit(self,
                      data,
                      emit_type,
