@@ -5,8 +5,7 @@ from website_youtube_dl.common.youtubeOptions import (
     YoutubeOptiones,
     VideoQuality,
     VideoExtension,
-    PostProcessors,
-    RequestArgument,
+    PostProcessors
 )
 
 

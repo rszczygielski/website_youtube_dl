@@ -173,7 +173,7 @@ class TestEmits(TestCase):
 
     def test_playlist_track_finish_send_emit_error(self):
         test_index = 5
-        self.playlist_track_finish_emit.send_emit_error(test_index)
+        self.playlist_track_finish_emit.send_emit_error(test_index, None)
         python_emit = self.socket_io_test_client.get_received()
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
