@@ -5,21 +5,37 @@ $(document).ready(function () {
         userManager = new UserManager()
         const userBrowserId = userManager.getUserBrowserId()
         console.log("Mój userBrowserId:", userBrowserId);
-        socket.emit("userSession", {"userBrowserId": userBrowserId})
+        socket.emit("userSession", { "userBrowserId": userBrowserId })
         socket.emit("getHistory", {
-                "userBrowserId": userBrowserId
-            });
+            "userBrowserId": userBrowserId
         });
+    });
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube");
     });
     var downloadForm = document.getElementById("DownloadForm");
+    var loadingSpinner = document.getElementById("loadingSpinner");
+    var downloadLinkContainer = document.getElementById("downloadLinkContainer");
+
+    function setSpinnerVisibility(isVisible) {
+        if (!loadingSpinner) {
+            return;
+        }
+        if (isVisible) {
+            loadingSpinner.classList.remove("d-none");
+        } else {
+            loadingSpinner.classList.add("d-none");
+        }
+    }
+
     downloadForm.addEventListener("submit", function (event) {
         event.preventDefault();
         var traks_urls_table = document.getElementById("downloadInfo");
         traks_urls_table.innerHTML = "";
-        var download_file_button = document.getElementById("downloadSection");
-        download_file_button.innerHTML = "";
+        if (downloadLinkContainer) {
+            downloadLinkContainer.innerHTML = "";
+        }
+        setSpinnerVisibility(true);
         var youtubeURL = document.getElementById("youtubeURL");
         var downloadTypes = document.getElementsByName("qualType");
         for (var i = 0; i < downloadTypes.length; i++) {
@@ -37,27 +53,29 @@ $(document).ready(function () {
 
     socket.on(DownloadMediaFinishReceiver.emitMsg, function (response) {
         var downloadMediaFinishReceiver = new DownloadMediaFinishReceiver(response)
-        if (downloadMediaFinishReceiver.isError()){
+        if (downloadMediaFinishReceiver.isError()) {
             console.log(downloadMediaFinishReceiver.getError())
+            setSpinnerVisibility(false);
             return
         }
-        var downloadSection = document.getElementById("downloadSection")
+        setSpinnerVisibility(false);
         var downloadMediaFinish = downloadMediaFinishReceiver.getData()
         console.log(downloadMediaFinish.hash)
-        downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " class='neon-button'>Download File</a>"
+        if (downloadLinkContainer) {
+            downloadLinkContainer.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " class='neon-button'>Download File</a>"
+        }
     })
 
     socket.on(PlaylistMediaEmitReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
         var playlistMediaEmitReceiver = new PlaylistMediaEmitReceiver(response)
-        if (playlistMediaEmitReceiver.isError()){
+        if (playlistMediaEmitReceiver.isError()) {
             console.log(playlistMediaEmitReceiver.getError())
             return
         }
         var playlistMedia = playlistMediaEmitReceiver.getData()
         console.log(playlistMedia.trackList)
         console.log(playlistMedia.sessionHash)
-        // save last playlist hash
         userManager.setLastPlaylistHash(playlistMedia.sessionHash);
 
         for (singleMedia of playlistMedia.trackList) {
@@ -75,7 +93,7 @@ $(document).ready(function () {
         var table = document.getElementById("downloadInfo")
         var playlistTrackFinishReceiver = new PlaylistTrackFinishReceiver(response)
         var downloadStatus = document.createElement("td")
-        if (playlistTrackFinishReceiver.isError()){
+        if (playlistTrackFinishReceiver.isError()) {
             console.log("Failed download")
             trakcIndex = playlistTrackFinishReceiver.getError()
             markHtml = "<div class=sucess-mark>❌</div>";
@@ -94,7 +112,7 @@ $(document).ready(function () {
         var table = document.getElementById("downloadInfo")
         var singleMediaEmitReceiver = new SingleMediaEmitReceiver(response)
         console.log(singleMediaEmitReceiver)
-        if (singleMediaEmitReceiver.isError()){
+        if (singleMediaEmitReceiver.isError()) {
             console.log(singleMediaEmitReceiver.getError())
             return
         }

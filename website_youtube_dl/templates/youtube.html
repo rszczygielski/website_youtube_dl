@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pl">
+
 <head>
     <meta charset="utf-8" />
     <title>YouTube</title>
@@ -31,46 +32,56 @@
 <body id="background">
     {% include "headers.html"%}
     <div class="menu">
-            <form id="DownloadForm" action="#" method="post">
-                <div>
-                    <td><label class="youtube-label">Enter YouTube URL</label></td>
-                </div >
-                <table>
-                    <tr>
-                        <td>
-                            <input id="youtubeURL" class="input-text" type="url" name="youtubeURL"
-                                placeholder="YouTube URL" size="50"></input>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <input type="radio" name="qualType" id="360p" value="360p">
-                            <label class="radio-buttons-label">360p</label>
-                            <input type="radio" name="qualType" id="720p" value="720p">
-                            <label class="radio-buttons-label">720p</label>
-                            <input type="radio" name="qualType" id="1080p" value="1080p">
-                            <label class="radio-buttons-label">1080p</label>
-                            <input type="radio" name="qualType" id="2160p" value="2160p">
-                            <label class="radio-buttons-label">2160p</label>
-                            <input type="radio" name="qualType" id="mp3" value="mp3">
-                            <label class="radio-buttons-label">mp3</label>
-                        </td>
-                    </tr>
-                </table>
-                <br>
-                <button class="neon-button" type="submit" id="DownloadButton">Download</button>
-                <br>
-                <br>
-                <a class="neon-button" href="/modify_playlist.html" >Add playlist to config file</a>
-            </form>
-        </div>
-        <br>
-            <div class="download-info-area">
-                <label class="youtube-label">Download Info Section</label>
-                <table id="downloadInfo" class="table-download-info"></table>
+        <form id="DownloadForm" action="#" method="post">
+            <div>
+                <td><label class="youtube-label">Enter YouTube URL</label></td>
             </div>
+            <table>
+                <tr>
+                    <td>
+                        <input id="youtubeURL" class="input-text" type="url" name="youtubeURL" placeholder="YouTube URL"
+                            size="50"></input>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="radio" name="qualType" id="360p" value="360p">
+                        <label class="radio-buttons-label">360p</label>
+                        <input type="radio" name="qualType" id="720p" value="720p">
+                        <label class="radio-buttons-label">720p</label>
+                        <input type="radio" name="qualType" id="1080p" value="1080p">
+                        <label class="radio-buttons-label">1080p</label>
+                        <input type="radio" name="qualType" id="2160p" value="2160p">
+                        <label class="radio-buttons-label">2160p</label>
+                        <input type="radio" name="qualType" id="mp3" value="mp3">
+                        <label class="radio-buttons-label">mp3</label>
+                    </td>
+                </tr>
+            </table>
             <br>
-            <div class="download-file-area" id="downloadSection"></div>
+            <button class="neon-button" type="submit" id="DownloadButton">Download</button>
+            <br>
+            <br>
+            <a class="neon-button" href="/modify_playlist.html">Add playlist to config file</a>
+        </form>
+    </div>
+    <br>
+    <div class="download-info-area">
+        <label class="youtube-label">Download Info Section</label>
+        <table id="downloadInfo" class="table-download-info"></table>
+    </div>
+    <br>
+    <div class="download-file-area">
+        <div id="downloadSection" class="text-center">
+            <div id="loadingSpinner" class="d-inline-flex justify-content-center d-none">
+                <button class="btn btn-primary" type="button" disabled>
+                    <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                    <span role="status">Loading...</span>
+                </button>
+            </div>
+            <div id="downloadLinkContainer"></div>
+        </div>
+    </div>
 </body>
 
 </html>
