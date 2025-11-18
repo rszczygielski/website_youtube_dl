@@ -66,6 +66,9 @@ body {
 
 .neon-button,
 .normal-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1.1rem;
     font-family: var(--main-font, 'Oswald', Arial, sans-serif);
     cursor: pointer;
@@ -73,10 +76,11 @@ body {
     color: #fff;
     border: 2px solid var(--clr-accent);
     background-color: var(--clr-accent-dark);
-    padding: 0.4em 1.2em;
+    padding: 0.4em 1.4em;
     border-radius: 0.3em;
     margin: 0.2em 0.5em;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .neon-button {
@@ -85,10 +89,9 @@ body {
     background: linear-gradient(90deg, var(--clr-accent) 0%, var(--clr-accent-dark) 100%);
     box-shadow: 0 0 8px var(--clr-accent), 0 0 16px var(--clr-accent-dark);
     font-size: 1rem;
-    padding: 0.3em 0.8em;
-    min-width: 80px;
-    max-width: 120px;
-    white-space: nowrap;
+    padding: 0.35em 1.6em;
+    min-width: 0;
+    max-width: none;
     margin-left: 10px;
     margin-right: 0;
 }
