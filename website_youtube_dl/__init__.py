@@ -1,5 +1,5 @@
 from flask_socketio import SocketIO
-from .common.youtubeConfigManager import BaseConfigParser
+from .common.youtubeConfigManager import ConfigParserManager
 from .config import Config
 from flask import Flask
 from .flaskAPI.services.youtubeHelper import YoutubeHelper
@@ -12,7 +12,7 @@ import os
 socketio = SocketIO()
 
 
-def create_app(config_class=Config, config_parser=BaseConfigParser, config_dir=None, logger_config=None):
+def create_app(config_class=Config, config_parser=ConfigParserManager, config_dir=None, logger_config=None):
     app = Flask(__name__)
     app.config.from_object(config_class)
     app.config_parser_manager = init_config_pareser(config_parser, config_dir)

@@ -37,17 +37,11 @@
             <form>
                 <table class="table-modify-playlists">
                     <tr>
-                        <td>
-                            <p class="neon-label" style="font-size: 30px;">Playlist Name</p>
-                        </td>
                         <td><input class="input-text" type="text" id="playlistName" placeholder="Playlist Name"
                                 size="50"></input></td>
                     </tr>
                     <tr>
-                        <td>
-                            <p class="neon-label" style="font-size: 30px">URL</p>
-                        </td>
-                        <td><input class="input-text" type="url" id="playlist_url" placeholder="Playlist URL"
+                        <td><input class="input-text" type="url" id="playlistUrl" placeholder="Playlist URL"
                                 size="50"></input></td>
                     </tr>
                 </table>
@@ -61,11 +55,10 @@
         <br>
 
         <div class="download-info-area">
-
-            <label for="playlists" class="neon-label">List of playlists</label>
+            <label for="playlists" class="youtube-label">List of playlists</label>
             <br>
             <select name="playlistSelect" id="playlistSelect" size="5" style="width: 300px;" class="input-text">
-                {% for playlist_name in playlistsNames %}
+                {% for playlist_name in playlists_names %}
                 <option value={{ playlist_name }}>{{ playlist_name }}</option>
                 {% endfor %}
             </select>

@@ -39,9 +39,9 @@ class FormData{
 
 class AddPlaylist{
 
-    constructor(playlistName, playlist_url){
+    constructor(playlistName, playlistUrl){
         this.playlistName = playlistName
-        this.playlist_url = playlist_url
+        this.playlistUrl = playlistUrl
     }
 }
 
@@ -236,7 +236,7 @@ class EmitAddPlaylist extends BaseEmit {
     convert_data_to_message(addPlaylist){
         return {
             "playlistName": addPlaylist.playlistName,
-            "playlistURL": addPlaylist.playlistURL
+            "playlistURL": addPlaylist.playlistUrl
         }
     }
 }

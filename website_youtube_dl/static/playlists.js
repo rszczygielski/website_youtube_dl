@@ -11,17 +11,17 @@ $(document).ready(function () {
 
     socket.on(UploadPlaylistsReceiver.emitMsg, function(response){
         var uploadPlaylistsReceiver = new UploadPlaylistsReceiver(response)
-        if (uploadPlaylistsReceiver.is_error()){
+        if (uploadPlaylistsReceiver.isError()){
             console.log(uploadPlaylistsReceiver.getError())
             return
         }
         const playlistSelect = document.getElementById("playlistSelect");
         var uploadPlaylists = uploadPlaylistsReceiver.getData()
-        console.log(uploadPlaylists.playlistsNames)
+        console.log(uploadPlaylists.playlistList)
 
         playlistSelect.innerHTML = '';
 
-        uploadPlaylists.playlist_list.forEach(function(playlist_name) {
+        uploadPlaylists.playlistList.forEach(function(playlist_name) {
             let option = document.createElement("option");
             option.value = playlist_name;
             option.textContent = playlist_name;
@@ -70,16 +70,17 @@ $(document).ready(function () {
             return
         }
         var playlistUrlObject = playlistUrlReceiver.getData()
-        const urlInput = document.getElementById("playlist_url")
+        const urlInput = document.getElementById("playlistUrl")
         urlInput.value = playlistUrlObject.playlistUrl
     })
 
     addPlaylistButton.addEventListener("click", function (event) {
         const playlist_name = document.getElementById("playlistName").value
-        const playlist_url = document.getElementById("playlist_url").value
-        console.log(playlist_name, playlist_url)
-        var addPlaylist = new AddPlaylist(playlist_name, playlist_url)
+        const playlistUrl = document.getElementById("playlistUrl").value
+        console.log(playlist_name, playlistUrl)
+        var addPlaylist = new AddPlaylist(playlist_name, playlistUrl)
         var emitAddPlaylist = new EmitAddPlaylist()
+        console.log(addPlaylist.playlistName, addPlaylist.playlistUrl, "addPlaylist")
         emitAddPlaylist.sendEmit(addPlaylist)
     });
 

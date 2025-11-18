@@ -44,7 +44,6 @@ def youtube_html():
 
 @youtube.route("/")
 @youtube.route("/index.html")
-@youtube.route('/example')
 def index():
     return render_template('index.html')
 

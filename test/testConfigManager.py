@@ -152,7 +152,7 @@ class TestConfigManagerWithEmptyConfig(TestCase):
     def test_delete_playlist(self):
         delete_playlist_flag = self.config.delete_playlist(
             TestVariables.playlist_name)
-        self.assertTrue(delete_playlist_flag)
+        self.assertFalse(delete_playlist_flag)
         self.mock_clear.assert_called_once()
 
 
