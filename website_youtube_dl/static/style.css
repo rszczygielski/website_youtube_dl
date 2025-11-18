@@ -64,7 +64,8 @@ body {
     display: inline-block;
 }
 
-.neon-button, .normal-button {
+.neon-button,
+.normal-button {
     font-size: 1.1rem;
     font-family: var(--main-font, 'Oswald', Arial, sans-serif);
     cursor: pointer;
@@ -92,7 +93,8 @@ body {
     margin-right: 0;
 }
 
-.normal-button:hover, .neon-button:hover {
+.normal-button:hover,
+.neon-button:hover {
     transform: scale(1.08);
     background: var(--clr-accent);
     color: #fff;
@@ -123,12 +125,25 @@ body {
     font-weight: 600;
 }
 
-.download-file-area, #downloadSection {
+.download-file-area,
+#downloadSection {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     width: 100%;
-    margin: 20px 0;
+    margin: 10px 0 20px;
+}
+
+#downloadLinkContainer {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+#downloadLinkContainer .neon-button {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 #downloadInfo {
