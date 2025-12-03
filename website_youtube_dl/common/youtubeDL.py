@@ -225,6 +225,19 @@ class YoutubeDL():
             requested_downloads = meta_data[MainYoutubeKeys.REQUESTED_DOWNLOADS.value][0]
             if MainYoutubeKeys.FUL_PATH.value in requested_downloads:
                 full_path = requested_downloads[MainYoutubeKeys.FUL_PATH.value]
+                # Extract actual extension from full_path (after postprocessing)
+                # This ensures correct extension for audio files converted to mp3
+                if full_path and os.path.splitext(full_path)[1]:
+                    actual_extension = os.path.splitext(full_path)[1][1:]
+                    if actual_extension:
+                        extension = actual_extension
+        logger.debug(f"Full path: {full_path}")
+        logger.debug(f"Title: {title}")
+        logger.debug(f"Album: {album}")
+        logger.debug(f"Artist: {artist}")
+        logger.debug(f"Youtube hash: {youtube_hash}")
+        logger.debug(f"Url: {url}")
+        logger.debug(f"Extension: {extension}")
         return SingleMedia(full_path, title, album, artist,
                            youtube_hash, url, extension)
 

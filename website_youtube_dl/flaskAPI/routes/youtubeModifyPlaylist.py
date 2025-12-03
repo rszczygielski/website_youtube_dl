@@ -5,10 +5,10 @@ from ..sockets.emits import (DownloadMediaFinishEmit,
                              UploadPlaylistToConfigEmit,
                              GetPlaylistUrlEmit)
 from ..handlers.youtube_download import download_tracks_from_playlist
-from ...common import utils
 from ...common.youtubeAPI import FormatMP3
+from ..handlers.youtube_emit import send_emit_media_finish_error
 from ..sockets.session_data import DownloadFileInfo
-
+from ..utils.general_funcions import generate_hash
 
 youtube_playlist = Blueprint("youtube_playlist", __name__)
 
@@ -35,13 +35,21 @@ def download_config_playlist(formData):
                                                    req_format=FormatMP3(),
                                                    user_browser_id=user_browser_id)
     if not full_file_path:
-        return
-    session_download_data = DownloadFileInfo(full_file_path)
-    generated_hash = utils.generate_hash()
-    app.session.add_elem_to_session(generated_hash, session_download_data)
-    emit_download_finish = DownloadMediaFinishEmit()
-    session_id = app.socket_manager.get_session_id_by_user_browser_id(user_browser_id)
-    emit_download_finish.send_emit(generated_hash, session_id)
+        app.logger.error("No file path returned")
+        send_emit_media_finish_error(
+            error_msg=f"Failed download from {playlist_url} - try again",
+            user_browser_id=user_browser_id)
+        return None
+    genereted_hash = generate_hash()
+    app.socket_manager.add_message_to_session_hash(
+        genereted_hash,
+        DownloadFileInfo(
+            full_file_path, True
+        )
+    )
+    app.socket_manager.process_emit(data=genereted_hash,
+                                    emit_type=DownloadMediaFinishEmit,
+                                    user_browser_id=user_browser_id)
 
 
 @socketio.on("addPlaylist")

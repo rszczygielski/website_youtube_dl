@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class MainYoutubeKeys(Enum):
-    FUL_PATH = "filename"
+    FUL_PATH = "filepath"
     REQUESTED_DOWNLOADS = "requested_downloads"
     DOWNLOAD_FILE_NAME = "downloadFileName"
     DOWNLOAD_DIRECOTRY_PATH = "downloadDirectoryPath"

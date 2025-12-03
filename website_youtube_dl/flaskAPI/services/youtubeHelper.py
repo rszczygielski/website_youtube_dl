@@ -55,9 +55,6 @@ class YoutubeHelper():
         singleMedia: SingleMedia = single_media_info_result.get_data()
         logger.debug(f"Single media: {singleMedia}")
         directory_path = self.config_parser_manager.get_save_path()
-        singleMedia.file_path = str(
-            singleMedia.file_path).replace(".webm", ".mp3")\
-                                  .replace(".mp4", ".mp3")
         easy_id3_manager = EasyID3Manager()
         easy_id3_manager.set_params(filePath=singleMedia.file_path,
                                     title=singleMedia.title,
@@ -75,6 +72,7 @@ class YoutubeHelper():
                                      playlist_name: str,
                                      index: str):
         youtube_options = self.get_youtube_download_options(req_format)
+        logger.debug(f"Youtube options: {youtube_options}")
         single_media_info_result = self.youtube_downloder.download_yt_media(
             single_media_url, youtube_options)
         if single_media_info_result.is_error():
@@ -83,9 +81,6 @@ class YoutubeHelper():
                 f"{YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value}: {error_msg}")
             return None
         singleMedia: SingleMedia = single_media_info_result.get_data()
-        singleMedia.file_path = str(
-            singleMedia.file_path).replace(
-            ".webm", ".mp3")
         easy_id3_manager = EasyID3Manager()
         easy_id3_manager.set_params(filePath=singleMedia.file_path,
                                     title=singleMedia.title,

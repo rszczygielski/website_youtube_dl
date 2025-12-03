@@ -68,7 +68,6 @@ def socket_download_server(formData):
     is_playlist = is_playlist_in_url(youtube_url)
     app.logger.debug(f"Is playlist: {is_playlist}")
     if is_playlist:
-
         full_file_path = download_playlist_data(
             youtube_url, request_format, user_browser_id)
         app.logger.debug(f"Downloaded playlist to: {full_file_path}")
@@ -83,7 +82,6 @@ def socket_download_server(formData):
             user_browser_id=user_browser_id)
         return None
     genereted_hash = generate_hash()
-    # zapisz genereted_hash do sesji z filepath w klasie DownloadFileInfo TODO
     app.socket_manager.add_message_to_session_hash(
         genereted_hash,
         DownloadFileInfo(

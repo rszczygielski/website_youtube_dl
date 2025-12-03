@@ -54,15 +54,24 @@ class TestYoutubeHelper(TestCase):
         self.app = app
 
         # create fresh SingleMedia and ResultOfYoutube instances per test
-        self.single_media1 = SingleMedia(file_path=self.test_full_path1,
+        self.single_media = SingleMedia(file_path=self.test_full_path1,
                                         title=self.test_title1,
                                         album=self.test_album1,
                                         artist=self.test_artist1,
                                         yt_hash=self.testId1,
                                         url=self.test_original_url1,
                                         extension=self.test_ext1)
+        
+        self.single_media_mp3 = SingleMedia(file_path=self.test_full_path1.replace("mp4", "mp3"),
+                                        title=self.test_title1,
+                                        album=self.test_album1,
+                                        artist=self.test_artist1,
+                                        yt_hash=self.testId1,
+                                        url=self.test_original_url1,
+                                        extension="mp3")
 
-        self.result_of_youtube_single = ResultOfYoutube(self.single_media1)
+        self.result_of_youtube_single = ResultOfYoutube(self.single_media)
+        self.result_of_youtube_single_mp3 = ResultOfYoutube(self.single_media_mp3)
         self.result_of_youtube_single_with_error = ResultOfYoutube()
         self.result_of_youtube_single_with_error.set_error(
             YoutubeLogs.MEDIA_INFO_DOWNLOAD_ERROR.value)
@@ -134,7 +143,7 @@ class TestYoutubeHelper(TestCase):
         mock_save_meta_data = self.mock_method(
             EasyID3Manager, "save_meta_data")
         mock_download_audio = self.mock_method(
-            YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single)
+            YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single_mp3)
         self._run_download_single_media_audio_test(
             expected_result=self.test_full_path1.replace("mp4", "mp3"),
             expected_emit_count=0
@@ -182,9 +191,9 @@ class TestYoutubeHelper(TestCase):
         mock_save_meta_data = self.mock_method(
             EasyID3Manager, "save_meta_data")
         mock_download_audio = self.mock_method(
-            YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single)
+            YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single_mp3)
         self._run_download_audio_from_playlist_test(
-            expected_result=self.test_full_path1.replace("webm", "mp3"),
+            expected_result=self.test_full_path1.replace("mp4", "mp3"),
             expected_emit_count=0
         )
         mock_download_audio.assert_called_once_with(
