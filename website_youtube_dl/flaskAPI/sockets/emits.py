@@ -5,12 +5,7 @@ from flask import current_app as app
 
 class BaseEmit(ABC):
     data_str = "data"
-    playlist_name = "playlistName"
-    track_list = "trackList"
-    playlist_list = "playlistList"
     error_str = "error"
-    session_hash = "sessionHash"
-    history_data = "history_data"
 
     def __init__(self, emit_msg) -> None:
         self.emit_msg = emit_msg
@@ -31,13 +26,14 @@ class BaseEmit(ABC):
 
 
 class DownloadMediaFinishEmit(BaseEmit):
+    hash_data_key = "HASH"
 
     def __init__(self) -> None:
         emit_msg = "downloadMediaFinish"
         super().__init__(emit_msg)
 
     def convert_data_to_message(self, genereted_hash):
-        return {"HASH": genereted_hash}
+        return {self.hash_data_key: genereted_hash}
 
 
 class SingleMediaInfoEmit(BaseEmit):
@@ -55,12 +51,15 @@ class SingleMediaInfoEmit(BaseEmit):
 
 
 class PlaylistMediaInfoEmit(BaseEmit):
+    playlist_name_data_key = "playlistName"
+    track_list_data_key = "trackList"
+    
     def __init__(self) -> None:
         emit_msg = "playlistMediaInfo"
         super().__init__(emit_msg)
 
     def convert_data_to_message(self, flask_playlist_media):
-        playlist_name = flask_playlist_media.playlist_name
+        playlist_name_value = flask_playlist_media.playlist_name
         playlist_track_list = []
         for track in flask_playlist_media.track_list:
             track_info_dict = {
@@ -68,35 +67,38 @@ class PlaylistMediaInfoEmit(BaseEmit):
                 PlaylistInfo.URL.value: track.url,
             }
             playlist_track_list.append(track_info_dict)
-        return {self.playlist_name: playlist_name,
-                self.track_list: playlist_track_list}
+        return {self.playlist_name_data_key: playlist_name_value,
+                self.track_list_data_key: playlist_track_list}
 
 
 class UploadPlaylistToConfigEmit(BaseEmit):
+    playlist_list_data_key = "playlistList"
+
     def __init__(self):
         emit_msg = "uploadPlaylists"
         super().__init__(emit_msg)
 
     def convert_data_to_message(self, playlist_list):
-        return {self.playlist_list: playlist_list}
+        return {self.playlist_list_data_key: playlist_list}
 
 
 class GetPlaylistUrlEmit(BaseEmit):
-    playlist_url_str = "playlistUrl"
+    playlist_url_data_key = "playlistUrl"
 
     def __init__(self):
-        emit_msg = self.playlist_url_str
+        emit_msg = "playlistUrl"
         super().__init__(emit_msg)
 
     def convert_data_to_message(self, playlistUrl):
-        return {self.playlist_url_str: playlistUrl}
+        return {self.playlist_url_data_key: playlistUrl}
 
 
 class PlaylistTrackFinish(BaseEmit):
-
+    index_data_key = "index"
+    
     def __init__(self):
         emit_msg = "playlistTrackFinish"
         super().__init__(emit_msg)
 
     def convert_data_to_message(self, index):
-        return {"index": index}
+        return {self.index_data_key: index}

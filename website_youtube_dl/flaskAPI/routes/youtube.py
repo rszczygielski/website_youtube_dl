@@ -34,6 +34,7 @@ def download_file(name):
     full_path = os.path.join(
         session_download_data.file_directory_path, session_download_data.file_name)
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
+    app.socket_manager.remove_session_data_by_hash(name) # remove session data after sending file
     return send_file(full_path, as_attachment=True)
 
 
@@ -82,12 +83,14 @@ def socket_download_server(formData):
             user_browser_id=user_browser_id)
         return None
     genereted_hash = generate_hash()
+    app.logger.debug(f"Generated hash: {genereted_hash}")
     app.socket_manager.add_message_to_session_hash(
         genereted_hash,
         DownloadFileInfo(
             full_file_path, is_playlist
         )
     )
+    app.logger.debug(f"Added message to session hash: {genereted_hash}")
     app.socket_manager.process_emit(data=genereted_hash,
                                     emit_type=DownloadMediaFinishEmit,
                                     user_browser_id=user_browser_id)

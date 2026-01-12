@@ -68,6 +68,9 @@ class SocketManager:
                 return user_browser_id
         return None
 
+    def remove_session_data_by_hash(self, genereted_hash):
+        self.session_data_by_hash.pop(genereted_hash, None)
+
     def get_session_id_by_user_browser_id(self, user_browser_id):
         return self.browser_sessions.get(user_browser_id, (None,))[0]
 

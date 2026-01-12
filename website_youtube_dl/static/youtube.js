@@ -1,14 +1,18 @@
 $(document).ready(function () {
     console.log("ready")
+    var socket_is_connected = false;
     socket.on('connect', function () {
         console.log("Connected Youtube");
         userManager = new UserManager()
         const userBrowserId = userManager.getUserBrowserId()
         console.log("Mój userBrowserId:", userBrowserId);
         socket.emit("userSession", { "userBrowserId": userBrowserId })
-        socket.emit("getHistory", {
-            "userBrowserId": userBrowserId
-        });
+        if (!socket_is_connected) {
+            socket.emit("getHistory", {
+                "userBrowserId": userBrowserId
+            })
+        };
+        socket_is_connected = true;
     });
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube");
@@ -16,6 +20,7 @@ $(document).ready(function () {
     var downloadForm = document.getElementById("DownloadForm");
     var loadingSpinner = document.getElementById("loadingSpinner");
     var downloadLinkContainer = document.getElementById("downloadLinkContainer");
+    var downloadButton = document.getElementById("DownloadButton");
 
     function setSpinnerVisibility(isVisible) {
         if (!loadingSpinner) {
@@ -28,6 +33,18 @@ $(document).ready(function () {
         }
     }
 
+    function setDownloadButtonEnabled(isEnabled) {
+        if (!downloadButton) {
+            return;
+        }
+        downloadButton.disabled = !isEnabled;
+        if (isEnabled) {
+            downloadButton.classList.remove("disabled");
+        } else {
+            downloadButton.classList.add("disabled");
+        }
+    }
+
     downloadForm.addEventListener("submit", function (event) {
         event.preventDefault();
         var traks_urls_table = document.getElementById("downloadInfo");
@@ -36,6 +53,7 @@ $(document).ready(function () {
             downloadLinkContainer.innerHTML = "";
         }
         setSpinnerVisibility(true);
+        setDownloadButtonEnabled(false);
         var youtubeURL = document.getElementById("youtubeURL");
         var downloadTypes = document.getElementsByName("qualType");
         for (var i = 0; i < downloadTypes.length; i++) {
@@ -56,9 +74,11 @@ $(document).ready(function () {
         if (downloadMediaFinishReceiver.isError()) {
             console.log(downloadMediaFinishReceiver.getError())
             setSpinnerVisibility(false);
+            setDownloadButtonEnabled(true);
             return
         }
         setSpinnerVisibility(false);
+        setDownloadButtonEnabled(true);
         var downloadMediaFinish = downloadMediaFinishReceiver.getData()
         console.log(downloadMediaFinish.hash)
         if (downloadLinkContainer) {
