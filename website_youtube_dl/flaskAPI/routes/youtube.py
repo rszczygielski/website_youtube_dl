@@ -34,7 +34,6 @@ def download_file(name):
     full_path = os.path.join(
         session_download_data.file_directory_path, session_download_data.file_name)
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
-    app.socket_manager.remove_session_data_by_hash(name) # remove session data after sending file
     return send_file(full_path, as_attachment=True)
 
 
@@ -57,6 +56,12 @@ def socket_download_server(formData):
     app.logger.debug(formData)
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(
         request.sid)
+
+    # jeśli nie ma user_browser_id, to nie ma sesji dla tego użytkownika
+    if user_browser_id is None:
+        app.logger.warning("No user browser id found for session")
+        return None
+
     app.logger.debug(
         f"{user_browser_id} <-- user_browser_id {request.sid} <-- request.sid")
     app.socket_manager.clear_user_data(user_browser_id)
@@ -68,6 +73,7 @@ def socket_download_server(formData):
         return None
     is_playlist = is_playlist_in_url(youtube_url)
     app.logger.debug(f"Is playlist: {is_playlist}")
+
     if is_playlist:
         full_file_path = download_playlist_data(
             youtube_url, request_format, user_browser_id)
@@ -76,24 +82,26 @@ def socket_download_server(formData):
         full_file_path = download_single_track_data(
             youtube_url, request_format, user_browser_id)
         app.logger.debug(f"Downloaded single track to: {full_file_path}")
+
     if not full_file_path:
         app.logger.error("No file path returned")
         send_emit_media_finish_error(
             error_msg=f"Failed download from {youtube_url} - try again",
             user_browser_id=user_browser_id)
-        return None
-    genereted_hash = generate_hash()
-    app.logger.debug(f"Generated hash: {genereted_hash}")
-    app.socket_manager.add_message_to_session_hash(
-        genereted_hash,
-        DownloadFileInfo(
-            full_file_path, is_playlist
+    else:
+        genereted_hash = generate_hash()
+        app.logger.debug(f"Generated hash: {genereted_hash}")
+        app.socket_manager.add_message_to_session_hash(
+            genereted_hash,
+            DownloadFileInfo(
+                full_file_path, is_playlist
+            )
         )
-    )
-    app.logger.debug(f"Added message to session hash: {genereted_hash}")
-    app.socket_manager.process_emit(data=genereted_hash,
-                                    emit_type=DownloadMediaFinishEmit,
-                                    user_browser_id=user_browser_id)
+        app.logger.debug(f"Added message to session hash: {genereted_hash}")
+        app.socket_manager.process_emit(data=genereted_hash,
+                                        emit_type=DownloadMediaFinishEmit,
+                                        user_browser_id=user_browser_id)
+    app.socket_manager.clear_user_data(user_browser_id)
 
 
 @socketio.on("userSession")

@@ -53,7 +53,7 @@ class SingleMediaInfoEmit(BaseEmit):
 class PlaylistMediaInfoEmit(BaseEmit):
     playlist_name_data_key = "playlistName"
     track_list_data_key = "trackList"
-    
+
     def __init__(self) -> None:
         emit_msg = "playlistMediaInfo"
         super().__init__(emit_msg)
@@ -95,7 +95,7 @@ class GetPlaylistUrlEmit(BaseEmit):
 
 class PlaylistTrackFinish(BaseEmit):
     index_data_key = "index"
-    
+
     def __init__(self):
         emit_msg = "playlistTrackFinish"
         super().__init__(emit_msg)
