@@ -9,7 +9,7 @@ from ..sockets.session_data import DownloadFileInfo
 
 
 class SocketManager:
-    SESSION_TIMEOUT = 1800
+    SESSION_TIMEOUT = 1800 # 30 minutes
 
     def __init__(self):
         self.browser_sessions = {}
@@ -25,17 +25,14 @@ class SocketManager:
                 for user_browser_id, (session_id, last_ts) in list(self.browser_sessions.items()):
                     if now - last_ts > self.SESSION_TIMEOUT:
                         to_remove.append(user_browser_id)
+                        print(f"Session timed out for user_browser_id: {user_browser_id}")
                 for user_browser_id in to_remove:
+                    print(f"Removing session for user_browser_id: {user_browser_id}")
                     self.browser_sessions.pop(user_browser_id, None)
                     self.user_session_data.pop(user_browser_id, None)
                 time.sleep(60)
         t = threading.Thread(target=cleanup_loop, daemon=True)
         t.start()
-
-    def __init__(self):
-        self.browser_sessions = {}
-        self.user_session_data = {}
-        self.session_data_by_hash = {}
 
     def add_user_session(self, user_browser_id, session_id):
         now = time.time()
@@ -44,14 +41,25 @@ class SocketManager:
                 f"Updating session for user_browser_id: {user_browser_id}")
         self.browser_sessions[user_browser_id] = (session_id, now)
 
+    # TO DO! change tuple to dataclass
     def add_msg_to_users_queue(self, user_browser_id, emit_type, data, is_error=False):
+        if user_browser_id is None:
+            app.logger.warning("Cannot add message to queue: user_browser_id is None")
+            return None
+        app.logger.debug(f"Adding message to users queue for user_browser_id: {user_browser_id}")
         if user_browser_id not in self.user_session_data:
             self.user_session_data[user_browser_id] = []
         self.user_session_data[user_browser_id].append((emit_type, data, is_error))
         # update activity timestamp
+        self.update_activity_timestamp(user_browser_id)
+
+    def update_activity_timestamp(self, user_browser_id):
         if user_browser_id in self.browser_sessions:
             session_id, _ = self.browser_sessions[user_browser_id]
             self.browser_sessions[user_browser_id] = (session_id, time.time())
+            app.logger.debug(f"Updated activity timestamp for user_browser_id: {user_browser_id}")
+        else:
+            app.logger.warning(f"User browser ID {user_browser_id} not found in active sessions.")
 
     def get_user_messages(self, user_browser_id):
         return self.user_session_data.get(user_browser_id, [])
@@ -68,14 +76,12 @@ class SocketManager:
                 return user_browser_id
         return None
 
-    def remove_session_data_by_hash(self, genereted_hash):
-        self.session_data_by_hash.pop(genereted_hash, None)
-
     def get_session_id_by_user_browser_id(self, user_browser_id):
         return self.browser_sessions.get(user_browser_id, (None,))[0]
 
     def clear_user_data(self, user_browser_id):
         self.user_session_data[user_browser_id] = []
+        app.logger.debug(f"Cleared user data for {user_browser_id}")
 
     def process_emit(self,
                      data,
@@ -86,6 +92,7 @@ class SocketManager:
         app.logger.debug(f'Processing emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
         if add_to_queue:
             self.add_msg_to_users_queue(user_browser_id, emit_type, data)
+        self.update_activity_timestamp(user_browser_id)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit(data, session_id)
 
@@ -98,6 +105,7 @@ class SocketManager:
         app.logger.debug(f'Processing error emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
         if add_to_queue:
             self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg, is_error=True)
+        self.update_activity_timestamp(user_browser_id)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit_error(error_msg, session_id)
 

@@ -2,12 +2,10 @@ import os
 from flask import current_app as app
 from ...common.youtubeAPI import FormatMP3
 from ...common.youtubeLogKeys import YoutubeLogs
-from ..sockets.socket_manager import SocketManager
 from ..sockets.emits import PlaylistTrackFinish
 from ..utils.general_funcions import get_files_from_dir, zip_all_files_in_list, generate_title_template_for_youtube_downloader
 from ..handlers.youtube_emit import send_emit_playlist_media, send_emit_media_finish_error, send_emit_single_media_info_from_youtube
 
-socket_manager = SocketManager()
 
 
 def process_playlist_track(playlistTrack,
