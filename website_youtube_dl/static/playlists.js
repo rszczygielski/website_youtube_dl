@@ -38,7 +38,8 @@ $(document).ready(function () {
         var downloadSection = document.getElementById("downloadSection")
         var downloadMediaFinish = downloadMediaFinishReceiver.getData()
         console.log(downloadMediaFinish.hash)
-        downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " class='neon-button'>Download File</a>"
+        // Use the `download` attribute to avoid navigating away from the page
+        downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " download target='_blank' class='neon-button'>Download File</a>"
     })
 
     socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
