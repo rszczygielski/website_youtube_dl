@@ -1,4 +1,30 @@
 import os
+from dataclasses import dataclass
+from typing import Any, Type, Optional
+
+
+@dataclass
+class UserMessage:
+    """Represents a message in user's session queue"""
+    emit_type: Type
+    data: Any
+    is_error: bool = False
+
+    def __iter__(self):
+        """Allow unpacking like tuple: emit_type, data, is_error = message"""
+        return iter((self.emit_type, self.data, self.is_error))
+
+
+@dataclass
+class BrowserSession:
+    """Represents a browser session with Socket.IO session ID and timestamp"""
+    session_id: str
+    last_activity_timestamp: float
+
+    def __iter__(self):
+        """Allow unpacking like tuple: session_id, timestamp = session"""
+        return iter((self.session_id, self.last_activity_timestamp))
+
 
 class DownloadFileInfo():
     file_name = None

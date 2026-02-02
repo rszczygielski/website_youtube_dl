@@ -1,8 +1,7 @@
 import threading
 import time
-import time
 from flask import current_app as app
-from ..sockets.session_data import DownloadFileInfo
+from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
 
 
 # user_browser_id - lives longer so it should be the key
@@ -22,8 +21,8 @@ class SocketManager:
             while True:
                 now = time.time()
                 to_remove = []
-                for user_browser_id, (session_id, last_ts) in list(self.browser_sessions.items()):
-                    if now - last_ts > self.SESSION_TIMEOUT:
+                for user_browser_id, session in list(self.browser_sessions.items()):
+                    if now - session.last_activity_timestamp > self.SESSION_TIMEOUT:
                         to_remove.append(user_browser_id)
                         print(f"Session timed out for user_browser_id: {user_browser_id}")
                 for user_browser_id in to_remove:
@@ -39,9 +38,9 @@ class SocketManager:
         if user_browser_id in self.browser_sessions:
             app.logger.debug(
                 f"Updating session for user_browser_id: {user_browser_id}")
-        self.browser_sessions[user_browser_id] = (session_id, now)
+        self.browser_sessions[user_browser_id] = BrowserSession(
+            session_id=session_id, last_activity_timestamp=now)
 
-    # TO DO! change tuple to dataclass
     def add_msg_to_users_queue(self, user_browser_id, emit_type, data, is_error=False):
         if user_browser_id is None:
             app.logger.warning("Cannot add message to queue: user_browser_id is None")
@@ -49,14 +48,17 @@ class SocketManager:
         app.logger.debug(f"Adding message to users queue for user_browser_id: {user_browser_id}")
         if user_browser_id not in self.user_session_data:
             self.user_session_data[user_browser_id] = []
-        self.user_session_data[user_browser_id].append((emit_type, data, is_error))
+        message = UserMessage(emit_type=emit_type, data=data, is_error=is_error)
+        self.user_session_data[user_browser_id].append(message)
         # update activity timestamp
         self.update_activity_timestamp(user_browser_id)
 
     def update_activity_timestamp(self, user_browser_id):
         if user_browser_id in self.browser_sessions:
-            session_id, _ = self.browser_sessions[user_browser_id]
-            self.browser_sessions[user_browser_id] = (session_id, time.time())
+            session = self.browser_sessions[user_browser_id]
+            self.browser_sessions[user_browser_id] = BrowserSession(
+                session_id=session.session_id, 
+                last_activity_timestamp=time.time())
             app.logger.debug(f"Updated activity timestamp for user_browser_id: {user_browser_id}")
         else:
             app.logger.warning(f"User browser ID {user_browser_id} not found in active sessions.")
@@ -71,13 +73,14 @@ class SocketManager:
         return self.session_data_by_hash.get(genereted_hash, None)
 
     def get_user_browser_id_by_session(self, session_id):
-        for user_browser_id, sessions in self.browser_sessions.items():
-            if sessions[0] == session_id:
+        for user_browser_id, session in self.browser_sessions.items():
+            if session.session_id == session_id:
                 return user_browser_id
         return None
 
     def get_session_id_by_user_browser_id(self, user_browser_id):
-        return self.browser_sessions.get(user_browser_id, (None,))[0]
+        session = self.browser_sessions.get(user_browser_id, None)
+        return session.session_id if session else None
 
     def clear_user_data(self, user_browser_id):
         self.user_session_data[user_browser_id] = []
