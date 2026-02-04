@@ -4,7 +4,6 @@ from flask import current_app as app
 from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
 
 
-# user_browser_id - lives longer so it should be the key
 
 
 class SocketManager:

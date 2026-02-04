@@ -24,6 +24,22 @@ logger = logging.getLogger(__name__)
 
 
 class YoutubeDL():
+    """Main class for YouTube media downloading operations.
+    
+    Provides functionality to download single media items and playlists
+    from YouTube, extract metadata, and verify video existence. Uses
+    yt-dlp library for actual downloading operations.
+    
+    Attributes:
+        title_template_default (str): Default output template for file names.
+        title_template (str): Current output template (can be modified temporarily).
+        _configManager (BaseConfigParser): Configuration manager instance.
+        yt_logger (LoggerClass): Logger instance for logging operations.
+        _savePath (str): Path where downloaded files are saved.
+        _ydl_opts (YoutubeDefaultOptiones): Default download options.
+        _ydl_single_info_opts (YoutubeGetSingleInfoOptiones): Options for single media info.
+        _ydl_playlist_info_opts (YoutubeGetPlaylistInfoOptiones): Options for playlist info.
+    """
     title_template_default = "/%(title)s"
     title_template = title_template_default
 
@@ -31,6 +47,14 @@ class YoutubeDL():
             self,
             configManager: BaseConfigParser,
             ytLogger: LoggerClass = logger):
+        """Initialize YoutubeDL with configuration manager and logger.
+        
+        Args:
+            configManager (BaseConfigParser): Configuration manager for
+                accessing save paths and settings.
+            ytLogger (LoggerClass, optional): Logger instance. Defaults to
+                standard logger.
+        """
         self._configManager = configManager
         self.yt_logger = ytLogger
         self._savePath = self._configManager.get_save_path()
@@ -40,13 +64,14 @@ class YoutubeDL():
 
     def download_yt_media(self, youtubeURL: str,
                           options) -> ResultOfYoutube:
-        """Method uded to download media type from YouTube
+        """Download media from YouTube using specified options.
 
         Args:
-            youtubeURL (str): YouTube URL
+            youtubeURL (str): YouTube URL of the media to download.
+            options: Download options (YoutubeAudioOptions, YoutubeVideoOptions, etc.).
 
         Returns:
-            dict: dict with YouTube media meta data
+            ResultOfYoutube: Result object containing media metadata or error information.
         """
         media_hash = self._get_media_result_hash(youtubeURL)
         result_of_youtube = self._download_file(media_hash, options)
@@ -57,13 +82,14 @@ class YoutubeDL():
         return result_of_youtube
 
     def request_playlist_media_info(self, youtubeURL) -> ResultOfYoutube:
-        """Method returns meta data based on youtube url
+        """Request playlist metadata from YouTube without downloading.
 
         Args:
-            youtubeURL (string): Youtube URL
+            youtubeURL (str): YouTube playlist URL.
 
         Returns:
-            ResultOfYoutube: result of youtube with metadata
+            ResultOfYoutube: Result object containing PlaylistMedia with
+                playlist name and track list, or error information.
         """
         yt_options = self._ydl_playlist_info_opts.to_dict()
         with yt_dlp.YoutubeDL(yt_options) as ydl:
@@ -79,13 +105,14 @@ class YoutubeDL():
         return ResultOfYoutube(playlist_media)
 
     def request_single_media_info(self, youtubeURL) -> ResultOfYoutube:
-        """Method provides youtube media info based on youtube URL without downloading it
+        """Request single media metadata from YouTube without downloading.
 
         Args:
-            youtubeURL (str): YouTube URL
+            youtubeURL (str): YouTube URL of the media.
 
         Returns:
-            dict: dict with Youtube info
+            ResultOfYoutube: Result object containing SingleMedia with
+                metadata, or error information.
         """
         youtube_hash = self._get_media_result_hash(youtubeURL)
         yt_options = self._ydl_single_info_opts.to_dict()
@@ -102,13 +129,18 @@ class YoutubeDL():
         return ResultOfYoutube(single_media)
 
     def verify_local_mp3_files(self, dirPath: str, easy_id3_manager_class: EasyID3Manager):
-        """Method verifies if the local files still exists on YouTube
+        """Verify if local MP3 files still exist on YouTube.
+
+        Scans a directory for MP3 files, reads their ID3 metadata to get
+        YouTube URLs, and checks if those videos still exist on YouTube.
 
         Args:
-            dirPath (str): path to file directory
+            dirPath (str): Path to directory containing MP3 files.
+            easy_id3_manager_class (EasyID3Manager): EasyID3Manager class
+                or instance for reading metadata.
 
         Returns:
-            list: List of files which weren't verified, so those which are no longer present on YouTube
+            list: List of file paths for files that no longer exist on YouTube.
         """
         not_verified_files = []
         list_of_files = os.listdir(dirPath)
@@ -124,15 +156,17 @@ class YoutubeDL():
         return not_verified_files
 
     def if_query_exist_on_youtube(self, yt_hash: str):  # pragma: no_cover
-        """Method checks if given query exists on YouTube, methos uses yt-dlp package
+        """Check if a given query/search term exists on YouTube.
+
+        Uses yt-dlp to attempt to extract information for the query.
+        This method can be used with search queries, not just video URLs.
 
         Args:
-            yt_hash (str): query for to search YouTube
+            yt_hash (str): Query string or YouTube URL to search for.
 
         Returns:
-            bool: True if video exists, False if video not exists on YouTube
+            bool: True if the query returns valid results, False otherwise.
         """
-
         ydl_opts = VideoVerificationOptiones().to_dict()
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -147,13 +181,17 @@ class YoutubeDL():
                 return False
 
     def if_video_exist_on_youtube(self, yt_hash: str):  # pragma: no_cover
-        """Method checks if given YouTube video hash exists on YouTube, methos uses yt-dlp package
+        """Check if a YouTube video exists on YouTube.
+
+        Uses yt-dlp to verify if a video with the given hash/ID still exists
+        on YouTube. Useful for verifying that downloaded videos haven't been
+        removed.
 
         Args:
-            yt_hash (str): YouTube video hash for YouTube search
+            yt_hash (str): YouTube video ID or hash.
 
         Returns:
-            bool: True if video exists, False if video not exists on YouTube
+            bool: True if video exists, False if video not found or deleted.
         """
 
         ydl_opts = VideoVerificationOptiones().to_dict()
@@ -169,14 +207,18 @@ class YoutubeDL():
                 return False
 
     def _download_file(self, single_media_hash: str, ydl_opts=None):
-        """Method used to download youtube media based on URL
+        """Download YouTube media file using yt-dlp.
+
+        Internal method that performs the actual download operation using
+        yt-dlp. Resets title_template to default after download.
 
         Args:
-            single_media_hash (str): Hash of YouTube media
-            youtubeOptions (dict): YouTube options dict form init
+            single_media_hash (str): YouTube video ID or URL.
+            ydl_opts: Optional download options. If None, uses default options.
 
         Returns:
-            class: meta data form youtube
+            ResultOfYoutube: Result object containing SingleMedia with
+                file path and metadata, or error information.
         """
         if ydl_opts is None:
             ydl_opts = self._ydl_opts.to_dict()
@@ -199,13 +241,17 @@ class YoutubeDL():
         return result_of_youtube
 
     def _get_media(self, meta_data):
-        """Method sets and returns SingleMedia instance based on meta data inptu
+        """Extract media information and create SingleMedia instance.
+
+        Parses yt-dlp metadata dictionary and extracts relevant information
+        including title, album, artist, YouTube hash, URL, extension, and
+        file path. Handles post-processing to get correct file extension.
 
         Args:
-            meta_data (dict): meta data dict
+            meta_data (dict): Metadata dictionary from yt-dlp extract_info().
 
         Returns:
-            SingleMedia : SingleMedia instance with all the info set up
+            SingleMedia: SingleMedia instance with all extracted information.
         """
         full_path = title = album = youtube_hash = artist = url = extension = ""
         if MediaInfo.TITLE.value in meta_data:
@@ -242,13 +288,18 @@ class YoutubeDL():
                            youtube_hash, url, extension)
 
     def _get_playlist_media(self, meta_data) -> PlaylistMedia:
-        """Method sets and returns PlaylistMedia instance based on meta data inptu
+        """Extract playlist information and create PlaylistMedia instance.
+
+        Parses yt-dlp playlist metadata dictionary and extracts playlist name
+        and all tracks, creating MediaFromPlaylist instances for each track.
 
         Args:
-            meta_data (dict): meta data dict
+            meta_data (dict): Metadata dictionary from yt-dlp extract_info()
+                for a playlist.
 
         Returns:
-            PlaylistMedia: PlaylistMedia instance with all the info set up
+            PlaylistMedia: PlaylistMedia instance with playlist name and
+                list of tracks.
         """
         media_info_list = []
         playlist_name = ""
@@ -269,10 +320,17 @@ class YoutubeDL():
         return PlaylistMedia(playlist_name, media_info_list)
 
     def _get_video_options(self, type: str):
-        """Method used to change and set proper
+        """Create video download options for specified quality.
+
+        Creates YoutubeVideoOptions instance configured for the specified
+        video quality (e.g., "720", "1080") with MP4 extension and
+        appropriate output template.
 
         Args:
-            type (str): _description_
+            type (str): Video quality string (e.g., "720", "1080", "480").
+
+        Returns:
+            YoutubeVideoOptions: Configured video options instance.
         """
         out_template = self._savePath + \
             self.title_template + f"_{type}p" + ".%(ext)s"
@@ -284,7 +342,13 @@ class YoutubeDL():
         return video_options_instance
 
     def _get_audio_options(self):
-        """Method sets audio options
+        """Create audio download options.
+
+        Creates YoutubeAudioOptions instance configured for MP3 audio
+        extraction with appropriate output template.
+
+        Returns:
+            YoutubeAudioOptions: Configured audio options instance.
         """
         out_template = self._savePath + \
             f"{self.title_template}.%(ext)s"
@@ -350,24 +414,53 @@ class YoutubeDL():
             return playlist_hash
 
     def set_title_template_one_time(self, newTitileTemplate):
+        """Set a custom title template for the next download.
+
+        Temporarily overrides the default title template. The template
+        will be reset to default after the next download operation.
+
+        Args:
+            newTitileTemplate (str): New output template string (e.g., "/%(title)s").
+        """
         self.title_template = newTitileTemplate
 
 
 class YoutubeDlPlaylists(YoutubeDL):
+    """Extended YouTube downloader with playlist-specific functionality.
+    
+    Extends YoutubeDL to provide methods for downloading entire playlists
+    (both audio and video) and managing ID3 metadata for downloaded tracks.
+    
+    Attributes:
+        easy_id3_manager (EasyID3Manager): Manager for ID3 metadata operations.
+    """
+    
     def __init__(self, configManager: BaseConfigParser,
                  easy_id3_manager: EasyID3Manager,
                  ytLogger: LoggerClass = Logger):
+        """Initialize YoutubeDlPlaylists with config manager and ID3 manager.
+        
+        Args:
+            configManager (BaseConfigParser): Configuration manager instance.
+            easy_id3_manager (EasyID3Manager): EasyID3Manager instance for
+                metadata operations.
+            ytLogger (LoggerClass, optional): Logger instance. Defaults to Logger.
+        """
         super().__init__(configManager, ytLogger)
         self.easy_id3_manager = easy_id3_manager
 
     def download_whole_audio_playlist(self, youtubeURL: str):
-        """Method uded to download audio playlist from YouTube
+        """Download entire audio playlist from YouTube as MP3 files.
+
+        Downloads all tracks from a playlist, converts them to MP3, and
+        adds ID3 metadata including title, artist, album, playlist name,
+        and track number.
 
         Args:
-            youtubeURL (str): YouTube URL
+            youtubeURL (str): YouTube playlist URL.
 
         Returns:
-            dict: dict with YouTube audio playlist meta data
+            dict: Metadata dictionary from yt-dlp, or False on error.
         """
         playlist_hash = self._get_playlist_hash(youtubeURL)
         audio_options = self._get_audio_options()
@@ -410,13 +503,16 @@ class YoutubeDlPlaylists(YoutubeDL):
         return meta_data
 
     def download_whole_video_playlist(self, youtubeURL: str, type: str):
-        """Method uded to download video playlist from YouTube
+        """Download entire video playlist from YouTube.
+
+        Downloads all videos from a playlist at the specified quality.
 
         Args:
-            youtubeURL (str): YouTube URL
+            youtubeURL (str): YouTube playlist URL.
+            type (str): Video quality string (e.g., "720", "1080", "480").
 
         Returns:
-            dict: dict with YouTube video playlist meta data
+            dict: Metadata dictionary from yt-dlp, or False on error.
         """
         video_options = self._get_video_options(type)
         ydl_opts = video_options.to_dict()
@@ -431,13 +527,16 @@ class YoutubeDlPlaylists(YoutubeDL):
         return meta_data
 
     def downolad_all_config_playlists_video(self, type):
-        """Method used to download all playlists added to cofig file - type video
+        """Download all playlists from configuration file as video.
+
+        Iterates through all playlists defined in the configuration file
+        and downloads them as video files at the specified quality.
 
         Args:
-            type (str): type of the video to download, like 480p
+            type (str): Video quality type (e.g., "480p", "720p", "1080p").
 
         Returns:
-            bool: True if finished successfully
+            bool: True when all playlists have been processed.
         """
         playlist_list = self._configManager.get_url_of_playlists()
         for playlist_url in playlist_list:
@@ -445,10 +544,13 @@ class YoutubeDlPlaylists(YoutubeDL):
         return True
 
     def downolad_all_config_playlists_audio(self):
-        """Method used to download all playlists added to cofig file - type audo
+        """Download all playlists from configuration file as audio.
+
+        Iterates through all playlists defined in the configuration file
+        and downloads them as MP3 audio files with ID3 metadata.
 
         Returns:
-            bool: True if finished successfully
+            bool: True when all playlists have been processed.
         """
         playlist_list = self._configManager.get_url_of_playlists()
         for playlist_url in playlist_list:
