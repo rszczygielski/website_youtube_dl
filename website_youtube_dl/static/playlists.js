@@ -31,7 +31,7 @@ $(document).ready(function () {
 
     socket.on(DownloadMediaFinishReceiver.emitMsg, function (response) {
         var downloadMediaFinishReceiver = new DownloadMediaFinishReceiver(response)
-        if (downloadMediaFinishReceiver.is_error()){
+        if (downloadMediaFinishReceiver.isError()){
             console.log(downloadMediaFinishReceiver.getError())
             return
         }
@@ -66,7 +66,7 @@ $(document).ready(function () {
 
     socket.on(PlaylistUrlReceiver.emitMsg, function(response){
         var playlistUrlReceiver = new PlaylistUrlReceiver(response)
-        if (playlistUrlReceiver.is_error()){
+        if (playlistUrlReceiver.isError()){
             console.log(playlistUrlReceiver.getError())
             return
         }
@@ -102,12 +102,12 @@ $(document).ready(function () {
     });
 
     downloadPlaylistButton.addEventListener("click", function (event) {
-        const downloadInfo = document.getElementById("downloadInfo");
-        const downloadSection = document.getElementById("downloadSection");
+        var downloadInfo = document.getElementById("downloadInfo");
+        var downloadSection = document.getElementById("downloadSection");
         downloadSection.innerHTML = ''
         downloadInfo.innerHTML = ''
-        const playlistToDownload = playlistSelect.value
-
+        var playlistToDownload = playlistSelect.value
+        console.log(playlistToDownload)
         var playlist_nameObject = new PlaylistName(playlistToDownload)
         var emitDownloadFromConfigFile = new EmitDownloadFromConfigFile()
         emitDownloadFromConfigFile.sendEmit(playlist_nameObject)
