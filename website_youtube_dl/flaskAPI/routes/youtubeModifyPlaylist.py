@@ -30,6 +30,7 @@ def download_config_playlist(formData):
     app.logger.info(f"Selected playlist form config {playlist_name}")
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(
         request.sid)
+    app.logger.info(f"User browser id: {user_browser_id}")
     playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
     full_file_path = download_tracks_from_playlist(youtube_url=playlist_url,
                                                    req_format=FormatMP3(),
@@ -60,18 +61,21 @@ def add_plalist_config(formData):
     result = app.config_parser_manager.add_playlist(
         playlist_name, playlist_url)
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
-    upload_playlist_emit = UploadPlaylistToConfigEmit()
     if result:
         app.logger.info(f"Added playlist {playlist_name} to config")
     else:
-        upload_playlist_emit.send_emit_error(
-            f"Failed to add playlist {playlist_name} to config", user_browser_id)
+        app.socket_manager.process_emit_error(
+            error_msg=f"Failed to add playlist {playlist_name} to config",
+            emit_type=UploadPlaylistToConfigEmit,
+            user_browser_id=user_browser_id)
         app.logger.warning(f"Failed to add playlist {playlist_name} to config")
         return
     app.logger.debug(f"Playlist URL: {playlist_url}")
     app.logger.debug(f"Playlist name: {playlist_name}")
     playlist_list = list(app.config_parser_manager.get_playlists().keys())
-    upload_playlist_emit.send_emit(playlist_list, user_browser_id)
+    app.socket_manager.process_emit(data=playlist_list,
+                                    emit_type=UploadPlaylistToConfigEmit,
+                                    user_browser_id=user_browser_id)
 
 
 @socketio.on("deletePlaylist")
@@ -79,26 +83,30 @@ def delete_plalist_config(formData):
     playlist_name = formData["playlistToDelete"]
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(
         request.sid)
-    upload_playlist_emit = UploadPlaylistToConfigEmit()
     result = app.config_parser_manager.delete_playlist(playlist_name)
     if result:
         app.logger.info(f"Deleted playlist {playlist_name} from config")
     else:
-        upload_playlist_emit.send_emit_error(
-            f"Failed to delete playlist {playlist_name} from config", user_browser_id)
+        app.socket_manager.process_emit_error(
+            error_msg=f"Failed to delete playlist {playlist_name} from config",
+            emit_type=UploadPlaylistToConfigEmit,
+            user_browser_id=user_browser_id)
         app.logger.warning(
             f"Failed to delete playlist {playlist_name} from config")
         return
     app.logger.debug(f"Playlist name: {playlist_name}")
     playlist_list = list(app.config_parser_manager.get_playlists().keys())
-    upload_playlist_emit.send_emit(playlist_list, user_browser_id)
+    app.socket_manager.process_emit(data=playlist_list,
+                                    emit_type=UploadPlaylistToConfigEmit,
+                                    user_browser_id=user_browser_id)
 
 
 @socketio.on("playlistName")
 def get_playlist_config_url(formData):
     playlist_name = formData["playlistName"]
     playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
-    get_playlist_emit = GetPlaylistUrlEmit()
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(
         request.sid)
-    get_playlist_emit.send_emit(playlist_url, user_browser_id)
+    app.socket_manager.process_emit(data=playlist_url,
+                                    emit_type=GetPlaylistUrlEmit,
+                                    user_browser_id=user_browser_id)

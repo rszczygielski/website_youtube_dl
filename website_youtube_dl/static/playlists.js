@@ -1,8 +1,21 @@
 $(document).ready(function () {
-    const socket = io();
     console.log("ready")
+    var socket_is_connected = false;
     socket.on('connect', function () {
-        console.log("Connected Playlists");
+        console.log("Connected Youtube Playlists");
+        userManager = new UserManager()
+        const userBrowserId = userManager.getUserBrowserId()
+        console.log("Mój userBrowserId:", userBrowserId);
+        socket.emit("userSession", { "userBrowserId": userBrowserId })
+        if (!socket_is_connected) {
+            socket.emit("getHistory", {
+                "userBrowserId": userBrowserId
+            })
+        };
+        socket_is_connected = true;
+    });
+    socket.on('disconnect', function () {
+        console.log("Disconnected Youtube Playlists");
     });
     const downloadPlaylistButton = document.getElementById("downloadPlaylist");
     const playlistSelect = document.getElementById("playlistSelect")
@@ -65,6 +78,7 @@ $(document).ready(function () {
     })
 
     socket.on(PlaylistUrlReceiver.emitMsg, function(response){
+        console.log(response, "responsePlaylistUrlReceiver")
         var playlistUrlReceiver = new PlaylistUrlReceiver(response)
         if (playlistUrlReceiver.isError()){
             console.log(playlistUrlReceiver.getError())
