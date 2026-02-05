@@ -17,10 +17,10 @@ $(document).ready(function () {
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube Playlists");
     });
-    const downloadPlaylistButton = document.getElementById("downloadPlaylist");
-    const playlistSelect = document.getElementById("playlistSelect")
-    const addPlaylistButton = document.getElementById("addPlaylistButton")
-    const deletePlalistButton = document.getElementById("deletePlaylistButton")
+    var downloadPlaylistButton = document.getElementById("downloadPlaylist");
+    var playlistSelect = document.getElementById("playlistSelect")
+    var addPlaylistButton = document.getElementById("addPlaylistButton")
+    var deletePlalistButton = document.getElementById("deletePlaylistButton")
 
     socket.on(UploadPlaylistsReceiver.emitMsg, function(response){
         var uploadPlaylistsReceiver = new UploadPlaylistsReceiver(response)
@@ -28,7 +28,7 @@ $(document).ready(function () {
             console.log(uploadPlaylistsReceiver.getError())
             return
         }
-        const playlistSelect = document.getElementById("playlistSelect");
+        var playlistSelect = document.getElementById("playlistSelect");
         var uploadPlaylists = uploadPlaylistsReceiver.getData()
         console.log(uploadPlaylists.playlistList)
 
@@ -55,26 +55,47 @@ $(document).ready(function () {
         downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " download target='_blank' class='neon-button'>Download File</a>"
     })
 
-    socket.on(SingleMediaEmitReceiver.emitMsg, function (response) {
+    socket.on(PlaylistTrackFinishReceiver.emitMsg, function (response) {
         var table = document.getElementById("downloadInfo")
-        var singleMediaEmitReceiver = new SingleMediaEmitReceiver(response)
-        console.log(singleMediaEmitReceiver)
-        if (singleMediaEmitReceiver.isError()){
-            console.log(singleMediaEmitReceiver.getError())
+        var playlistTrackFinishReceiver = new PlaylistTrackFinishReceiver(response)
+        var downloadStatus = document.createElement("td")
+        if (playlistTrackFinishReceiver.isError()) {
+            console.log("Failed download")
+            trakcIndex = playlistTrackFinishReceiver.getError()
+            markHtml = "<div class=sucess-mark>❌</div>";
+        } else {
+            trakcIndex = playlistTrackFinishReceiver.getData().index
+            markHtml = "<div class=sucess-mark>✔</div>"
+        }
+        var row = table.rows[trakcIndex]
+        var statusCell = row.querySelector('.status-cell');
+        if (statusCell) {
+            statusCell.innerHTML = markHtml;
+        }
+    })
+
+    socket.on(PlaylistMediaEmitReceiver.emitMsg, function (response) {
+        console.log("TEEEEEEEST")
+        var table = document.getElementById("downloadInfo")
+        var playlistMediaEmitReceiver = new PlaylistMediaEmitReceiver(response)
+        if (playlistMediaEmitReceiver.isError()) {
+            console.log(playlistMediaEmitReceiver.getError())
             return
         }
-        var singleMedia = singleMediaEmitReceiver.getData()
-        var row = table.insertRow()
-        var full_row_html = `
-        <td class=row-download-info>
-            <label class=trak-info>
-            ${singleMedia.artist} ${singleMedia.title}
-            </label>
-            <a class=neon-button target='_blank' href="${singleMedia.url}">url</a>
-        </td>
-        <br>
-        `
-        row.innerHTML = full_row_html
+        var playlistMedia = playlistMediaEmitReceiver.getData()
+        console.log(playlistMedia.trackList)
+        console.log(playlistMedia.sessionHash)
+        userManager.setLastPlaylistHash(playlistMedia.sessionHash);
+
+        for (singleMedia of playlistMedia.trackList) {
+            var row = table.insertRow()
+            var full_row_html = `
+            <td class="download-title-cell">${singleMedia.title}</td>
+            <td class="url-cell"><a class="neon-button" target="_blank" href="${singleMedia.url}">url</a></td>
+            <td class="status-cell"></td>
+            `
+            row.innerHTML = full_row_html
+        }
     })
 
     socket.on(PlaylistUrlReceiver.emitMsg, function(response){

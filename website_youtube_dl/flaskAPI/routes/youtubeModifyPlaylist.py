@@ -51,6 +51,7 @@ def download_config_playlist(formData):
     app.socket_manager.process_emit(data=genereted_hash,
                                     emit_type=DownloadMediaFinishEmit,
                                     user_browser_id=user_browser_id)
+    app.socket_manager.clear_user_data(user_browser_id)
 
 
 @socketio.on("addPlaylist")
