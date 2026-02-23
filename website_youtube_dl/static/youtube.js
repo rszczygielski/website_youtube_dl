@@ -1,5 +1,6 @@
 $(document).ready(function () {
     console.log("ready")
+    const socket = io("/youtube")
     var socket_is_connected = false;
     socket.on('connect', function () {
         console.log("Connected Youtube");
@@ -64,7 +65,7 @@ $(document).ready(function () {
             }
         }
         formData = new FormData(youtubeURL.value, downloadType)
-        emitFormData = new EmitFormData()
+        emitFormData = new EmitFormData(socket)
         emitFormData.sendEmit(formData)
         return true
     })

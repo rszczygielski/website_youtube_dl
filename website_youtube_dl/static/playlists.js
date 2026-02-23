@@ -1,5 +1,6 @@
 $(document).ready(function () {
     console.log("ready")
+    const socket = io("/playlists")
     var socket_is_connected = false;
     socket.on('connect', function () {
         console.log("Connected Youtube Playlists");
@@ -75,7 +76,6 @@ $(document).ready(function () {
     })
 
     socket.on(PlaylistMediaEmitReceiver.emitMsg, function (response) {
-        console.log("TEEEEEEEST")
         var table = document.getElementById("downloadInfo")
         var playlistMediaEmitReceiver = new PlaylistMediaEmitReceiver(response)
         if (playlistMediaEmitReceiver.isError()) {
@@ -115,7 +115,7 @@ $(document).ready(function () {
         const playlistUrl = document.getElementById("playlistUrl").value
         console.log(playlist_name, playlistUrl)
         var addPlaylist = new AddPlaylist(playlist_name, playlistUrl)
-        var emitAddPlaylist = new EmitAddPlaylist()
+        var emitAddPlaylist = new EmitAddPlaylist(socket)
         console.log(addPlaylist.playlistName, addPlaylist.playlistUrl, "addPlaylist")
         emitAddPlaylist.sendEmit(addPlaylist)
     });
@@ -125,14 +125,14 @@ $(document).ready(function () {
         const playlist_nameInput = document.getElementById("playlistName");
         playlist_nameInput.value = playlist_name;
         var playlist_nameObject = new PlaylistName(playlist_name)
-        var emitPlaylistName = new EmitPlaylistName()
+        var emitPlaylistName = new EmitPlaylistName(socket)
         emitPlaylistName.sendEmit(playlist_nameObject)
     });
 
     deletePlalistButton.addEventListener("click", function (event) {
         const playlistToDelete = playlistSelect.value
         var playlist_nameObject = new PlaylistName(playlistToDelete)
-        var emitDeletePlaylist = new EmitDeletePlaylist()
+        var emitDeletePlaylist = new EmitDeletePlaylist(socket)
         emitDeletePlaylist.sendEmit(playlist_nameObject)
     });
 
@@ -144,7 +144,7 @@ $(document).ready(function () {
         var playlistToDownload = playlistSelect.value
         console.log(playlistToDownload)
         var playlist_nameObject = new PlaylistName(playlistToDownload)
-        var emitDownloadFromConfigFile = new EmitDownloadFromConfigFile()
+        var emitDownloadFromConfigFile = new EmitDownloadFromConfigFile(socket)
         emitDownloadFromConfigFile.sendEmit(playlist_nameObject)
     });
 });

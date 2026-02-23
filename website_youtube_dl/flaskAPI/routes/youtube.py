@@ -19,11 +19,12 @@ from ..handlers.youtube_emit import send_emit_media_finish_error
 from ..sockets.session_data import DownloadFileInfo
 
 # --- Globals ---
+
+YOUTUBE_NS = "/youtube"
 youtube = Blueprint("youtube", __name__)
 
 
 # --- Flask Routes ---
-
 
 @youtube.route("/downloadFile/<name>")
 def download_file(name):
@@ -50,14 +51,12 @@ def index():
 
 # --- SocketIO Handlers ---
 
-
-@socketio.on("FormData")
+@socketio.on("FormData", namespace=YOUTUBE_NS)
 def socket_download_server(formData):
     app.logger.debug(formData)
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(
         request.sid)
 
-    # jeśli nie ma user_browser_id, to nie ma sesji dla tego użytkownika
     if user_browser_id is None:
         app.logger.warning("No user browser id found for session")
         return None
@@ -76,18 +75,19 @@ def socket_download_server(formData):
 
     if is_playlist:
         full_file_path = download_playlist_data(
-            youtube_url, request_format, user_browser_id)
+            youtube_url, request_format, user_browser_id, YOUTUBE_NS)
         app.logger.debug(f"Downloaded playlist to: {full_file_path}")
     else:
         full_file_path = download_single_track_data(
-            youtube_url, request_format, user_browser_id)
+            youtube_url, request_format, user_browser_id, YOUTUBE_NS)
         app.logger.debug(f"Downloaded single track to: {full_file_path}")
 
     if not full_file_path:
         app.logger.error("No file path returned")
         send_emit_media_finish_error(
             error_msg=f"Failed download from {youtube_url} - try again",
-            user_browser_id=user_browser_id)
+            user_browser_id=user_browser_id,
+            namespace=YOUTUBE_NS)
     else:
         genereted_hash = generate_hash()
         app.logger.debug(f"Generated hash: {genereted_hash}")
@@ -100,11 +100,12 @@ def socket_download_server(formData):
         app.logger.debug(f"Added message to session hash: {genereted_hash}")
         app.socket_manager.process_emit(data=genereted_hash,
                                         emit_type=DownloadMediaFinishEmit,
-                                        user_browser_id=user_browser_id)
+                                        user_browser_id=user_browser_id,
+                                        namespace=YOUTUBE_NS)
     app.socket_manager.clear_user_data(user_browser_id)
 
 
-@socketio.on("userSession")
+@socketio.on("userSession", namespace=YOUTUBE_NS)
 def handle_user_session(data):
     user_browser_id = data["userBrowserId"]
     request_sid = request.sid
@@ -112,7 +113,7 @@ def handle_user_session(data):
     app.logger.info(f"Mapping {request_sid} -> {user_browser_id}")
 
 
-@socketio.on("getHistory")
+@socketio.on("getHistory", namespace=YOUTUBE_NS)
 def handle_get_history(data):
     user_browser_id = data.get("userBrowserId")
     user_data = app.socket_manager.get_user_messages(user_browser_id)
@@ -125,11 +126,13 @@ def handle_get_history(data):
                     error_msg=data,
                      emit_type=emit_type,
                      user_browser_id=user_browser_id,
-                     add_to_queue=False)
+                     add_to_queue=False,
+                     namespace=YOUTUBE_NS)
         else:
             app.logger.debug(f"Emitting history for {user_browser_id}: {data}")
             app.socket_manager.process_emit(
                     data=data,
                     emit_type=emit_type,
                     user_browser_id=user_browser_id,
-                    add_to_queue=False)
+                    add_to_queue=False,
+                    namespace=YOUTUBE_NS)

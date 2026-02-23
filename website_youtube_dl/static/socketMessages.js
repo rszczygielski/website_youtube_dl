@@ -1,4 +1,4 @@
-var socket = io()
+
 
 class SingleMedia {
     constructor(title, artist, url) {
@@ -187,8 +187,9 @@ class PlaylistTrackFinishReceiver extends BaseReceiver {
 
 class BaseEmit {
 
-    constructor(emitMsg){
+    constructor(emitMsg, socket){
         this.emitMsg = emitMsg
+        this.socket = socket
     }
 
     convert_data_to_message(){
@@ -196,16 +197,14 @@ class BaseEmit {
 
     sendEmit(data){
         var convertedData = this.convert_data_to_message(data)
-        socket.emit(this.emitMsg, convertedData)
+        this.socket.emit(this.emitMsg, convertedData)
     }
 }
 
 class EmitFormData extends BaseEmit {
 
-    constructor(){
-        var emitMsg = "FormData"
-        super(emitMsg)
-        this.emitMsg = emitMsg
+    constructor(socket){
+        super("FormData", socket)
 
     }
 
@@ -224,10 +223,8 @@ class EmitFormData extends BaseEmit {
 
 class EmitAddPlaylist extends BaseEmit {
 
-    constructor(){
-        var emitMsg = "addPlaylist"
-        super(emitMsg)
-        this.emitMsg = emitMsg
+    constructor(socket){
+        super("addPlaylist", socket)
     }
 
     /**
@@ -244,10 +241,8 @@ class EmitAddPlaylist extends BaseEmit {
 
 class EmitDeletePlaylist extends BaseEmit {
 
-    constructor(){
-        var emitMsg = "deletePlaylist"
-        super(emitMsg)
-        this.emitMsg = emitMsg
+    constructor(socket){
+        super("deletePlaylist", socket)
     }
 
     /**
@@ -263,10 +258,8 @@ class EmitDeletePlaylist extends BaseEmit {
 
 class EmitPlaylistName extends BaseEmit {
 
-    constructor(){
-        var emitMsg = "playlistName"
-        super(emitMsg)
-        this.emitMsg = emitMsg
+    constructor(socket){
+        super("playlistName", socket)
     }
 
     /**
@@ -282,10 +275,8 @@ class EmitPlaylistName extends BaseEmit {
 
 class EmitDownloadFromConfigFile extends BaseEmit {
 
-    constructor(){
-        var emitMsg = "downloadFromConfigFile"
-        super(emitMsg)
-        this.emitMsg = emitMsg
+    constructor(socket){
+        super("downloadFromConfigFile", socket)
     }
 
     /**

@@ -31,7 +31,7 @@ class SocketManager:
 
     def _start_cleanup_thread(self):
         """Start background thread to clean up expired connections.
-        
+
         The cleanup thread runs every 60 seconds and removes connections that have
         exceeded SESSION_TIMEOUT. This prevents memory leaks from stale connections.
         """
@@ -53,7 +53,7 @@ class SocketManager:
 
     def add_user_session(self, user_browser_id, session_id):
         """Add or update a user's active connection.
-        
+
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
             session_id (str): Socket.IO session ID.
@@ -67,16 +67,16 @@ class SocketManager:
 
     def add_msg_to_users_queue(self, user_browser_id, emit_type, data, is_error=False):
         """Add a message to user's message queue for history and reconnection.
-        
+
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
             emit_type (Type): The emit type class (e.g., DownloadMediaFinishEmit).
             data (Any): The data to be stored with the message.
             is_error (bool): Whether this message represents an error. Defaults to False.
-            
+
         Returns:
             None: Returns None if user_browser_id is None (logs warning).
-            
+
         Note:
             This method also updates the activity timestamp for the user connection.
         """
@@ -93,10 +93,10 @@ class SocketManager:
 
     def update_activity_timestamp(self, user_browser_id):
         """Update the last activity timestamp for a user connection.
-        
+
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
-            
+
         Note:
             Logs a warning if the user_browser_id is not found in active connections.
         """
@@ -111,10 +111,10 @@ class SocketManager:
 
     def get_user_messages(self, user_browser_id):
         """Get all messages in user's message queue.
-        
+
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
-            
+
         Returns:
             list[UserMessage]: List of UserMessage objects for the user.
                 Returns empty list if user_browser_id not found.
@@ -123,7 +123,7 @@ class SocketManager:
 
     def add_message_to_session_hash(self, genereted_hash, download_file_info: DownloadFileInfo):
         """Store download file information in download registry by hash.
-        
+
         Args:
             genereted_hash (str): Unique hash identifier for the download.
             download_file_info (DownloadFileInfo): File information to store.
@@ -132,10 +132,10 @@ class SocketManager:
 
     def get_session_data_by_hash(self, genereted_hash):
         """Retrieve download file information from download registry by hash.
-        
+
         Args:
             genereted_hash (str): Unique hash identifier for the download.
-            
+
         Returns:
             DownloadFileInfo | None: Download file information if found, None otherwise.
         """
@@ -143,10 +143,10 @@ class SocketManager:
 
     def get_user_browser_id_by_session(self, session_id):
         """Get user_browser_id from Socket.IO session_id.
-        
+
         Args:
             session_id (str): Socket.IO session ID.
-            
+
         Returns:
             str | None: user_browser_id if found, None otherwise.
         """
@@ -157,10 +157,10 @@ class SocketManager:
 
     def get_session_id_by_user_browser_id(self, user_browser_id):
         """Get Socket.IO session_id from user_browser_id.
-        
+
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
-            
+
         Returns:
             str | None: Socket.IO session_id if found, None otherwise.
         """
@@ -169,7 +169,7 @@ class SocketManager:
 
     def clear_user_data(self, user_browser_id):
         """Clear all messages from user's message queue.
-        
+
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
         """
@@ -180,9 +180,10 @@ class SocketManager:
                      data,
                      emit_type,
                      user_browser_id: str,
+                     namespace:str,
                      add_to_queue=True):
         """Process and send a Socket.IO emit to the user.
-        
+
         Args:
             data (Any): Data to be sent with the emit.
             emit_type (Type): The emit type class (e.g., DownloadMediaFinishEmit).
@@ -196,15 +197,16 @@ class SocketManager:
             self.add_msg_to_users_queue(user_browser_id, emit_type, data)
         self.update_activity_timestamp(user_browser_id)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
-        process_emit_type.send_emit(data, session_id)
+        process_emit_type.send_emit(data, session_id, namespace)
 
     def process_emit_error(self,
                      error_msg,
                      emit_type,
                      user_browser_id: str,
+                     namespace: str,
                      add_to_queue=True):
         """Process and send a Socket.IO error emit to the user.
-        
+
         Args:
             error_msg (str): Error message to be sent.
             emit_type (Type): The emit type class (e.g., DownloadMediaFinishEmit).
@@ -218,5 +220,5 @@ class SocketManager:
             self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg, is_error=True)
         self.update_activity_timestamp(user_browser_id)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
-        process_emit_type.send_emit_error(error_msg, session_id)
+        process_emit_type.send_emit_error(error_msg, session_id, namespace)
 

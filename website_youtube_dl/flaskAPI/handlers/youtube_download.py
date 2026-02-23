@@ -7,13 +7,13 @@ from ..utils.general_funcions import get_files_from_dir, zip_all_files_in_list, 
 from ..handlers.youtube_emit import send_emit_playlist_media, send_emit_media_finish_error, send_emit_single_media_info_from_youtube
 
 
-
 def process_playlist_track(playlistTrack,
                            req_format,
                            user_browser_id,
                            playlist_media,
                            index,
-                           downloaded_files):
+                           downloaded_files,
+                           namespace=None):
     title = playlistTrack.title
     title_template = generate_title_template_for_youtube_downloader(
         downloaded_files, title)
@@ -31,23 +31,28 @@ def process_playlist_track(playlistTrack,
             req_format=req_format)
     if full_path is None:
         app.logger.error(f"{title} song not downloaded")
-        app.socket_manager.process_emit_error(error_msg=index, # zrobić unittest pod to
+        app.socket_manager.process_emit_error(error_msg=index,
                                              emit_type=PlaylistTrackFinish,
-                                             user_browser_id=user_browser_id)
+                                             user_browser_id=user_browser_id,
+                                             namespace=namespace)
         return None, title_template
 
     app.socket_manager.process_emit(data=index,
                                     emit_type=PlaylistTrackFinish,
-                                    user_browser_id=user_browser_id)
+                                    user_browser_id=user_browser_id,
+                                    namespace=namespace)
     return full_path, title_template
 
 
-def download_tracks_from_playlist(youtube_url, req_format, user_browser_id):
+def download_tracks_from_playlist(youtube_url, req_format, user_browser_id, namespace=None):
+    # Note: Added namespace to these helper calls as well
     playlist_media = send_emit_playlist_media(
-        youtube_url, user_browser_id)
+        youtube_url, user_browser_id, namespace=namespace)
+
     if not playlist_media:
         send_emit_media_finish_error(error_msg=f"Failed to get data from {youtube_url}",
-                                     user_browser_id=user_browser_id)
+                                     user_browser_id=user_browser_id,
+                                     namespace=namespace)
         return None
     file_paths = []
     directory_path = app.config_parser_manager.get_save_path()
@@ -58,7 +63,8 @@ def download_tracks_from_playlist(youtube_url, req_format, user_browser_id):
                                                            user_browser_id,
                                                            playlist_media,
                                                            index,
-                                                           downloaded_files)
+                                                           downloaded_files,
+                                                           namespace=namespace)
         if full_path:
             file_paths.append(full_path)
             downloaded_files.append(title_template)
@@ -71,18 +77,21 @@ def download_tracks_from_playlist(youtube_url, req_format, user_browser_id):
     return full_zip_path
 
 
-def download_playlist_data(youtube_url, req_format, user_browser_id):
+def download_playlist_data(youtube_url, req_format, user_browser_id, namespace=None):
     app.logger.info(f"Youtube URL: {youtube_url} (playlist)")
     return download_tracks_from_playlist(youtube_url=youtube_url,
                                          req_format=req_format,
-                                         user_browser_id=user_browser_id)
+                                         user_browser_id=user_browser_id,
+                                         namespace=namespace)
 
 
 def download_single_track_data(youtube_url,
                                req_format,
-                               user_browser_id):
+                               user_browser_id,
+                               namespace=None):
     app.logger.info(f"Youtube URL: {youtube_url} (single track)")
-    if not send_emit_single_media_info_from_youtube(youtube_url, user_browser_id):
+
+    if not send_emit_single_media_info_from_youtube(youtube_url, user_browser_id, namespace=namespace):
         app.logger.error("Failed to send emit for single media info")
         return None
     if isinstance(req_format, FormatMP3):

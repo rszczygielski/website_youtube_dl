@@ -10,6 +10,8 @@ from ..handlers.youtube_emit import send_emit_media_finish_error
 from ..sockets.session_data import DownloadFileInfo
 from ..utils.general_funcions import generate_hash
 
+# --- Globals ---
+PLAYLISTS_NS = "/playlists"
 youtube_playlist = Blueprint("youtube_playlist", __name__)
 
 
@@ -24,7 +26,7 @@ def modify_playlist_html():
         playlists_names=playlists_names)
 
 
-@socketio.on("downloadFromConfigFile")
+@socketio.on("downloadFromConfigFile", namespace=PLAYLISTS_NS)
 def download_config_playlist(formData):
     playlist_name = formData["playlistToDownload"]
     app.logger.info(f"Selected playlist form config {playlist_name}")
@@ -34,12 +36,15 @@ def download_config_playlist(formData):
     playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
     full_file_path = download_tracks_from_playlist(youtube_url=playlist_url,
                                                    req_format=FormatMP3(),
-                                                   user_browser_id=user_browser_id)
+                                                   user_browser_id=user_browser_id,
+                                                   namespace=PLAYLISTS_NS)
+
     if not full_file_path:
         app.logger.error("No file path returned")
         send_emit_media_finish_error(
             error_msg=f"Failed download from {playlist_url} - try again",
-            user_browser_id=user_browser_id)
+            user_browser_id=user_browser_id,
+            namespace=PLAYLISTS_NS)
         return None
     genereted_hash = generate_hash()
     app.socket_manager.add_message_to_session_hash(
@@ -50,11 +55,13 @@ def download_config_playlist(formData):
     )
     app.socket_manager.process_emit(data=genereted_hash,
                                     emit_type=DownloadMediaFinishEmit,
-                                    user_browser_id=user_browser_id)
+                                    user_browser_id=user_browser_id,
+                                    namespace=PLAYLISTS_NS)
+
     app.socket_manager.clear_user_data(user_browser_id)
 
 
-@socketio.on("addPlaylist")
+@socketio.on("addPlaylist",  namespace=PLAYLISTS_NS)
 def add_plalist_config(formData):
     print(f"formData: {formData}")
     playlist_name = formData["playlistName"]
@@ -68,7 +75,8 @@ def add_plalist_config(formData):
         app.socket_manager.process_emit_error(
             error_msg=f"Failed to add playlist {playlist_name} to config",
             emit_type=UploadPlaylistToConfigEmit,
-            user_browser_id=user_browser_id)
+            user_browser_id=user_browser_id,
+            namespace=PLAYLISTS_NS)
         app.logger.warning(f"Failed to add playlist {playlist_name} to config")
         return
     app.logger.debug(f"Playlist URL: {playlist_url}")
@@ -76,10 +84,11 @@ def add_plalist_config(formData):
     playlist_list = list(app.config_parser_manager.get_playlists().keys())
     app.socket_manager.process_emit(data=playlist_list,
                                     emit_type=UploadPlaylistToConfigEmit,
-                                    user_browser_id=user_browser_id)
+                                    user_browser_id=user_browser_id,
+                                    namespace=PLAYLISTS_NS)
 
 
-@socketio.on("deletePlaylist")
+@socketio.on("deletePlaylist",  namespace=PLAYLISTS_NS)
 def delete_plalist_config(formData):
     playlist_name = formData["playlistToDelete"]
     user_browser_id = app.socket_manager.get_user_browser_id_by_session(
@@ -91,7 +100,8 @@ def delete_plalist_config(formData):
         app.socket_manager.process_emit_error(
             error_msg=f"Failed to delete playlist {playlist_name} from config",
             emit_type=UploadPlaylistToConfigEmit,
-            user_browser_id=user_browser_id)
+            user_browser_id=user_browser_id,
+            namespace=PLAYLISTS_NS)
         app.logger.warning(
             f"Failed to delete playlist {playlist_name} from config")
         return
@@ -99,10 +109,11 @@ def delete_plalist_config(formData):
     playlist_list = list(app.config_parser_manager.get_playlists().keys())
     app.socket_manager.process_emit(data=playlist_list,
                                     emit_type=UploadPlaylistToConfigEmit,
-                                    user_browser_id=user_browser_id)
+                                    user_browser_id=user_browser_id,
+                                    namespace=PLAYLISTS_NS)
 
 
-@socketio.on("playlistName")
+@socketio.on("playlistName",  namespace=PLAYLISTS_NS)
 def get_playlist_config_url(formData):
     playlist_name = formData["playlistName"]
     playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
@@ -110,4 +121,34 @@ def get_playlist_config_url(formData):
         request.sid)
     app.socket_manager.process_emit(data=playlist_url,
                                     emit_type=GetPlaylistUrlEmit,
-                                    user_browser_id=user_browser_id)
+                                    user_browser_id=user_browser_id,
+                                    namespace=PLAYLISTS_NS)
+
+
+@socketio.on("userSession", namespace=PLAYLISTS_NS)
+def handle_user_session_playlists(data):
+    user_browser_id = data["userBrowserId"]
+    request_sid = request.sid
+    app.socket_manager.add_user_session(user_browser_id, request_sid)
+    app.logger.info(f"Mapping {request_sid} -> {user_browser_id} (Playlists NS)")
+
+@socketio.on("getHistory", namespace=PLAYLISTS_NS)
+def handle_get_history_playlists(data):
+    user_browser_id = data.get("userBrowserId")
+    user_data = app.socket_manager.get_user_messages(user_browser_id)
+
+    for emit_type, data, is_error in user_data:
+        if is_error:
+            app.socket_manager.process_emit_error(
+                error_msg=data,
+                emit_type=emit_type,
+                user_browser_id=user_browser_id,
+                add_to_queue=False,
+                namespace=PLAYLISTS_NS)
+        else:
+            app.socket_manager.process_emit(
+                data=data,
+                emit_type=emit_type,
+                user_browser_id=user_browser_id,
+                add_to_queue=False,
+                namespace=PLAYLISTS_NS)
