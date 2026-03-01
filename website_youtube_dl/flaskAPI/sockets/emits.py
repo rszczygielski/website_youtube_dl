@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from ...common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from ... import socketio
+from flask_socketio import emit
 from flask import current_app as app
 
 class BaseEmit(ABC):
@@ -13,13 +13,13 @@ class BaseEmit(ABC):
     def send_emit(self, data, session_id, namespace):
         converted_data = self.convert_data_to_message(data)
         app.logger.debug(f'Sending emit {self.emit_msg} to session {session_id} with data {converted_data}')
-        socketio.emit(self.emit_msg, {
+        emit(self.emit_msg, {
                       self.data_str: converted_data},
                       to=session_id,
                       namespace=namespace)
 
     def send_emit_error(self, error_msg, session_id, namespace):
-        socketio.emit(self.emit_msg, {
+        emit(self.emit_msg, {
                       self.error_str: error_msg},
                       to=session_id,
                       namespace=namespace)

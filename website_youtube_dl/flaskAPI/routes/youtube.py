@@ -1,140 +1,99 @@
 import os
-from ... import socketio
-from ...common.youtubeLogKeys import YoutubeLogs
-from flask import (
-    send_file, render_template, Blueprint, request
-)
+from flask import send_file, render_template, Blueprint, request
 from flask import current_app as app
-from ..sockets.emits import (
-    DownloadMediaFinishEmit
-)
-from ..utils.general_funcions import generate_hash
-from ..handlers.youtube_download import (
-    download_playlist_data, download_single_track_data)
+
+from ...common.youtubeLogKeys import YoutubeLogs
+from ..handlers.youtube_download import download_playlist_data, download_single_track_data
 from ..handlers.youtube_utils import (
-    extract_youtube_url, extract_request_format,
-    is_playlist_in_url
+    extract_youtube_url, extract_request_format, is_playlist_in_url
 )
-from ..handlers.youtube_emit import send_emit_media_finish_error
-from ..sockets.session_data import DownloadFileInfo
+from ..sockets.base_namespace import BaseMediaNamespace
 
-# --- Globals ---
-
-YOUTUBE_NS = "/youtube"
+# --- Blueprints for standard HTTP routes ---
 youtube = Blueprint("youtube", __name__)
-
-
-# --- Flask Routes ---
 
 @youtube.route("/downloadFile/<name>")
 def download_file(name):
+    """Serve the downloaded file to the user as an attachment.
+
+    Args:
+        name (str): The unique hash identifying the file in the download registry.
+
+    Returns:
+        Response: The file as an attachment or a 404 error if not found.
+    """
     session_download_data = app.socket_manager.get_session_data_by_hash(name)
     if not session_download_data:
         app.logger.warning(f"No session data for hash: {name}")
         return "File not found", 404
+
     full_path = os.path.join(
-        session_download_data.file_directory_path, session_download_data.file_name)
+        session_download_data.file_directory_path,
+        session_download_data.file_name
+    )
     app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
     return send_file(full_path, as_attachment=True)
 
-
 @youtube.route("/youtube.html")
 def youtube_html():
+    """Render the YouTube downloader interface."""
     return render_template("youtube.html")
-
 
 @youtube.route("/")
 @youtube.route("/index.html")
 def index():
+    """Render the main index page."""
     return render_template('index.html')
 
 
-# --- SocketIO Handlers ---
+# --- SocketIO Namespace Class ---
+class YoutubeNamespace(BaseMediaNamespace):
+    """Socket.IO Namespace handler for /youtube.
 
-@socketio.on("FormData", namespace=YOUTUBE_NS)
-def socket_download_server(formData):
-    app.logger.debug(formData)
-    user_browser_id = app.socket_manager.get_user_browser_id_by_session(
-        request.sid)
+    This class manages real-time communication for single track and playlist
+    downloads from YouTube. It inherits session and history management
+    from BaseMediaNamespace.
+    """
 
-    if user_browser_id is None:
-        app.logger.warning("No user browser id found for session")
-        return None
+    def on_FormData(self, formData):
+        """Handle the main download form submission via WebSocket.
 
-    app.logger.debug(
-        f"{user_browser_id} <-- user_browser_id {request.sid} <-- request.sid")
-    app.socket_manager.clear_user_data(user_browser_id)
-    app.logger.info(f"Cleared user data: {user_browser_id}")
-    youtube_url = extract_youtube_url(formData, user_browser_id)
-    request_format = extract_request_format(formData, user_browser_id)
+        Processes the provided URL and format, triggers the appropriate
+        download handler, and finalizes the download process by emitting
+        the result back to the client.
 
-    if not youtube_url or not request_format:
-        return None
-    is_playlist = is_playlist_in_url(youtube_url)
-    app.logger.debug(f"Is playlist: {is_playlist}")
+        Args:
+            formData (dict): Data from the client containing 'url' and 'format'.
+        """
+        app.logger.debug(f"[{self.namespace}] Received FormData: {formData}")
 
-    if is_playlist:
-        full_file_path = download_playlist_data(
-            youtube_url, request_format, user_browser_id, YOUTUBE_NS)
-        app.logger.debug(f"Downloaded playlist to: {full_file_path}")
-    else:
-        full_file_path = download_single_track_data(
-            youtube_url, request_format, user_browser_id, YOUTUBE_NS)
-        app.logger.debug(f"Downloaded single track to: {full_file_path}")
+        user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
+        if user_browser_id is None:
+            app.logger.warning("No user browser id found for session")
+            return
 
-    if not full_file_path:
-        app.logger.error("No file path returned")
-        send_emit_media_finish_error(
-            error_msg=f"Failed download from {youtube_url} - try again",
-            user_browser_id=user_browser_id,
-            namespace=YOUTUBE_NS)
-    else:
-        genereted_hash = generate_hash()
-        app.logger.debug(f"Generated hash: {genereted_hash}")
-        app.socket_manager.add_message_to_session_hash(
-            genereted_hash,
-            DownloadFileInfo(
-                full_file_path, is_playlist
+        # Prepare for a new process by clearing previous history
+        app.socket_manager.clear_user_data(user_browser_id)
+
+        youtube_url = extract_youtube_url(formData, user_browser_id)
+        request_format = extract_request_format(formData, user_browser_id)
+
+        if not youtube_url or not request_format:
+            return
+
+        is_playlist = is_playlist_in_url(youtube_url)
+        app.logger.debug(f"Is playlist: {is_playlist}")
+
+        # Execute physical file download
+        if is_playlist:
+            full_file_path = download_playlist_data(
+                youtube_url, request_format, user_browser_id, self.namespace
             )
-        )
-        app.logger.debug(f"Added message to session hash: {genereted_hash}")
-        app.socket_manager.process_emit(data=genereted_hash,
-                                        emit_type=DownloadMediaFinishEmit,
-                                        user_browser_id=user_browser_id,
-                                        namespace=YOUTUBE_NS)
-    app.socket_manager.clear_user_data(user_browser_id)
-
-
-@socketio.on("userSession", namespace=YOUTUBE_NS)
-def handle_user_session(data):
-    user_browser_id = data["userBrowserId"]
-    request_sid = request.sid
-    app.socket_manager.add_user_session(user_browser_id, request_sid)
-    app.logger.info(f"Mapping {request_sid} -> {user_browser_id}")
-
-
-@socketio.on("getHistory", namespace=YOUTUBE_NS)
-def handle_get_history(data):
-    user_browser_id = data.get("userBrowserId")
-    user_data = app.socket_manager.get_user_messages(user_browser_id)
-    app.logger.debug(f"{user_browser_id} <-- user_browser_id")
-
-    for emit_type, data, namespace, is_error in user_data:
-        if namespace != YOUTUBE_NS:
-            continue
-        if is_error:
-            app.logger.debug(f"Emitting error from history for {user_browser_id}: {data}")
-            app.socket_manager.process_emit_error(
-                    error_msg=data,
-                     emit_type=emit_type,
-                     user_browser_id=user_browser_id,
-                     add_to_queue=False,
-                     namespace=YOUTUBE_NS)
         else:
-            app.logger.debug(f"Emitting history for {user_browser_id}: {data}")
-            app.socket_manager.process_emit(
-                    data=data,
-                    emit_type=emit_type,
-                    user_browser_id=user_browser_id,
-                    add_to_queue=False,
-                    namespace=YOUTUBE_NS)
+            full_file_path = download_single_track_data(
+                youtube_url, request_format, user_browser_id, self.namespace
+            )
+
+        # Finalize download using base class method
+        # This handles error reporting, hashing, and success emission
+        self.finalize_download(full_file_path, is_playlist, user_browser_id)
