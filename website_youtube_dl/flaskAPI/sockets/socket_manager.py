@@ -5,15 +5,14 @@ from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
 
 
 
-
 class SocketManager:
     """Manages Socket.IO connections, user message queues, and download file registry.
-    
+
     This class handles:
     - Active WebSocket connections tracking with timeout management
     - User message queues for history and reconnection
     - Download file registry mapping hashes to file metadata
-    
+
     Attributes:
         SESSION_TIMEOUT (int): Connection timeout in seconds (default: 1800 = 30 minutes).
         active_connections (dict): Maps user_browser_id to BrowserSession.
@@ -65,13 +64,14 @@ class SocketManager:
         self.active_connections[user_browser_id] = BrowserSession(
             session_id=session_id, last_activity_timestamp=now)
 
-    def add_msg_to_users_queue(self, user_browser_id, emit_type, data, is_error=False):
+    def add_msg_to_users_queue(self, user_browser_id, emit_type, data, namespace, is_error=False):
         """Add a message to user's message queue for history and reconnection.
 
         Args:
             user_browser_id (str): Unique identifier for the user's browser.
             emit_type (Type): The emit type class (e.g., DownloadMediaFinishEmit).
             data (Any): The data to be stored with the message.
+            namespace (str): The namespace for the Socket.IO event.
             is_error (bool): Whether this message represents an error. Defaults to False.
 
         Returns:
@@ -86,7 +86,7 @@ class SocketManager:
         app.logger.debug(f"Adding message to users queue for user_browser_id: {user_browser_id}")
         if user_browser_id not in self.message_queues:
             self.message_queues[user_browser_id] = []
-        message = UserMessage(emit_type=emit_type, data=data, is_error=is_error)
+        message = UserMessage(emit_type=emit_type, data=data, namespace=namespace, is_error=is_error)
         self.message_queues[user_browser_id].append(message)
         # update activity timestamp
         self.update_activity_timestamp(user_browser_id)
@@ -103,7 +103,7 @@ class SocketManager:
         if user_browser_id in self.active_connections:
             session = self.active_connections[user_browser_id]
             self.active_connections[user_browser_id] = BrowserSession(
-                session_id=session.session_id, 
+                session_id=session.session_id,
                 last_activity_timestamp=time.time())
             app.logger.debug(f"Updated activity timestamp for user_browser_id: {user_browser_id}")
         else:
@@ -194,7 +194,7 @@ class SocketManager:
         process_emit_type = emit_type()
         app.logger.debug(f'Processing emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
         if add_to_queue:
-            self.add_msg_to_users_queue(user_browser_id, emit_type, data)
+            self.add_msg_to_users_queue(user_browser_id, emit_type, data, namespace)
         self.update_activity_timestamp(user_browser_id)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit(data, session_id, namespace)
@@ -217,7 +217,7 @@ class SocketManager:
         process_emit_type = emit_type()
         app.logger.debug(f'Processing error emit {process_emit_type.emit_msg} for user_browser_id {user_browser_id}')
         if add_to_queue:
-            self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg, is_error=True)
+            self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg, namespace, is_error=True)
         self.update_activity_timestamp(user_browser_id)
         session_id = self.get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit_error(error_msg, session_id, namespace)

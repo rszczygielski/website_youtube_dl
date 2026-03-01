@@ -137,7 +137,9 @@ def handle_get_history_playlists(data):
     user_browser_id = data.get("userBrowserId")
     user_data = app.socket_manager.get_user_messages(user_browser_id)
 
-    for emit_type, data, is_error in user_data:
+    for emit_type, data, namespace, is_error in user_data:
+        if namespace != PLAYLISTS_NS:
+            continue
         if is_error:
             app.socket_manager.process_emit_error(
                 error_msg=data,

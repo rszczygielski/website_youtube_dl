@@ -6,40 +6,42 @@ from typing import Any, Type, Optional
 @dataclass
 class UserMessage:
     """Represents a message in user's session queue.
-    
+
     This dataclass stores a message that will be sent to the user via Socket.IO.
     It can be unpacked like a tuple for backward compatibility.
-    
+
     Attributes:
         emit_type (Type): The emit type class (e.g., DownloadMediaFinishEmit).
         data (Any): The data to be sent with the emit.
+        namespace (str): The namespace for the Socket.IO event.
         is_error (bool): Whether this message represents an error. Defaults to False.
     """
     emit_type: Type
     data: Any
+    namespace: str
     is_error: bool = False
 
     def __iter__(self):
         """Allow unpacking like tuple for backward compatibility.
-        
+
         Returns:
             Iterator: Iterator over (emit_type, data, is_error) tuple.
-            
+
         Example:
             >>> message = UserMessage(emit_type=SomeEmit, data="test", is_error=False)
-            >>> emit_type, data, is_error = message  # Unpacking works
+            >>> emit_type, data, namespace, is_error = message  # Unpacking works
         """
-        return iter((self.emit_type, self.data, self.is_error))
+        return iter((self.emit_type, self.data, self.namespace, self.is_error))
 
 
 @dataclass
 class BrowserSession:
     """Represents a browser session with Socket.IO session ID and timestamp.
-    
+
     This dataclass stores information about an active browser session, including
     the Socket.IO session ID and the last activity timestamp for timeout management.
     It can be unpacked like a tuple for backward compatibility.
-    
+
     Attributes:
         session_id (str): The Socket.IO session ID.
         last_activity_timestamp (float): Unix timestamp of last activity.
@@ -49,10 +51,10 @@ class BrowserSession:
 
     def __iter__(self):
         """Allow unpacking like tuple for backward compatibility.
-        
+
         Returns:
             Iterator: Iterator over (session_id, last_activity_timestamp) tuple.
-            
+
         Example:
             >>> session = BrowserSession(session_id="abc123", last_activity_timestamp=1234567890.0)
             >>> session_id, timestamp = session  # Unpacking works
@@ -62,10 +64,10 @@ class BrowserSession:
 
 class DownloadFileInfo():
     """Stores information about a downloaded file for session management.
-    
+
     This class holds file metadata needed to serve the file to the user
     via the download endpoint. It validates that the file exists during initialization.
-    
+
     Attributes:
         file_name (str): The name of the file.
         file_directory_path (str): The directory path where the file is stored.
@@ -77,11 +79,11 @@ class DownloadFileInfo():
 
     def __init__(self, fullFilePath: str, is_playlist: bool) -> None:
         """Initialize DownloadFileInfo with file path and playlist flag.
-        
+
         Args:
             fullFilePath (str): Full path to the downloaded file.
             is_playlist (bool): Whether this file represents a playlist download.
-            
+
         Raises:
             FileNotFoundError: If the file at fullFilePath does not exist.
         """
@@ -90,10 +92,10 @@ class DownloadFileInfo():
 
     def set_file_download_data(self, fullFilePath):
         """Extract file name and directory path from full file path.
-        
+
         Args:
             fullFilePath (str): Full path to the file.
-            
+
         Raises:
             FileNotFoundError: If the file at fullFilePath does not exist.
         """
