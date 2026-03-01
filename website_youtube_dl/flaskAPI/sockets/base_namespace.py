@@ -10,7 +10,7 @@ class BaseMediaNamespace(Namespace):
 
     This class provides common event handlers for session management,
     message history retrieval, and a unified method for finalizing
-    media downloads.
+    media downloads. It also triggers session cleanup on disconnect.
     """
 
     def on_userSession(self, data):
@@ -23,6 +23,17 @@ class BaseMediaNamespace(Namespace):
         request_sid = request.sid
         app.socket_manager.add_user_session(user_browser_id, request_sid)
         app.logger.info(f"[{self.namespace}] Mapping {request_sid} -> {user_browser_id}")
+
+    def on_disconnect(self):
+        """Handle WebSocket disconnection by scheduling a session cleanup.
+
+        Retrieves the browser ID associated with the current session and
+        notifies the SocketManager to start the expiration timer.
+        """
+        user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
+        if user_browser_id:
+            app.logger.info(f"[{self.namespace}] User {user_browser_id} disconnected")
+            app.socket_manager.on_user_disconnect(user_browser_id)
 
     def on_getHistory(self, data):
         """Retrieve and replay the message history for a specific user.
