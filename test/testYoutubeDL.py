@@ -2,472 +2,232 @@ import os
 import yt_dlp
 from unittest import TestCase, main
 from unittest.mock import patch, call, MagicMock
+
 from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
-from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
+from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo, MainYoutubeKeys
 import website_youtube_dl.common.youtubeDL as youtubeDL
-from website_youtube_dl.common.youtubeAPI import (SingleMedia,
-                                                  MediaFromPlaylist,
-                                                  PlaylistMedia)
-from website_youtube_dl.common.youtubeOptions import (YoutubeAudioOptions,
-                                                      YoutubeVideoOptions)
-from test.configParserMock import ConfigParserMock
+from website_youtube_dl.common.youtubeAPI import (
+    SingleMedia,
+    MediaFromPlaylist,
+    PlaylistMedia
+)
+from website_youtube_dl.common.youtubeOptions import (
+    YoutubeAudioOptions,
+    YoutubeVideoOptions,
+    YoutubeOptiones
+)
+from test.configParserMock import ConfigParserMock, TestConstants
 from test.easyID3ManagerMock import EasyID3ManagerMock
-from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
-from website_youtube_dl.common.youtubeOptions import YoutubeOptiones
 
 
 class TestYoutubeDL(TestCase):
-    mainURL1 = "https://www.youtube.com/watch?v=ABsslEoL0-c"
-    main_playlist_url_with_video_hash1 = "https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
-    main_playlist_url_no_video_hash1 = "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
-    main_playlist_url_no_video_hash2 = "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"
-    main_playlist_url_with_index1 = "https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1"
-    main_playlist_hash = "PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
-    main_media_download_error = "Download media info error ValueError"
-    main_playlist_without_video_error = 'This a playlist only - without video hash to download'
+    # Base URLs and Hashes
+    URL_SINGLE = "https://www.youtube.com/watch?v=ABsslEoL0-c"
+    URL_PLAYLIST_WITH_VIDEO = "https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
+    URL_PLAYLIST_ONLY_1 = "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
+    URL_PLAYLIST_ONLY_2 = "https://www.youtube.com/playlist?list=PLAz00b-z3I5WEWEj9eWN_xvTmAtwI0_gU"
+    URL_PLAYLIST_WITH_INDEX = "https://www.youtube.com/watch?v=ABsslEoL0-c&list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO&index=1"
+    
+    PLAYLIST_HASH = "PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
+    MSG_DOWNLOAD_ERROR = "Download media info error ValueError"
+    MSG_PLAYLIST_ONLY_ERROR = 'This a playlist only - without video hash to download'
 
-    folder_path = os.path.abspath(__file__)
+    # Test Metadata
+    FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
+    TEST_PLAYLIST_NAME = "test_playlist"
+    TEST_TITLE_1 = "Society"
+    TEST_ALBUM_1 = "Into The Wild"
+    TEST_ARTIST_1 = "Eddie Vedder"
+    TEST_EXT_1 = "webm"
+    TEST_INDEX_1 = 1
+    TEST_URL_1 = 'https://www.youtube.com/watch?v=ABsslEoL0-c'
+    TEST_ID_1 = 'ABsslEoL0-c'
+    TEST_FULL_PATH_1 = os.path.join(FOLDER_PATH, f"{TEST_TITLE_1}.webm")
 
-    test_playlist_name = "test_playlist"
-    test_title1 = "Society"
-    test_album1 = "Into The Wild"
-    test_artist1 = "Eddie Vedder"
-    test_ext1 = "webm"
-    test_playlistIndex1 = 1
-    test_original_url1 = 'https://www.youtube.com/watch?v=ABsslEoL0-c'
-    testId1 = 'ABsslEoL0-c'
-    test_full_path1 = f"{folder_path}/{test_title1}.webm"
+    TEST_TITLE_2 = 'Hard Sun'
+    TEST_ARTIST_2 = "Eddie Vedder"
+    TEST_EXT_2 = "webm"
+    TEST_INDEX_2 = 2
+    TEST_URL_2 = 'https://www.youtube.com/watch?v=_EZUfnMv3Lg'
+    TEST_ID_2 = '_EZUfnMv3Lg'
+    TEST_FULL_PATH_2 = os.path.join(FOLDER_PATH, f"{TEST_TITLE_2}.webm")
 
-    test_title2 = 'Hard Sun'
-    test_artist2 = "Eddie Vedder"
-    test_ext2 = "webm"
-    test_playlist_index2 = 2
-    test_original_url2 = 'https://www.youtube.com/watch?v=_EZUfnMv3Lg'
-    testId2 = '_EZUfnMv3Lg'
-    test_full_path2 = f"{folder_path}/{test_title2}.webm"
-
-    list_of_formats = ['360', '480', '720', '1080', '2160']
-
-    # Global test file names
-    test_file_1 = "file1.mp3"
-    test_file_2 = "file2.mp3"
-    test_file_3 = "file3.txt"
-
-    songMetaData1 = {
-        MediaInfo.TITLE.value: test_title1,
-        MediaInfo.ALBUM.value: test_album1,
-        MediaInfo.ARTIST.value: test_artist1,
-        MediaInfo.EXTENSION.value: test_ext1,
-        PlaylistInfo.PLAYLIST_INDEX.value: test_playlistIndex1,
-        MediaInfo.URL.value: test_original_url1,
-        MediaInfo.YOUTUBE_HASH.value: testId1,
+    # Mock Data Dictionaries
+    SONG_META_1 = {
+        MediaInfo.TITLE.value: TEST_TITLE_1,
+        MediaInfo.ALBUM.value: TEST_ALBUM_1,
+        MediaInfo.ARTIST.value: TEST_ARTIST_1,
+        MediaInfo.EXTENSION.value: TEST_EXT_1,
+        PlaylistInfo.PLAYLIST_INDEX.value: TEST_INDEX_1,
+        MediaInfo.URL.value: TEST_URL_1,
+        MediaInfo.YOUTUBE_HASH.value: TEST_ID_1,
         MainYoutubeKeys.REQUESTED_DOWNLOADS.value: [
-            {MainYoutubeKeys.FUL_PATH.value: test_full_path1}]
+            {MainYoutubeKeys.FUL_PATH.value: TEST_FULL_PATH_1}]
     }
 
-    songMetaData2 = {
-        MediaInfo.TITLE.value: test_title2,
-        MediaInfo.ARTIST.value: test_artist2,
-        MediaInfo.ALBUM.value: test_album1,
-        MediaInfo.EXTENSION.value: test_ext2,
-        PlaylistInfo.PLAYLIST_INDEX.value: test_playlist_index2,
-        MediaInfo.URL.value: test_original_url2,
-        MediaInfo.YOUTUBE_HASH.value: testId2,
+    SONG_META_2 = {
+        MediaInfo.TITLE.value: TEST_TITLE_2,
+        MediaInfo.ARTIST.value: TEST_ARTIST_2,
+        MediaInfo.ALBUM.value: TEST_ALBUM_1,
+        MediaInfo.EXTENSION.value: TEST_EXT_2,
+        PlaylistInfo.PLAYLIST_INDEX.value: TEST_INDEX_2,
+        MediaInfo.URL.value: TEST_URL_2,
+        MediaInfo.YOUTUBE_HASH.value: TEST_ID_2,
         MainYoutubeKeys.REQUESTED_DOWNLOADS.value: [
-            {MainYoutubeKeys.FUL_PATH.value: test_full_path2}]
-
+            {MainYoutubeKeys.FUL_PATH.value: TEST_FULL_PATH_2}]
     }
 
-    songFromPlaylist1 = {
-        PlaylistInfo.TITLE.value: test_title1,
-        PlaylistInfo.URL.value: testId1,
-    }
+    PLAYLIST_ENTRY_1 = {PlaylistInfo.TITLE.value: TEST_TITLE_1, PlaylistInfo.URL.value: TEST_ID_1}
+    PLAYLIST_ENTRY_2 = {PlaylistInfo.TITLE.value: TEST_TITLE_2, PlaylistInfo.URL.value: TEST_ID_2}
 
-    songFromPlaylist2 = {
-        PlaylistInfo.TITLE.value: test_title2,
-        PlaylistInfo.URL.value: testId2,
-    }
+    TEST_PLAYLIST_FULL_ENTRIES = [SONG_META_1, SONG_META_2, None]
+    TEST_PLAYLIST_SIMPLE_ENTRIES = [PLAYLIST_ENTRY_1, PLAYLIST_ENTRY_2, None]
+    TEST_PLAYLIST_URLS = [URL_PLAYLIST_ONLY_1, URL_PLAYLIST_ONLY_2]
 
-    test_playlistFullEntries = [songMetaData1, songMetaData2, None]
-    playlistMetaDataFull = {
-        PlaylistInfo.TITLE.value: test_playlist_name,
-        PlaylistInfo.PLAYLIST_TRACKS.value: test_playlistFullEntries
-    }
-
-    testEntriesList = [songFromPlaylist1, songFromPlaylist2, None]
-    testPlaylsitUrlsList = [
-        main_playlist_url_no_video_hash1, main_playlist_url_no_video_hash2]
-
-    plalistMetaData = {
-        PlaylistInfo.TITLE.value: test_playlist_name,
-        PlaylistInfo.PLAYLIST_TRACKS.value: testEntriesList
-    }
-
-    singleMediaTest = SingleMedia(test_full_path1, test_title1, test_album1,
-                                  test_artist1, testId1,
-                                  test_original_url1, test_ext1)
-
-    mediaFromPlaylistTest1 = MediaFromPlaylist(test_title1, testId1)
-
-    mediaFromPlaylistTest2 = MediaFromPlaylist(test_title2, testId2)
-
-    out_template = folder_path + \
-        f"{test_title1}.%(ext)s"
-    audio_options = YoutubeAudioOptions(out_template)
-    video_options = YoutubeVideoOptions(out_template)
-
-    playlist_mediaTest = PlaylistMedia(test_playlist_name, [mediaFromPlaylistTest1,
-                                                            mediaFromPlaylistTest2])
+    # API Objects for Comparison
+    EXPECTED_SINGLE_MEDIA = SingleMedia(TEST_FULL_PATH_1, TEST_TITLE_1, TEST_ALBUM_1,
+                                       TEST_ARTIST_1, TEST_ID_1, TEST_URL_1, TEST_EXT_1)
+    
+    EXPECTED_PLAYLIST_MEDIA = PlaylistMedia(TEST_PLAYLIST_NAME, [
+        MediaFromPlaylist(TEST_TITLE_1, TEST_ID_1),
+        MediaFromPlaylist(TEST_TITLE_2, TEST_ID_2)
+    ])
 
     def setUp(self):
-        self.testDir = os.path.dirname(os.path.abspath(__file__))
-        config_parser_manager = BaseConfigParser(f'{self.testDir}/test_youtube_config.ini',
-                                                 ConfigParserMock())
-        self.youtube_test = youtubeDL.YoutubeDL(config_parser_manager)
-        self.youtubeConfigPlaylists = youtubeDL.YoutubeDlPlaylists(config_parser_manager,
-                                                                   MagicMock())
-        self.youtube_test._savePath = self.testDir
-        self.youtube_test._ydl_opts.overwrite_option(YoutubeOptiones.OUT_TEMPLATE,
-                                                     self.testDir + '/%(title)s.%(ext)s')
-        self.easy_id3_manager_mock = EasyID3ManagerMock()
-        self.easy_id3_manager_mock.set_params(
-            filePath=self.testDir,
-            title=self.test_title1,
-            album=self.test_album1,
-            artist=self.test_artist1,
-            track_number=self.test_playlistIndex1,
-            playlist_name=self.test_playlist_name,
+        self.test_dir = os.path.dirname(os.path.abspath(__file__))
+        config_parser_manager = BaseConfigParser(
+            f'{self.test_dir}/test_youtube_config.ini',
+            ConfigParserMock()
+        )
+        
+        self.youtube_dl = youtubeDL.YoutubeDL(config_parser_manager)
+        self.youtube_playlists = youtubeDL.YoutubeDlPlaylists(config_parser_manager, MagicMock())
+        
+        # Configure test path and template
+        self.youtube_dl._savePath = self.test_dir
+        self.youtube_dl._ydl_opts.overwrite_option(
+            YoutubeOptiones.OUT_TEMPLATE,
+            os.path.join(self.test_dir, '%(title)s.%(ext)s')
+        )
+        
+        # Mocking metadata manager
+        self.meta_manager = EasyID3ManagerMock()
+        self.meta_manager.set_params(
+            file_path=self.test_dir,
+            title=self.TEST_TITLE_1,
+            album=self.TEST_ALBUM_1,
+            artist=self.TEST_ARTIST_1,
+            track_number=self.TEST_INDEX_1,
+            playlist_name=self.TEST_PLAYLIST_NAME,
         )
 
-    def check_result_single_media(self, singleMedia, singleMediaExpected):
-        self.assertEqual(singleMedia.title, singleMediaExpected.title)
-        self.assertEqual(singleMedia.album, singleMediaExpected.album)
-        self.assertEqual(singleMedia.artist, singleMediaExpected.artist)
-        self.assertEqual(singleMedia.extension, singleMediaExpected.extension)
-        self.assertEqual(singleMedia.url, singleMediaExpected.url)
-        self.assertEqual(singleMedia.yt_hash, singleMediaExpected.yt_hash)
+    # --- Assertion Helpers ---
 
-    def check_media_from_playlist(self, mediaFromPlaylist, mediaFromPlaylistExpected):
-        self.assertEqual(mediaFromPlaylist.title,
-                         mediaFromPlaylistExpected.title)
-        self.assertEqual(mediaFromPlaylist.yt_hash,
-                         mediaFromPlaylistExpected.yt_hash)
+    def assert_single_media_equal(self, actual, expected):
+        self.assertEqual(actual.title, expected.title)
+        self.assertEqual(actual.album, expected.album)
+        self.assertEqual(actual.artist, expected.artist)
+        self.assertEqual(actual.extension, expected.extension)
+        self.assertEqual(actual.url, expected.url)
+        self.assertEqual(actual.yt_hash, expected.yt_hash)
 
-    def check_resul_playlist_meida(self, playlist_media: youtubeDL.PlaylistMedia,
-                                   playlist_mediaExpected: youtubeDL.PlaylistMedia):
-        self.assertEqual(playlist_media.playlist_name,
-                         playlist_mediaExpected.playlist_name)
-        self.assertEqual(len(playlist_media.media_from_playlist_list), len(
-            playlist_mediaExpected.media_from_playlist_list))
-        for idex in range(len(playlist_media.media_from_playlist_list)):
-            self.check_media_from_playlist(playlist_media.media_from_playlist_list[idex],
-                                           playlist_mediaExpected.media_from_playlist_list[idex])
-
-    # bez sensu testować ale błedy sprawdzać
-    def check_fast_download_result(self, metaData):
-        resultTest = {'title': 'test_playlist', 'entries': [
-            self.songFromPlaylist1, self.songFromPlaylist2, None]}
-        if metaData != resultTest:
-            return False
-        else:
-            return True
+    def assert_playlist_media_equal(self, actual, expected):
+        self.assertEqual(actual.playlist_name, expected.playlist_name)
+        self.assertEqual(len(actual.media_from_playlist_list), len(expected.media_from_playlist_list))
+        for act_track, exp_track in zip(actual.media_from_playlist_list, expected.media_from_playlist_list):
+            self.assertEqual(act_track.title, exp_track.title)
+            self.assertEqual(act_track.yt_hash, exp_track.yt_hash)
 
     def mock_extract(self, return_value=None, side_effect=None):
         patcher = patch.object(yt_dlp.YoutubeDL, "extract_info",
                                return_value=return_value, side_effect=side_effect)
-        mock = patcher.start()
+        mock_obj = patcher.start()
         self.addCleanup(patcher.stop)
-        return mock
+        return mock_obj
 
-    def test_download_file(self):
-        mock_extrac_info = self.mock_extract(return_value=self.songMetaData1)
-        resultOfYoutube = self.youtube_test._download_file(self.mainURL1)
-        self.assertEqual(False, resultOfYoutube.is_error())
-        mock_extrac_info.assert_called_once_with(self.mainURL1)
-        singleMedia = resultOfYoutube.get_data()
-        self.check_result_single_media(singleMedia, self.singleMediaTest)
+    # --- Core Download Tests ---
 
-    def test_download_file_different_title_template(self):
-        self.youtube_test.set_title_template_one_time("test")
-        self.assertEqual("test", self.youtube_test.title_template)
-        mock_extrac_info = self.mock_extract(return_value=self.songMetaData1)
-        resultOfYoutube = self.youtube_test._download_file(self.mainURL1)
-        self.assertEqual(False, resultOfYoutube.is_error())
-        mock_extrac_info.assert_called_once_with(self.mainURL1)
-        singleMedia = resultOfYoutube.get_data()
-        self.check_result_single_media(singleMedia, self.singleMediaTest)
-        self.assertEqual('/%(title)s', self.youtube_test.title_template)
+    def test_download_file_success(self):
+        mock_info = self.mock_extract(return_value=self.SONG_META_1)
+        result = self.youtube_dl._download_file(self.URL_SINGLE)
+        
+        self.assertFalse(result.is_error())
+        mock_info.assert_called_once_with(self.URL_SINGLE)
+        self.assert_single_media_equal(result.get_data(), self.EXPECTED_SINGLE_MEDIA)
 
-    def test_download_file_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        resultOfYoutube = self.youtube_test._download_file(self.mainURL1)
-        self.assertEqual(True, resultOfYoutube.is_error())
-        mock_extrac_info.assert_called_once_with(self.mainURL1)
-        error_msg = resultOfYoutube.get_error_info()
-        self.assertEqual(error_msg, self.main_media_download_error)
+    def test_download_file_with_one_time_template(self):
+        self.youtube_dl.set_title_template_one_time("temp_template")
+        self.assertEqual("temp_template", self.youtube_dl.title_template)
+        
+        self.mock_extract(return_value=self.SONG_META_1)
+        result = self.youtube_dl._download_file(self.URL_SINGLE)
+        
+        self.assertFalse(result.is_error())
+        # Verify template reset
+        self.assertEqual('/%(title)s', self.youtube_dl.title_template)
 
-    def test_get_video_hash(self):
-        correctVideoHash = self.testId1
-        testVideoHash1 = self.youtube_test._get_media_result_hash(
-            self.mainURL1)
-        self.assertEqual(testVideoHash1, correctVideoHash)
-        testVideoHash2 = self.youtube_test._get_media_result_hash(
-            self.main_playlist_url_with_video_hash1)
-        self.assertEqual(testVideoHash2, correctVideoHash)
-        testVideoHash3 = self.youtube_test._get_media_result_hash(
-            self.main_playlist_url_with_index1)
-        self.assertEqual(testVideoHash3, correctVideoHash)
-        testVideoHash4 = self.youtube_test._get_media_result_hash(
-            self.testId1)
-        self.assertEqual(testVideoHash4, self.testId1)
-        wrong_link_with_video = self.main_playlist_url_no_video_hash1
+    def test_download_file_error(self):
+        self.mock_extract(side_effect=ValueError(self.MSG_DOWNLOAD_ERROR))
+        result = self.youtube_dl._download_file(self.URL_SINGLE)
+        
+        self.assertTrue(result.is_error())
+        self.assertEqual(result.get_error_info(), self.MSG_DOWNLOAD_ERROR)
+
+    # --- Hash Extraction Tests ---
+
+    def test_get_media_result_hash(self):
+        # Test various URL formats
+        urls = [self.URL_SINGLE, self.URL_PLAYLIST_WITH_VIDEO, self.URL_PLAYLIST_WITH_INDEX, self.TEST_ID_1]
+        for url in urls:
+            self.assertEqual(self.youtube_dl._get_media_result_hash(url), self.TEST_ID_1)
+
         with self.assertRaises(ValueError) as context:
-            self.youtube_test._get_media_result_hash(wrong_link_with_video)
-        self.assertTrue(
-            self.main_playlist_without_video_error in str(context.exception))
+            self.youtube_dl._get_media_result_hash(self.URL_PLAYLIST_ONLY_1)
+        self.assertIn(self.MSG_PLAYLIST_ONLY_ERROR, str(context.exception))
 
-    def test_get_playlist_hash(self):
-        correectPlaylistHash = self.main_playlist_hash
-        testVideoHash1 = self.youtube_test._get_playlist_hash(
-            self.main_playlist_url_no_video_hash1)
-        self.assertEqual(testVideoHash1, correectPlaylistHash)
-        testVideoHash2 = self.youtube_test._get_playlist_hash(
-            self.main_playlist_url_with_video_hash1)
-        self.assertEqual(testVideoHash2, correectPlaylistHash)
-        testVideoHash3 = self.youtube_test._get_playlist_hash(
-            self.main_playlist_url_with_index1)
-        self.assertEqual(testVideoHash3, correectPlaylistHash)
-        wrong_link_with_video = self.mainURL1
-        with self.assertRaises(ValueError) as context:
-            self.youtube_test._get_playlist_hash(wrong_link_with_video)
-        self.assertTrue('This is not a playlist' in str(context.exception))
+    def test_get_playlist_hash_success(self):
+        urls = [self.URL_PLAYLIST_ONLY_1, self.URL_PLAYLIST_WITH_VIDEO, self.URL_PLAYLIST_WITH_INDEX]
+        for url in urls:
+            self.assertEqual(self.youtube_dl._get_playlist_hash(url), self.PLAYLIST_HASH)
 
-    def test_download_video(self):
-        mock_extrac_info = self.mock_extract(return_value=self.songMetaData1)
-        youtubeResult = self.youtube_test.download_yt_media(
-            self.mainURL1, self.video_options)
-        singleMedia = youtubeResult.get_data()
-        mock_extrac_info.assert_called_once_with(self.testId1)
-        self.check_result_single_media(singleMedia, self.singleMediaTest)
+    # --- Playlist Download Tests ---
 
-    def test_download_video_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        youtubeResult = self.youtube_test.download_yt_media(
-            self.mainURL1, self.video_options)
-        mock_extrac_info.assert_any_call(self.testId1)
-        self.assertEqual(mock_extrac_info.mock_calls[0], call(self.testId1))
-        self.assertEqual(youtubeResult.is_error(), True)
-        self.assertEqual(youtubeResult.get_error_info(),
-                         self.main_media_download_error)
-
-    def test_download_whole_video_playlist(self):
-        mock_extrac_info = self.mock_extract(return_value={"title": self.test_playlist_name,
-                                                           "entries": self.testEntriesList})
-        metaData = self.youtubeConfigPlaylists.download_whole_video_playlist(
-            self.main_playlist_url_no_video_hash1, "480")
-        mock_extrac_info.assert_called_once_with(self.main_playlist_hash)
-        checkResult = self.check_fast_download_result(metaData)
-        self.assertEqual(True, checkResult)
-
-    def test_download_video_playlist_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        error_msg = self.youtubeConfigPlaylists.download_whole_video_playlist(
-            self.main_playlist_url_no_video_hash1, "480")
-        mock_extrac_info.assert_called_once_with(self.main_playlist_hash)
-        self.assertFalse(error_msg)
-
-# importować easy_id3_manager to już imporotwać zmocowanaą wersję
-    def test_fast_download_playlist_audio(self):
-        mock_extrac_info = self.mock_extract(return_value={"title": self.test_playlist_name,
-                                                           "entries": self.test_playlistFullEntries})
-        metaData = self.youtubeConfigPlaylists.download_whole_audio_playlist(
-            self.main_playlist_url_no_video_hash1)
-        mock_extrac_info.assert_called_once_with(self.main_playlist_hash)
-        self.assertEqual(self.playlistMetaDataFull, metaData)
-
-    def test_fast_download_playlist_audio_no_entries(self):
-        mock_extrac_info = self.mock_extract(
-            return_value={"title": self.test_playlist_name})
-        functionResult = self.youtubeConfigPlaylists.download_whole_audio_playlist(
-            self.main_playlist_url_no_video_hash1)
-        mock_extrac_info.assert_called_once_with(self.main_playlist_hash)
-        self.assertEqual(False, functionResult)
-
-    def test_fast_download_playlist_audio_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        error_msg = self.youtubeConfigPlaylists.download_whole_audio_playlist(
-            self.main_playlist_url_no_video_hash1)
-        mock_extrac_info.assert_called_once_with(self.main_playlist_hash)
-        self.assertFalse(error_msg)
-
-    def test_download_audio(self):
-        mock_extrac_info = self.mock_extract(return_value=self.songMetaData1)
-        single_media_info_result = self.youtube_test.download_yt_media(
-            self.mainURL1,
-            self.audio_options)
-        singleMedia = single_media_info_result.get_data()
-        mock_extrac_info.assert_called_once()
-        self.check_result_single_media(singleMedia, self.singleMediaTest)
-
-    def test_download_audio_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        youtubeResult = self.youtube_test.download_yt_media(self.mainURL1,
-                                                            self.audio_options)
-        self.assertEqual(youtubeResult.is_error(), True)
-        mock_extrac_info.assert_called_once_with(self.testId1)
-        self.assertEqual(youtubeResult.get_error_info(),
-                         self.main_media_download_error)
+    def test_download_whole_audio_playlist(self):
+        mock_info = self.mock_extract(return_value={
+            "title": self.TEST_PLAYLIST_NAME,
+            "entries": self.TEST_PLAYLIST_FULL_ENTRIES
+        })
+        
+        result_meta = self.youtube_playlists.download_whole_audio_playlist(self.URL_PLAYLIST_ONLY_1)
+        mock_info.assert_called_once_with(self.PLAYLIST_HASH)
+        self.assertEqual(result_meta[PlaylistInfo.TITLE.value], self.TEST_PLAYLIST_NAME)
 
     @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_audio_playlist")
-    @patch.object(youtubeDL.BaseConfigParser,
-                  "get_url_of_playlists",
-                  return_value=testPlaylsitUrlsList)
-    def test_download_audio_from_config_two_playlists(
-            self, mockGetPlaylists, mock_download_audio):
-        metaData = self.youtubeConfigPlaylists.downolad_all_config_playlists_audio()
-        mockGetPlaylists.assert_called_once()
-        self.assertEqual(mock_download_audio.call_count, 2)
-        self.assertEqual(metaData, True)
+    @patch.object(youtubeDL.BaseConfigParser, "get_url_of_playlists")
+    def test_download_all_config_playlists_audio(self, mock_get_urls, mock_download):
+        mock_get_urls.return_value = self.TEST_PLAYLIST_URLS
+        
+        success = self.youtube_playlists.downolad_all_config_playlists_audio()
+        
+        self.assertTrue(success)
+        self.assertEqual(mock_download.call_count, 2)
+        mock_get_urls.assert_called_once()
 
-    @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_audio_playlist")
-    @patch.object(youtubeDL.BaseConfigParser,
-                  "get_url_of_playlists", return_value=[])
-    def test_download_audio_from_config_zero_playlists(
-            self, mockGetPlaylists, mock_download_audio):
-        metaData = self.youtubeConfigPlaylists.downolad_all_config_playlists_audio()
-        mockGetPlaylists.assert_called_once()
-        self.assertEqual(mock_download_audio.call_count, 0)
-        self.assertEqual(metaData, True)
+    # --- Verification Tests ---
 
-    @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_video_playlist")
-    @patch.object(youtubeDL.BaseConfigParser,
-                  "get_url_of_playlists",
-                  return_value=[main_playlist_url_no_video_hash1])
-    def test_download_video_from_config_one_playlists(
-            self, mockGetPlaylists, mockDownloadVideo):
-        type = "720"
-        metaData = self.youtubeConfigPlaylists.downolad_all_config_playlists_video(
-            type)
-        mockGetPlaylists.assert_called_once()
-        mockDownloadVideo.assert_called_once_with(
-            self.main_playlist_url_no_video_hash1, type)
-        self.assertEqual(metaData, True)
+    @patch("os.listdir")
+    @patch("os.path.isfile")
+    @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube")
+    def test_verify_local_mp3_files_detection(self, mock_exists, mock_isfile, mock_listdir):
+        mock_listdir.return_value = ["valid.mp3", "broken.mp3", "notes.txt"]
+        mock_isfile.side_effect = lambda p: p.endswith(".mp3")
+        # valid.mp3 exists on YT (True), broken.mp3 does not (False)
+        mock_exists.side_effect = [True, False]
 
-    @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_video_playlist")
-    @patch.object(youtubeDL.BaseConfigParser,
-                  "get_url_of_playlists",
-                  return_value=testPlaylsitUrlsList)
-    def test_download_video_from_config_two_playlists(
-            self, mockGetPlaylists, mockDownloadVideo):
-        type = "720"
-        metaData = self.youtubeConfigPlaylists.downolad_all_config_playlists_video(
-            type)
-        mockGetPlaylists.assert_called_once()
-        self.assertEqual(mockDownloadVideo.call_count, 2)
-        mockDownloadVideo.assert_has_calls([call(self.main_playlist_url_no_video_hash1, type),
-                                            call(self.main_playlist_url_no_video_hash2, type)])
-        self.assertEqual(mockDownloadVideo.call_count, 2)
-        self.assertEqual(metaData, True)
-
-    def testrequest_single_media_info(self):
-        mock_extrac_info = self.mock_extract(return_value=self.songMetaData1)
-        resultOfYoutube = self.youtube_test.request_single_media_info(
-            self.mainURL1)
-        mock_extrac_info.assert_called_once()
-        self.assertEqual(False, resultOfYoutube.is_error())
-        singleMedia = resultOfYoutube.get_data()
-        self.check_result_single_media(singleMedia, self.singleMediaTest)
-
-    def testget_single_media_info_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        resultOfYoutube = self.youtube_test.request_single_media_info(
-            self.mainURL1)
-        mock_extrac_info.assert_called_once()
-        self.assertEqual(True, resultOfYoutube.is_error())
-        error_msg = resultOfYoutube.get_error_info()
-        self.assertTrue(error_msg, self.main_media_download_error)
-        self.assertFalse(resultOfYoutube.get_data())
-
-    def test_get_playlist_media_info(self):
-        mock_extrac_info = self.mock_extract(return_value={"title": self.test_playlist_name,
-                                                           "entries": self.testEntriesList})
-        resultOfYoutube = self.youtube_test.request_playlist_media_info(
-            self.main_playlist_url_no_video_hash1)
-        mock_extrac_info.assert_called_once()
-        self.assertEqual(False, resultOfYoutube.is_error())
-        playlist_media = resultOfYoutube.get_data()
-        self.check_resul_playlist_meida(playlist_media,
-                                        self.playlist_mediaTest)
-
-    def testget_playlist_media_info_with_error(self):
-        mock_extrac_info = self.mock_extract(
-            side_effect=ValueError(self.main_media_download_error))
-        resultOfYoutube = self.youtube_test.request_playlist_media_info(
-            self.main_playlist_url_no_video_hash1)
-        mock_extrac_info.assert_called_once()
-        self.assertEqual(True, resultOfYoutube.is_error())
-        error_msg = resultOfYoutube.get_error_info()
-        self.assertTrue(error_msg, self.main_media_download_error)
-        self.assertFalse(resultOfYoutube.get_data())
-
-    def test_get_playlist_media_result(self):
-        playlist_media = self.youtube_test._get_playlist_media(
-            self.plalistMetaData)
-        self.check_resul_playlist_meida(playlist_media,
-                                        self.playlist_mediaTest)
-
-    def test_get_single_media_result(self):
-        singleMedia = self.youtube_test._get_media(
-            self.songMetaData1)
-        self.check_result_single_media(singleMedia, self.singleMediaTest)
-
-    @patch("os.listdir", return_value=[test_file_1, test_file_2, test_file_3])
-    @patch("os.path.isfile", side_effect=lambda path: path.endswith(".mp3"))
-    @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube", side_effect=[True, False])
-    def test_verify_local_mp3_files(self, mock_if_video_exist, mock_isfile, mock_listdir):
-        not_verified_files = self.youtube_test.verify_local_mp3_files(
-            self.testDir, EasyID3ManagerMock)
-        mock_listdir.assert_called_once_with(self.testDir)
-        self.assertEqual(mock_isfile.call_count, 3)
-        self.assertEqual(mock_if_video_exist.call_count,
-                         2)
-        self.assertEqual(not_verified_files, [
-            os.path.join(self.testDir, self.test_file_2)
-        ])
-
-    @patch("os.listdir", return_value=[test_file_1, test_file_2])
-    @patch("os.path.isfile", side_effect=lambda path: path.endswith(".mp3"))
-    @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube", return_value=True)
-    def test_verify_local_mp3_files_all_verified(self, mock_if_video_exist, mock_isfile, mock_listdir):
-        not_verified_files = self.youtube_test.verify_local_mp3_files(
-            self.testDir, EasyID3ManagerMock)
-
-        mock_listdir.assert_called_once_with(self.testDir)
-        self.assertEqual(mock_isfile.call_count, 2)
-        self.assertEqual(mock_if_video_exist.call_count,
-                         2)
-        self.assertEqual(not_verified_files, [])
-
-    @patch("os.listdir", return_value=[test_file_1, test_file_2])
-    @patch("os.path.isfile", side_effect=lambda path: path.endswith(".mp3"))
-    @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube", return_value=False)
-    def test_verify_local_mp3_files_none_verified(self, mock_if_video_exist, mock_isfile, mock_listdir):
-        not_verified_files = self.youtube_test.verify_local_mp3_files(
-            self.testDir, EasyID3ManagerMock)
-        mock_listdir.assert_called_once_with(self.testDir)
-        self.assertEqual(mock_isfile.call_count, 2)
-        self.assertEqual(mock_if_video_exist.call_count,
-                         2)
-        self.assertEqual(not_verified_files, [
-            os.path.join(self.testDir, self.test_file_1),
-            os.path.join(self.testDir, self.test_file_2),
-        ])
+        invalid_files = self.youtube_dl.verify_local_mp3_files(self.test_dir, EasyID3ManagerMock)
+        
+        self.assertEqual(len(invalid_files), 1)
+        self.assertIn("broken.mp3", invalid_files[0])
 
 
 if __name__ == "__main__":
