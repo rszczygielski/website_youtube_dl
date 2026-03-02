@@ -202,16 +202,17 @@ class TestEmits(TestCase):
             self.assertEqual({"index": test_index}, emit_data.data[self.DATA_KEY])
 
     def test_playlist_track_finish_send_emit_error(self):
-        test_index = 5
-        self.track_finish_emit.send_emit_error(test_index, self.session_id, self.youtube_ns)
-        
-        received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
-        message_payload = EmitData.get_emit_massage(received_events, 0)
-        emit_data = EmitData.init_from_massage(message_payload)
+        with self.app.app_context():
+            test_index = 5
+            self.track_finish_emit.send_emit_error(test_index, self.session_id, self.youtube_ns)
+            
+            received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
+            message_payload = EmitData.get_emit_massage(received_events, 0)
+            emit_data = EmitData.init_from_massage(message_payload)
 
-        self.assertEqual(self.track_finish_emit.emit_msg, emit_data.emit_name)
-        self.assertIn(self.track_finish_emit.error_str, emit_data.data)
-        self.assertEqual(test_index, emit_data.data[self.track_finish_emit.error_str])
+            self.assertEqual(self.track_finish_emit.emit_msg, emit_data.emit_name)
+            self.assertIn(self.track_finish_emit.error_str, emit_data.data)
+            self.assertEqual(test_index, emit_data.data[self.track_finish_emit.error_str])
 
 
 if __name__ == "__main__":
