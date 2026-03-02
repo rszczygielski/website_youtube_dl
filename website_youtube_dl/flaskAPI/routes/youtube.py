@@ -75,8 +75,8 @@ class YoutubeNamespace(BaseMediaNamespace):
         # Prepare for a new process by clearing previous history
         app.socket_manager.clear_user_data(user_browser_id)
 
-        youtube_url = extract_youtube_url(formData, user_browser_id)
-        request_format = extract_request_format(formData, user_browser_id)
+        youtube_url = extract_youtube_url(formData, user_browser_id, namespace=self.namespace)
+        request_format = extract_request_format(formData, user_browser_id, namespace=self.namespace)
 
         if not youtube_url or not request_format:
             return

@@ -5,21 +5,28 @@ from ...common.youtubeLogKeys import YoutubeLogs
 from ..utils.general_funcions import get_format_instance
 
 
-def extract_youtube_url(formData, user_browser_id):
+def extract_youtube_url(formData, user_browser_id, namespace=None):
     youtube_url = formData.get(MainYoutubeKeys.YOUTUBE_URL.value)
     if not youtube_url:
         app.logger.warning(YoutubeLogs.NO_URL.value)
-        send_emit_media_finish_error(YoutubeLogs.NO_URL.value, user_browser_id)
+        send_emit_media_finish_error(
+            YoutubeLogs.NO_URL.value,
+            user_browser_id,
+            namespace=namespace
+        )
 
         return None
     return youtube_url
 
 
-def extract_request_format(formData, user_browser_id):
+def extract_request_format(formData, user_browser_id, namespace=None):
     if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
         app.logger.warning(YoutubeLogs.NO_FORMAT.value)
         send_emit_media_finish_error(
-            YoutubeLogs.NO_FORMAT.value, user_browser_id)
+            YoutubeLogs.NO_FORMAT.value,
+            user_browser_id,
+            namespace=namespace
+        )
         return None
     format_type = formData[MainYoutubeKeys.DOWNLOAD_TYP.value]
     app.logger.debug(f"{YoutubeLogs.SPECIFIED_FORMAT.value} {format_type}")

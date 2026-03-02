@@ -2,17 +2,16 @@ from website_youtube_dl import create_app, socketio
 import os
 from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
 from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs
-from website_youtube_dl.common import utils
 from unittest import TestCase, main, skip
 from unittest.mock import patch, call
 from website_youtube_dl.config import TestingConfig
-from website_youtube_dl.flaskAPI.routes import youtube
+from website_youtube_dl.flaskAPI.routes import youtube, youtube_playlists
 from website_youtube_dl.flaskAPI.handlers import youtube_emit
+from website_youtube_dl.flaskAPI.sockets import base_namespace 
 from website_youtube_dl.flaskAPI.handlers import youtube_download
 from website_youtube_dl.flaskAPI.services.youtubeHelper import YoutubeHelper
 from website_youtube_dl.flaskAPI.services.flaskMedia import (FlaskSingleMedia,
                                                              FlaskPlaylistMedia)
-from website_youtube_dl.flaskAPI.utils import general_funcions
 from website_youtube_dl.common.youtubeAPI import (FormatMP3,
                                                   Format360p,
                                                   Format480p,
@@ -30,7 +29,6 @@ from website_youtube_dl.flaskAPI.sockets.emits import (DownloadMediaFinishEmit,
                                                        PlaylistMediaInfoEmit)
 from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
 from website_youtube_dl.flaskAPI.sockets import emits
-from website_youtube_dl.flaskAPI.routes import youtubeModifyPlaylist
 from test.emitData import EmitData
 from unittest.mock import MagicMock
 from website_youtube_dl.common.youtubeOptions import (YoutubeAudioOptions,
@@ -154,10 +152,22 @@ class testYoutubeWeb(TestCase):
         app.config_parser_manager.get_save_path = MagicMock(
             return_value=self.test_path)
         app.config["TESTING"] = True
-        self.socket_io_test_client = socketio.test_client(app)
+        # Connect explicitly to namespaces (the app registers '/youtube' and '/playlists')
+        self.youtube_ns = "/youtube"
+        self.playlists_ns = "/playlists"
+        self.socket_io_test_client = socketio.test_client(app, namespace=self.youtube_ns)
         self.flask = app.test_client()
         self.app = app
         self.app.socket_manager = SocketManager()
+        # Mirror frontend behavior: map Socket.IO session -> browser id before using any handlers
+        self.user_browser_id = "test-browser-id"
+        self.socket_io_test_client.emit(
+            "userSession",
+            {"userBrowserId": self.user_browser_id},
+            namespace=self.youtube_ns
+        )
+        # Drain any acks/events produced during session init (usually none)
+        self.socket_io_test_client.get_received(namespace=self.youtube_ns)
 
     def create_flask_single_media(self, data):
         title = data["title"]
@@ -202,15 +212,21 @@ class testYoutubeWeb(TestCase):
             MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
         }
         self.socket_io_test_client.emit(
-            MainYoutubeKeys.FORM_DATA.value, form_data
+            MainYoutubeKeys.FORM_DATA.value, form_data, namespace=self.youtube_ns
         )
-        python_emit = self.socket_io_test_client.get_received()
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
+
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         mock_download_single_track.assert_called_once_with(self.actual_youtube_url1,
                                                            self.format_mp3,
-                                                           None)
+                                                           self.user_browser_id,
+                                                           self.youtube_ns)
         self.mock_isfile.assert_called_once_with(self.test_path)
-        mock_get_format.assert_called_once_with(form_data, None)
+        mock_get_format.assert_called_once_with(
+            form_data,
+            self.user_browser_id,
+            namespace=self.youtube_ns
+        )
         self.assertEqual(len(python_emit), 1)
         emit_data = EmitData.init_from_massage(received_msg)
         self.assertEqual(self.download_media_finish_emit.emit_msg,
@@ -221,11 +237,11 @@ class testYoutubeWeb(TestCase):
 
     def test_socket_download_server_no_download_type(self):
         self.socket_io_test_client.emit(
-            MainYoutubeKeys.FORM_DATA.value, {
-                MainYoutubeKeys.YOUTUBE_URL.value: self.actual_youtube_url1
-            }
+            MainYoutubeKeys.FORM_DATA.value,
+            {MainYoutubeKeys.YOUTUBE_URL.value: self.actual_youtube_url1},
+            namespace=self.youtube_ns
         )
-        python_emit = self.socket_io_test_client.get_received()
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         self.assertEqual(len(python_emit), 1)
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
@@ -238,12 +254,14 @@ class testYoutubeWeb(TestCase):
 
     def test_socket_download_server_no_youtube_url(self):
         self.socket_io_test_client.emit(
-            MainYoutubeKeys.FORM_DATA.value, {
+            MainYoutubeKeys.FORM_DATA.value,
+            {
                 MainYoutubeKeys.YOUTUBE_URL.value: "",
                 MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
-            }
+            },
+            namespace=self.youtube_ns
         )
-        python_emit = self.socket_io_test_client.get_received()
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         self.assertEqual(len(python_emit), 1)
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
@@ -254,7 +272,7 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(emit_data.data[MainYoutubeKeys.ERROR.value],
                          YoutubeLogs.NO_URL.value)
 
-    @patch.object(youtube, "generate_hash", return_value=test_generated_hash)
+    @patch.object(base_namespace, "generate_hash", return_value=test_generated_hash)
     @patch.object(youtube, "extract_request_format", return_value=format_mp3)
     @patch.object(youtube, "download_single_track_data", return_value=test_path)
     def test_socket_download_audio(self,
@@ -267,16 +285,21 @@ class testYoutubeWeb(TestCase):
             MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
         }
         self.socket_io_test_client.emit(
-            MainYoutubeKeys.FORM_DATA.value, from_data
+            MainYoutubeKeys.FORM_DATA.value, from_data, namespace=self.youtube_ns
         )
         mock_generate_hash.assert_called_once()
-        python_emit = self.socket_io_test_client.get_received()
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         self.assertEqual(len(python_emit), 1)
         mock_download_single_track_data.assert_called_once_with(self.actual_youtube_url2,
                                                                 self.format_mp3,
-                                                                None)
+                                                                self.user_browser_id,
+                                                                self.youtube_ns)
         self.mock_isfile.assert_called_once_with(self.test_path)
-        mock_get_format.assert_called_once_with(from_data, None)
+        mock_get_format.assert_called_once_with(
+            from_data,
+            self.user_browser_id,
+            namespace=self.youtube_ns
+        )
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
         self.assertIn(MainYoutubeKeys.NAME.value, received_msg)
@@ -298,16 +321,21 @@ class testYoutubeWeb(TestCase):
             MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
         }
         self.socket_io_test_client.emit(
-            MainYoutubeKeys.FORM_DATA.value, form_data
+            MainYoutubeKeys.FORM_DATA.value, form_data, namespace=self.youtube_ns
         )
-        python_emit = self.socket_io_test_client.get_received()
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         self.mock_isfile.assert_called_once_with(self.test_path)
         self.assertEqual(len(python_emit), 1)
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         mock_download_playlist_data.assert_called_once_with(self.actual_youtube_playlist_url1,
                                                             self.format_mp3,
-                                                            None)
-        mock_get_format.assert_called_once_with(form_data, None)
+                                                            self.user_browser_id,
+                                                            self.youtube_ns)
+        mock_get_format.assert_called_once_with(
+            form_data,
+            self.user_browser_id,
+            namespace=self.youtube_ns
+        )
         emit_data = EmitData.init_from_massage(received_msg)
         self.assertEqual(self.download_media_finish_emit.emit_msg,
                          emit_data.emit_name)
@@ -325,13 +353,18 @@ class testYoutubeWeb(TestCase):
             MainYoutubeKeys.DOWNLOAD_TYP.value: self.mp3
         }
         self.socket_io_test_client.emit(
-            MainYoutubeKeys.FORM_DATA.value, form_data
+            MainYoutubeKeys.FORM_DATA.value, form_data, namespace=self.youtube_ns
         )
-        mock_get_format.assert_called_once_with(form_data, None)
+        mock_get_format.assert_called_once_with(
+            form_data,
+            self.user_browser_id,
+            namespace=self.youtube_ns
+        )
         mock_download_single_track_data.assert_called_once_with(self.actual_youtube_url1,
                                                                 self.format_mp3,
-                                                                None)
-        python_emit = self.socket_io_test_client.get_received()
+                                                                self.user_browser_id,
+                                                                self.youtube_ns)
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         self.assertEqual(len(python_emit), 1)
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
@@ -346,8 +379,10 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube_emit.send_emit_single_media_info_from_youtube(
                 single_media_url=self.actual_youtube_url1,
-                user_browser_id=None)
-        python_emit = self.socket_io_test_client.get_received()
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
         mock_request_single_media.assert_called_once_with(
@@ -365,8 +400,10 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube_emit.send_emit_single_media_info_from_youtube(
                 single_media_url=self.actual_youtube_url1,
-                user_browser_id=None)
-        python_emit = self.socket_io_test_client.get_received()
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         mock_request_single_media.assert_called_once_with(
             self.actual_youtube_url1)
         no_emit_data = len(python_emit)
@@ -379,8 +416,10 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube_emit.send_emit_playlist_media(
                 youtube_url=self.actual_youtube_playlist_url1,
-                user_browser_id=None)
-        python_emit = self.socket_io_test_client.get_received()
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         received_msg = EmitData.get_emit_massage(python_emit, 0)
         emit_data = EmitData.init_from_massage(received_msg)
         mock_request_single_media.assert_called_once_with(
@@ -398,8 +437,10 @@ class testYoutubeWeb(TestCase):
         with self.app.app_context():
             result = youtube_emit.send_emit_playlist_media(
                 youtube_url=self.actual_youtube_playlist_url1,
-                user_browser_id=None)
-        python_emit = self.socket_io_test_client.get_received()
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
+        python_emit = self.socket_io_test_client.get_received(namespace=self.youtube_ns)
         no_emit_data = len(python_emit)
         self.assertFalse(result)
         self.assertEqual(no_emit_data, 0)
@@ -416,7 +457,9 @@ class testYoutubeWeb(TestCase):
             result = youtube_download.download_tracks_from_playlist(
                 youtube_url=self.actual_youtube_playlist_url1,
                 req_format=self.format_360p,
-                user_browser_id=None)
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
         mockSendEmitPlaylist.assert_called_once()
         calls = mockDownloadVideo.mock_calls
         self.assertEqual(call(single_media_url=self.testId1, req_format=self.format_360p),
@@ -438,7 +481,9 @@ class testYoutubeWeb(TestCase):
             result = youtube_download.download_tracks_from_playlist(
                 youtube_url=self.actual_youtube_playlist_url1,
                 req_format=self.format_mp3,
-                user_browser_id=None)
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
         mockSendEmitPlaylist.assert_called_once()
         mockGetFilesFromDir.assert_called_once_with(self.test_path)
         calls = mock_download_audio.mock_calls
@@ -467,7 +512,9 @@ class testYoutubeWeb(TestCase):
             result = youtube_download.download_tracks_from_playlist(
                 youtube_url=self.actual_youtube_playlist_url1,
                 req_format=self.format_1080p,
-                user_browser_id=None)
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
         mock_get_files.assert_called_once_with(self.test_path)
         mock_send_emit.assert_called_once()
         self.assertEqual(mock_download_video.call_count, 2)
@@ -482,7 +529,9 @@ class testYoutubeWeb(TestCase):
             result = youtube_download.download_tracks_from_playlist(
                 youtube_url=self.actual_youtube_playlist_url1,
                 req_format=self.format_2160p,
-                user_browser_id=None)
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
         mock_get_files.assert_called_once_with(self.test_path)
         mock_send_emit.assert_called_once()
         self.assertEqual(mock_download_video.call_count, 2)
@@ -497,11 +546,15 @@ class testYoutubeWeb(TestCase):
             result = youtube_download.download_tracks_from_playlist(
                 youtube_url=self.actual_youtube_playlist_url1,
                 req_format=self.hd_720p,
-                user_browser_id=None)
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
         self.assertFalse(result)
         mock_request_playlist_media_info.assert_called_once_with(
             self.actual_youtube_playlist_url1,
-            None)
+            self.user_browser_id,
+            namespace=self.youtube_ns
+            )
 
     @patch.object(youtube_download, "send_emit_playlist_media",
                   return_value=None)
@@ -511,11 +564,15 @@ class testYoutubeWeb(TestCase):
             result = youtube_download.download_tracks_from_playlist(
                 youtube_url=self.actual_youtube_playlist_url1,
                 req_format=self.format_mp3,
-                user_browser_id=None)
+                user_browser_id=self.user_browser_id,
+                namespace=self.youtube_ns
+            )
         self.assertFalse(result)
         mock_request_playlist_media_info.assert_called_once_with(
             self.actual_youtube_playlist_url1,
-            None)
+            self.user_browser_id,
+            namespace=self.youtube_ns
+            )
 
     def test_youtube_html(self):
         response = self.flask.get("/youtube.html")
@@ -533,9 +590,9 @@ class testYoutubeWeb(TestCase):
         self.assertEqual(response.status_code, 404)
 
     @skip("Skipping test, config not working")
-    @patch.object(youtubeModifyPlaylist, "generate_hash",
+    @patch.object(youtube_playlists, "generate_hash",
                   return_value="test_hash")
-    @patch.object(youtubeModifyPlaylist, "download_tracks_from_playlist",
+    @patch.object(youtube_playlists, "download_tracks_from_playlist",
                   return_value="video_playlist_path")
     def test_download_config_playlist(self, mock_download_playlist,
                                       mock_generate_hash):
@@ -559,7 +616,7 @@ class testYoutubeWeb(TestCase):
             emit_data.data[self.data_str], self.download_media_finish_emit.convert_data_to_message("test_hash"))
 
     @skip("Skipping test, config not working")
-    @patch.object(youtubeModifyPlaylist, "download_tracks_from_playlist",
+    @patch.object(youtube_playlists, "download_tracks_from_playlist",
                   return_value=None)
     def test_download_config_playlist_with_error(self, mock_download_playlist):
         self.app.config_parser_manager.get_playlist_url = MagicMock(
