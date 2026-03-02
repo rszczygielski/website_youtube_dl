@@ -1,110 +1,106 @@
 import configparser
-import os
 from unittest import TestCase, main
 from unittest.mock import patch
-from test.configParserMock import (ConfigParserMock,
-                                   ConfigParserMockWithEmptyData,
-                                   TestVariables,
-                                   ConfigManagerMock)
 
-
-# wrzucić self.assertEqual(plalists_list_count, 3) self.assertEqual(self.mock_clear.call_count, 2) do funkcji pomocniczej
+from test.configParserMock import (
+    ConfigParserMock,
+    ConfigParserEmptyMock,
+    TestConstants,
+    ConfigManagerMock
+)
 
 class TestConfigParserManager(TestCase):
 
     def setUp(self):
+        # Patch ConfigParser.clear to verify re-loading behavior
         self.clear_patcher = patch.object(configparser.ConfigParser, "clear")
         self.mock_clear = self.clear_patcher.start()
         self.addCleanup(self.clear_patcher.stop)
 
         self.config_parser_mock = ConfigParserMock()
-        self.main_config = ConfigManagerMock(
-            TestVariables.config_file, self.config_parser_mock)
+        self.config_manager = ConfigManagerMock(
+            TestConstants.MOCK_CONFIG_PATH, 
+            self.config_parser_mock
+        )
+
+    # --- Helper Methods ---
+
+    def assert_playlist_state(self, expected_count, expected_clear_calls):
+        """Helper to verify the number of playlists and clear() calls."""
+        playlists = self.config_parser_mock[TestConstants.SECTION_PLAYLISTS]
+        self.assertEqual(len(playlists), expected_count)
+        self.assertEqual(self.mock_clear.call_count, expected_clear_calls)
+
+    # --- Test Cases ---
 
     def test_get_save_path(self):
-        save_path = self.main_config.get_save_path()
-        self.assertEqual(
-            save_path, TestVariables.download_path)
+        save_path = self.config_manager.get_save_path()
+        self.assertEqual(save_path, TestConstants.LEGACY_DOWNLOAD_PATH)
         self.mock_clear.assert_called_once()
 
     def test_get_url_of_playlists(self):
-        test_playlistLists = self.main_config.get_url_of_playlists()
-        self.assertEqual([TestVariables.url_test_playlist,
-                          TestVariables.url_nowy_swiat], test_playlistLists)
+        urls = self.config_manager.get_url_of_playlists()
+        expected_urls = [TestConstants.URL_TEST_PLAYLIST, TestConstants.URL_NOWY_SWIAT]
+        self.assertEqual(urls, expected_urls)
         self.mock_clear.assert_called_once()
 
-    def test_get_playlist_url(self):
-        result = self.main_config.get_playlist_url(
-            TestVariables.test_playlist)
-        self.assertEqual(result,
-                         TestVariables.url_test_playlist)
+    def test_get_playlist_url_success(self):
+        result = self.config_manager.get_playlist_url(TestConstants.TEST_PLAYLIST_ID)
+        self.assertEqual(result, TestConstants.URL_TEST_PLAYLIST)
 
-    def test_get_playlist_wrong_url(self):
-        result = self.main_config.get_playlist_url(
-            TestVariables.wrong_url)
-        self.assertEqual(result, None)
+    def test_get_playlist_url_not_found(self):
+        # wrong_url represents a name/key that doesn't exist
+        result = self.config_manager.get_playlist_url("non_existent_key")
+        self.assertIsNone(result)
 
     def test_add_playlist(self):
-        self.main_config.get_url_of_playlists()
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 2)
-        self.main_config.add_playlist(
-            TestVariables.new_playlist, TestVariables.test_url)
+        # Initial state (from Mock)
+        self.config_manager.get_url_of_playlists()  # Triggers 1st clear
+        self.assert_playlist_state(expected_count=2, expected_clear_calls=1)
+        
+        # Action
+        self.config_manager.add_playlist(TestConstants.NEW_PLAYLIST_ID, TestConstants.URL_GENERIC_TEST)
+        
+        # Verify result
         self.assertEqual(
-            self.config_parser_mock[TestVariables.playlists][TestVariables.new_playlist],
-            TestVariables.test_url)
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 3)
-        self.assertEqual(self.mock_clear.call_count, 2)
+            self.config_parser_mock[TestConstants.SECTION_PLAYLISTS][TestConstants.NEW_PLAYLIST_ID],
+            TestConstants.URL_GENERIC_TEST
+        )
+        self.assert_playlist_state(expected_count=3, expected_clear_calls=2)
 
-    def test_add_playlist_with_the_same_name(self):
-        self.main_config.get_url_of_playlists()
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 2)
-        self.main_config.add_playlist(
-            TestVariables.new_playlist, TestVariables.test_url)
+    def test_add_playlist_overwrite_existing(self):
+        self.config_manager.get_url_of_playlists()
+        self.config_manager.add_playlist(TestConstants.NEW_PLAYLIST_ID, TestConstants.URL_GENERIC_TEST)
+        
+        # Update existing
+        new_url = "https://updated-url.com"
+        self.config_manager.add_playlist(TestConstants.NEW_PLAYLIST_ID, new_url)
+        
         self.assertEqual(
-            self.config_parser_mock[TestVariables.playlists][TestVariables.new_playlist], TestVariables.test_url)
-        self.main_config.add_playlist(
-            TestVariables.new_playlist, TestVariables.newUrl)
-        self.assertEqual(
-            self.config_parser_mock[TestVariables.playlists][TestVariables.new_playlist], TestVariables.newUrl)
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 3)
-        self.assertEqual(self.mock_clear.call_count, 3)
+            self.config_parser_mock[TestConstants.SECTION_PLAYLISTS][TestConstants.NEW_PLAYLIST_ID], 
+            new_url
+        )
+        self.assert_playlist_state(expected_count=3, expected_clear_calls=3)
 
-    def test_delete_playlist(self):
-        self.main_config.get_url_of_playlists()
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 2)
-        self.main_config.delete_playlist(TestVariables.test_playlist)
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 1)
-        self.assertEqual(self.mock_clear.call_count, 2)
+    def test_delete_playlist_success(self):
+        self.config_manager.get_url_of_playlists()
+        self.assert_playlist_state(expected_count=2, expected_clear_calls=1)
+        
+        self.config_manager.delete_playlist(TestConstants.TEST_PLAYLIST_ID)
+        self.assert_playlist_state(expected_count=1, expected_clear_calls=2)
 
-    def test_wrong_playlist_to_delete(self):
-        self.main_config.get_url_of_playlists()
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 2)
-        self.main_config.delete_playlist(TestVariables.wrong_playlist)
-        plalists_list_count = len(
-            self.config_parser_mock[TestVariables.playlists])
-        self.assertEqual(plalists_list_count, 2)
-        self.assertEqual(self.mock_clear.call_count, 2)
+    def test_delete_playlist_not_found(self):
+        self.config_manager.get_url_of_playlists()
+        self.config_manager.delete_playlist("invalid_key")
+        self.assert_playlist_state(expected_count=2, expected_clear_calls=2)
 
-    def test_get_playlists(self):
-        test_playlistDict = self.main_config.get_playlists()
-        self.assertEqual({
-            TestVariables.test_playlist: TestVariables.url_test_playlist,
-            TestVariables.nowy_swiat: TestVariables.url_nowy_swiat
-        }, test_playlistDict)
+    def test_get_playlists_dict(self):
+        playlists_dict = self.config_manager.get_playlists()
+        expected = {
+            TestConstants.TEST_PLAYLIST_ID: TestConstants.URL_TEST_PLAYLIST,
+            TestConstants.NOWY_SWIAT_ID: TestConstants.URL_NOWY_SWIAT
+        }
+        self.assertEqual(playlists_dict, expected)
 
 
 class TestConfigManagerWithEmptyConfig(TestCase):
@@ -114,45 +110,44 @@ class TestConfigManagerWithEmptyConfig(TestCase):
         self.mock_clear = self.clear_patcher.start()
         self.addCleanup(self.clear_patcher.stop)
 
-        self.musicPath = ConfigManagerMock._get_home_music_path()
-        self.config_parser_mock = ConfigParserMockWithEmptyData()
-        self.config = ConfigManagerMock(
-            "save_config", self.config_parser_mock)
+        self.expected_music_path = ConfigManagerMock._get_home_music_path()
+        self.config_parser_mock = ConfigParserEmptyMock()
+        self.config_manager = ConfigManagerMock("dummy_path", self.config_parser_mock)
 
-    def test_get_save_path(self):
-        save_path = self.config.get_save_path()
-        self.assertEqual(save_path, self.musicPath)
+    def test_get_save_path_creates_default(self):
+        save_path = self.config_manager.get_save_path()
+        self.assertEqual(save_path, self.expected_music_path)
 
-    def test_get_playlists(self):
-        test_playlistDict = self.config.get_playlists()
-        self.assertEqual(test_playlistDict, {})
+    def test_get_playlists_empty(self):
+        playlists = self.config_manager.get_playlists()
+        self.assertEqual(playlists, {})
+        # Verify that accessing path initializes the default global config
         self.assertEqual(
-            self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
+            self.config_parser_mock[TestConstants.SECTION_GLOBAL][TestConstants.KEY_PATH], 
+            self.expected_music_path
+        )
 
-    def test_get_playlist_urls(self):
-        result = self.config.get_playlist_url(
-            TestVariables.test_name)
-        self.assertEqual(None, result)
+    def test_get_playlist_url_empty_config(self):
+        result = self.config_manager.get_playlist_url("any_name")
+        self.assertIsNone(result)
         self.assertEqual(
-            self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
+            self.config_parser_mock[TestConstants.SECTION_GLOBAL][TestConstants.KEY_PATH], 
+            self.expected_music_path
+        )
 
-    def test_get_url_of_playlists(self):
-        test_playlistUrls = self.config.get_url_of_playlists()
-        self.assertEqual(test_playlistUrls, [])
-        self.assertEqual(
-            self.config_parser_mock[TestVariables.global_var][TestVariables.path], self.musicPath)
+    def test_get_url_of_playlists_empty(self):
+        urls = self.config_manager.get_url_of_playlists()
+        self.assertEqual(urls, [])
         self.mock_clear.assert_called_once()
 
-    def test_add_playlist(self):
-        add_playlist_flag = self.config.add_playlist(
-            TestVariables.new_test_playlist, TestVariables.test_url)
-        self.assertTrue(add_playlist_flag)
+    def test_add_playlist_in_empty_config(self):
+        success = self.config_manager.add_playlist("new_item", TestConstants.URL_GENERIC_TEST)
+        self.assertTrue(success)
         self.mock_clear.assert_called_once()
 
-    def test_delete_playlist(self):
-        delete_playlist_flag = self.config.delete_playlist(
-            TestVariables.playlist_name)
-        self.assertFalse(delete_playlist_flag)
+    def test_delete_playlist_in_empty_config(self):
+        success = self.config_manager.delete_playlist("non_existent")
+        self.assertFalse(success)
         self.mock_clear.assert_called_once()
 
 
