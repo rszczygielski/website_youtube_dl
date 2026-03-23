@@ -6,7 +6,6 @@ from ..sockets.emits import (
     UploadPlaylistToConfigEmit,
     GetPlaylistUrlEmit
 )
-from ..handlers.youtube_download import download_tracks_from_playlist
 from ...common.youtubeAPI import FormatMP3
 
 # --- Blueprints for standard HTTP routes ---
@@ -54,16 +53,11 @@ class PlaylistsNamespace(BaseMediaNamespace):
 
         playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
 
-        # Execute physical download of playlist tracks
-        full_file_path = download_tracks_from_playlist(
+        self._handle_playlist_download(
             youtube_url=playlist_url,
-            req_format=FormatMP3(),
-            user_browser_id=user_browser_id,
-            namespace=self.namespace
+            request_format=FormatMP3(),
+            user_browser_id=user_browser_id
         )
-
-        # Finalize download using base class method for registry and emission
-        self.finalize_download(full_file_path, True, user_browser_id)
 
     def on_addPlaylist(self, formData):
         """Add a new playlist entry to the application configuration.
