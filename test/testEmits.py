@@ -28,7 +28,7 @@ class TestEmits(TestCase):
     URL_KEY = "url"
     PLAYLIST_NAME = "Test Playlist"
     PLAYLIST_URL = "https://www.youtube.com/playlist?list=PLAz00b-z3I5Um0R1_XqkbiqqkB0526jxO"
-    
+
     # Track 1 Metadata
     TRACK_1_TITLE = "Society"
     TRACK_1_ARTIST = "Eddie Vedder"
@@ -48,9 +48,9 @@ class TestEmits(TestCase):
 
     media_from_playlist_1 = FlaskMediaFromPlaylist(TRACK_1_TITLE, TRACK_1_URL)
     media_from_playlist_2 = FlaskMediaFromPlaylist(TRACK_2_TITLE, TRACK_2_URL)
-    
+
     track_objects_list = [media_from_playlist_1, media_from_playlist_2]
-    
+
     expected_track_dict_list = [
         {TITLE_KEY: TRACK_1_TITLE, URL_KEY: TRACK_1_URL},
         {TITLE_KEY: TRACK_2_TITLE, URL_KEY: TRACK_2_URL}
@@ -66,16 +66,16 @@ class TestEmits(TestCase):
         self.upload_config_emit = UploadPlaylistToConfigEmit()
         self.playlist_url_emit = GetPlaylistUrlEmit()
         self.track_finish_emit = PlaylistTrackFinish()
-        
+
         # Flask & SocketIO Setup
         self.config_manager_mock = MagicMock()
         app = create_app(TestingConfig, self.config_manager_mock)
         app.config["TESTING"] = True
-        
+
         self.youtube_ns = "/youtube"
         self.socket_io_client = socketio.test_client(app, namespace=self.youtube_ns)
         self.app = app
-        
+
         # User Session Simulation
         self.user_browser_id = "test-browser-id"
         self.socket_io_client.emit(
@@ -83,7 +83,7 @@ class TestEmits(TestCase):
             {"userBrowserId": self.user_browser_id},
             namespace=self.youtube_ns
         )
-        
+
         # Resolve session ID and clear startup buffers
         self.session_id = self.app.socket_manager.get_session_id_by_user_browser_id(self.user_browser_id)
         self.socket_io_client.get_received(namespace=self.youtube_ns)
@@ -102,7 +102,7 @@ class TestEmits(TestCase):
     def test_download_media_finish_emit_send_emit(self):
         with self.app.app_context():
             self.download_finish_emit.send_emit(self.TEST_HASH, self.session_id, self.youtube_ns)
-            
+
             received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
             message_payload = EmitData.get_emit_massage(received_events, 0)
             emit_data = EmitData.init_from_massage(message_payload)
@@ -125,14 +125,14 @@ class TestEmits(TestCase):
     def test_single_media_info_emit_send_emit(self):
         with self.app.app_context():
             self.single_info_emit.send_emit(self.sample_single_media, self.session_id, self.youtube_ns)
-            
+
             received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
             message_payload = EmitData.get_emit_massage(received_events, 0)
             emit_data = EmitData.init_from_massage(message_payload)
 
             self.assertEqual(self.single_info_emit.emit_msg, emit_data.emit_name)
             self.assertIn(self.DATA_KEY, emit_data.data)
-            
+
             expected_data = {
                 MediaInfo.TITLE.value: self.sample_single_media.title,
                 MediaInfo.ARTIST.value: self.sample_single_media.artist,
@@ -153,14 +153,14 @@ class TestEmits(TestCase):
     def test_playlist_media_info_emit_convert_send_emit(self):
         with self.app.app_context():
             self.playlist_info_emit.send_emit(self.sample_playlist_media, self.session_id, self.youtube_ns)
-            
+
             received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
             message_payload = EmitData.get_emit_massage(received_events, 0)
             emit_data = EmitData.init_from_massage(message_payload)
 
             self.assertEqual(self.playlist_info_emit.emit_msg, emit_data.emit_name)
             self.assertIn(self.DATA_KEY, emit_data.data)
-            
+
             payload_data = emit_data.data[self.DATA_KEY]
             self.assertEqual(self.PLAYLIST_NAME, payload_data[self.playlist_info_emit.playlist_name_data_key])
             self.assertEqual(self.expected_track_dict_list, payload_data["trackList"])
@@ -174,7 +174,7 @@ class TestEmits(TestCase):
     def test_get_playlist_url_emit_send_emit(self):
         with self.app.app_context():
             self.playlist_url_emit.send_emit(self.PLAYLIST_URL, self.session_id, self.youtube_ns)
-            
+
             received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
             message_payload = EmitData.get_emit_massage(received_events, 0)
             emit_data = EmitData.init_from_massage(message_payload)
@@ -193,7 +193,7 @@ class TestEmits(TestCase):
         with self.app.app_context():
             test_index = 5
             self.track_finish_emit.send_emit(test_index, self.session_id, self.youtube_ns)
-            
+
             received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
             message_payload = EmitData.get_emit_massage(received_events, 0)
             emit_data = EmitData.init_from_massage(message_payload)
@@ -205,7 +205,7 @@ class TestEmits(TestCase):
         with self.app.app_context():
             test_index = 5
             self.track_finish_emit.send_emit_error(test_index, self.session_id, self.youtube_ns)
-            
+
             received_events = self.socket_io_client.get_received(namespace=self.youtube_ns)
             message_payload = EmitData.get_emit_massage(received_events, 0)
             emit_data = EmitData.init_from_massage(message_payload)
