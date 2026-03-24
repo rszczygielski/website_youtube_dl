@@ -1,37 +1,37 @@
 from website_youtube_dl import create_app, socketio
 import os
-from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
-from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs
+from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys
+from website_youtube_dl.common.youtube_log_keys import YoutubeLogs
 from unittest import TestCase, main, skip
 from unittest.mock import patch, call
 from website_youtube_dl.config import TestingConfig
-from website_youtube_dl.flaskAPI.routes import youtube, youtube_playlists
-from website_youtube_dl.flaskAPI.handlers import youtube_emit
-from website_youtube_dl.flaskAPI.sockets import base_namespace 
-from website_youtube_dl.flaskAPI.handlers import youtube_download
-from website_youtube_dl.flaskAPI.services.youtubeHelper import YoutubeHelper
-from website_youtube_dl.flaskAPI.services.flaskMedia import (FlaskSingleMedia,
+from website_youtube_dl.flask_api.routes import youtube, youtube_playlists
+from website_youtube_dl.flask_api.handlers import youtube_emit
+from website_youtube_dl.flask_api.sockets import base_namespace 
+from website_youtube_dl.flask_api.handlers import youtube_download
+from website_youtube_dl.flask_api.services.youtube_helper import YoutubeHelper
+from website_youtube_dl.flask_api.services.flask_media import (FlaskSingleMedia,
                                                              FlaskPlaylistMedia)
-from website_youtube_dl.common.youtubeAPI import (FormatMP3,
+from website_youtube_dl.common.youtube_api import (FormatMP3,
                                                   Format360p,
                                                   Format480p,
                                                   Format720p,
                                                   Format1080p,
                                                   Format2160p)
-from website_youtube_dl.flaskAPI.sockets.session_data import DownloadFileInfo
-from website_youtube_dl.flaskAPI.sockets.socket_manager import SocketManager
-from website_youtube_dl.common.youtubeDL import YoutubeDL
-from website_youtube_dl.common.youtubeAPI import (SingleMedia,
+from website_youtube_dl.flask_api.sockets.session_data import DownloadFileInfo
+from website_youtube_dl.flask_api.sockets.socket_manager import SocketManager
+from website_youtube_dl.common.youtube_dl import YoutubeDL
+from website_youtube_dl.common.youtube_api import (SingleMedia,
                                                   PlaylistMedia,
                                                   ResultOfYoutube)
-from website_youtube_dl.flaskAPI.sockets.emits import (DownloadMediaFinishEmit,
+from website_youtube_dl.flask_api.sockets.emits import (DownloadMediaFinishEmit,
                                                        SingleMediaInfoEmit,
                                                        PlaylistMediaInfoEmit)
-from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo
-from website_youtube_dl.flaskAPI.sockets import emits
+from website_youtube_dl.common.youtube_data_keys import PlaylistInfo, MediaInfo
+from website_youtube_dl.flask_api.sockets import emits
 from test.emitData import EmitData
 from unittest.mock import MagicMock
-from website_youtube_dl.common.youtubeOptions import (YoutubeAudioOptions,
+from website_youtube_dl.common.youtube_options import (YoutubeAudioOptions,
                                                       YoutubeVideoOptions)
 
 

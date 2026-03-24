@@ -1,9 +1,9 @@
 import configparser
 import argparse
 import logging
-from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
-from website_youtube_dl.common.easyID3Manager import EasyID3Manager
-from website_youtube_dl.common.youtubeDL import YoutubeDlPlaylists
+from website_youtube_dl.common.youtube_config_manager import BaseConfigParser
+from website_youtube_dl.common.easyID3_manager import EasyID3Manager
+from website_youtube_dl.common.youtube_dl import YoutubeDlPlaylists
 
 logger = logging.getLogger(__name__)
 

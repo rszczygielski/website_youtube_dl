@@ -1,28 +1,28 @@
 import configparser
 import os
 import logging
-from .configKeys import ConfigKeys
+from .config_keys import ConfigKeys
 
 logger = logging.getLogger("__main__")
 
 
 class BaseConfigParser():
     """Base configuration parser for YouTube downloader settings.
-    
+
     Provides functionality to read and manage configuration files containing
     global settings (like save path) and playlist URLs. Automatically creates
     a default configuration file if none exists.
-    
+
     Attributes:
         config_file_path (str): Path to the configuration file.
         config_parser (configparser.ConfigParser): ConfigParser instance
             used to read/write configuration.
     """
-    
+
     def __init__(self, config_file_path,
                  config_parser=configparser.ConfigParser()):
         """Initialize BaseConfigParser with configuration file path.
-        
+
         Args:
             config_file_path (str): Path to the configuration file.
             config_parser (configparser.ConfigParser, optional): ConfigParser
@@ -37,9 +37,9 @@ class BaseConfigParser():
 
     def get_save_path(self):
         """Get the save path from configuration file.
-        
+
         Reads the global save path setting from the configuration file.
-        
+
         Returns:
             str: The save path directory, or None if config file is invalid.
         """
@@ -55,10 +55,10 @@ class BaseConfigParser():
 
     def get_playlist_url(self, playlist_name):
         """Get URL for a specific playlist by name.
-        
+
         Args:
             playlist_name (str): Name of the playlist to look up.
-            
+
         Returns:
             str: The playlist URL if found, None otherwise.
         """
@@ -77,7 +77,7 @@ class BaseConfigParser():
 
     def get_playlists(self):
         """Get all playlists from configuration file as a dictionary.
-        
+
         Returns:
             dict: Dictionary mapping playlist names to their URLs.
                 Returns empty dict if config file is invalid.
@@ -96,7 +96,7 @@ class BaseConfigParser():
 
     def get_url_of_playlists(self):
         """Get list of all playlist URLs from configuration file.
-        
+
         Returns:
             list: List of playlist URLs (strings). Returns empty list
                 if config file is invalid.
@@ -116,7 +116,7 @@ class BaseConfigParser():
 
     def create_default_config_file(self):
         """Create a default configuration file with standard settings.
-        
+
         Creates a new config file with global and playlists sections.
         Sets the default save path to ~/Music and creates the directory
         if it doesn't exist.
@@ -137,7 +137,7 @@ class BaseConfigParser():
 
     def _handle_default_dir(self, dirPath):  # pragma: no_cover
         """Create default directory if it doesn't exist.
-        
+
         Args:
             dirPath (str): Path to the directory to create.
         """
@@ -152,7 +152,7 @@ class BaseConfigParser():
 
     def save_config(self):  # pragma: no_cover
         """Save configuration to file.
-        
+
         Writes the current configuration state to the config file.
         Creates the config directory if it doesn't exist.
         """
@@ -170,20 +170,20 @@ class BaseConfigParser():
 
 class ConfigParserManager(BaseConfigParser):
     """Extended configuration parser with playlist management capabilities.
-    
+
     Extends BaseConfigParser to provide methods for adding and deleting
     playlists from the configuration file.
-    
+
     Attributes:
         config_file_path (str): Path to the configuration file.
         config_parser (configparser.ConfigParser): ConfigParser instance
             used to read/write configuration.
     """
-    
+
     def __init__(self, config_file_path,
                  config_parser=configparser.ConfigParser()):
         """Initialize ConfigParserManager with configuration file path.
-        
+
         Args:
             config_file_path (str): Path to the configuration file.
             config_parser (configparser.ConfigParser, optional): ConfigParser
@@ -195,11 +195,11 @@ class ConfigParserManager(BaseConfigParser):
 
     def add_playlist(self, playlist_name, playlist_url):
         """Add or update a playlist in the configuration file.
-        
+
         Args:
             playlist_name (str): Name of the playlist to add.
             playlist_url (str): YouTube URL of the playlist.
-            
+
         Returns:
             bool: True if playlist was added successfully, False if
                 config file is invalid or PLAYLISTS section is missing.
@@ -220,10 +220,10 @@ class ConfigParserManager(BaseConfigParser):
 
     def delete_playlist(self, playlist_name):
         """Delete a playlist from the configuration file.
-        
+
         Args:
             playlist_name (str): Name of the playlist to delete.
-            
+
         Returns:
             bool: True if playlist was deleted successfully, False if
                 playlist doesn't exist, config file is invalid, or

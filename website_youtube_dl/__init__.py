@@ -4,10 +4,10 @@ from flask import Flask
 from flask_socketio import SocketIO
 from platformdirs import user_config_dir
 
-from .common.youtubeConfigManager import ConfigParserManager
+from .common.youtube_config_manager import ConfigParserManager
 from .config import Config
-from .flaskAPI.services.youtubeHelper import YoutubeHelper
-from .flaskAPI.sockets.socket_manager import SocketManager
+from .flask_api.services.youtube_helper import YoutubeHelper
+from .flask_api.sockets.socket_manager import SocketManager
 
 # Global SocketIO instance
 socketio = SocketIO()
@@ -38,8 +38,8 @@ def create_app(config_class=Config, config_parser=ConfigParserManager,
     app.socket_manager = SocketManager()
 
     # Local imports to avoid circular dependencies during initialization
-    from .flaskAPI.routes.youtube import youtube, YoutubeNamespace
-    from .flaskAPI.routes.youtube_playlists import youtube_playlist, PlaylistsNamespace
+    from .flask_api.routes.youtube import youtube, YoutubeNamespace
+    from .flask_api.routes.youtube_playlists import youtube_playlist, PlaylistsNamespace
 
     # Register Flask Blueprints for HTTP routes
     app.register_blueprint(youtube)

@@ -1,19 +1,19 @@
 import os
 from unittest import TestCase, main
 from unittest.mock import patch, MagicMock
-from website_youtube_dl.flaskAPI.services.youtubeHelper import YoutubeHelper
-from website_youtube_dl.common.youtubeDL import YoutubeDL
-from website_youtube_dl.common.easyID3Manager import EasyID3Manager
+from website_youtube_dl.flask_api.services.youtube_helper import YoutubeHelper
+from website_youtube_dl.common.youtube_dl import YoutubeDL
+from website_youtube_dl.common.easyID3_manager import EasyID3Manager
 from website_youtube_dl import create_app, socketio
 from website_youtube_dl.config import TestingConfig
-from website_youtube_dl.common.youtubeAPI import (
+from website_youtube_dl.common.youtube_api import (
     SingleMedia,
     ResultOfYoutube,
     Format360p,
     FormatMP3,
 )
-from website_youtube_dl.common.youtubeLogKeys import YoutubeLogs
-from website_youtube_dl.common.youtubeOptions import (
+from website_youtube_dl.common.youtube_log_keys import YoutubeLogs
+from website_youtube_dl.common.youtube_options import (
     YoutubeAudioOptions,
     YoutubeVideoOptions,
 )

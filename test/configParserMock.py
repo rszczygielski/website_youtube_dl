@@ -1,6 +1,6 @@
 import os
 import configparser
-from website_youtube_dl.common.youtubeConfigManager import ConfigParserManager
+from website_youtube_dl.common.youtube_config_manager import ConfigParserManager
 
 class TestConstants:
     """Centralized constants for unit testing configuration logic."""

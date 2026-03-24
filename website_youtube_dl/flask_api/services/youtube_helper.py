@@ -1,11 +1,11 @@
 import logging
-from ...common.youtubeLogKeys import YoutubeLogs
-from ...common.youtubeAPI import SingleMedia
-from ...common.youtubeDL import YoutubeDL
-from ...common.easyID3Manager import EasyID3Manager
-from ...common.youtubeConfigManager import BaseConfigParser
-from ...common.myLogger import LoggerClass
-from ...common.youtubeAPI import FormatMP3
+from ...common.youtube_log_keys import YoutubeLogs
+from ...common.youtube_api import SingleMedia
+from ...common.youtube_dl import YoutubeDL
+from ...common.easyID3_manager import EasyID3Manager
+from ...common.youtube_config_manager import BaseConfigParser
+from ...common.my_logger import LoggerClass
+from ...common.youtube_api import FormatMP3
 
 logger = logging.getLogger(__name__)
 

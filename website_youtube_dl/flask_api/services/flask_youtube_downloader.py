@@ -1,7 +1,7 @@
 import os
 from flask import current_app as app
-from ...common.youtubeAPI import FormatMP3
-from ...common.youtubeLogKeys import YoutubeLogs
+from ...common.youtube_api import FormatMP3
+from ...common.youtube_log_keys import YoutubeLogs
 from ..utils.general_funcions import zip_all_files_in_list, generate_title_template_for_youtube_downloader
 
 class FlaskYoutubeDownloader:

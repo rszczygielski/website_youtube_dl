@@ -3,10 +3,10 @@ from enum import Enum
 
 class MainYoutubeKeys(Enum):
     """Enumeration of main YouTube-related keys used in the application.
-    
+
     Contains keys used for request/response data structures, file paths,
     and download-related identifiers throughout the application.
-    
+
     Attributes:
         FUL_PATH (str): Key for full file path.
         REQUESTED_DOWNLOADS (str): Key for requested downloads list.
@@ -43,10 +43,10 @@ class MainYoutubeKeys(Enum):
 
 class MetaDataType(Enum):
     """Enumeration of metadata type keys for audio file tags.
-    
+
     Contains keys used for ID3 metadata tags in MP3 files, including
     title, album, artist, track information, and playlist details.
-    
+
     Attributes:
         TITLE (str): Key for track title.
         ALBUM (str): Key for album name.
@@ -67,10 +67,10 @@ class MetaDataType(Enum):
 
 class PlaylistInfo(Enum):
     """Enumeration of playlist information keys from YouTube API.
-    
+
     Contains keys used to extract playlist and track information from
     YouTube API responses when processing playlists.
-    
+
     Attributes:
         PLAYLIST_NAME (str): Key for playlist name.
         TITLE (str): Key for track title.
@@ -95,10 +95,10 @@ class PlaylistInfo(Enum):
 
 class MediaInfo(Enum):
     """Enumeration of media information keys from YouTube API.
-    
+
     Contains keys used to extract media metadata from YouTube API
     responses for single media items (videos/audio).
-    
+
     Attributes:
         TITLE (str): Key for media title.
         ALBUM (str): Key for album name.
@@ -121,10 +121,10 @@ class MediaInfo(Enum):
 
 class YoutubeOptiones(Enum):
     """Enumeration of YouTube downloader option keys.
-    
+
     Contains keys used for configuring yt-dlp options, including
     format, output template, metadata, and logging settings.
-    
+
     Attributes:
         FORMAT (str): Key for format specification.
         DOWNLOAD_ARCHIVE (str): Key for download archive file.

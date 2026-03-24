@@ -1,13 +1,13 @@
 from flask import current_app as app
 
-from ...common.youtubeAPI import (
+from ...common.youtube_api import (
     SingleMedia, PlaylistMedia, ResultOfYoutube
 )
-from ..services.flaskMedia import FlaskPlaylistMedia, FlaskSingleMedia
+from ..services.flask_media import FlaskPlaylistMedia, FlaskSingleMedia
 from .emits import (
     SingleMediaInfoEmit, PlaylistMediaInfoEmit, DownloadMediaFinishEmit
 )
-from ...common.youtubeLogKeys import YoutubeLogs
+from ...common.youtube_log_keys import YoutubeLogs
 
 
 class YoutubeMediaInfoHandler:

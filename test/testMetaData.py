@@ -1,7 +1,7 @@
 import os
 from unittest.mock import patch, call, MagicMock
 from unittest import TestCase, main
-from website_youtube_dl.common.easyID3Manager import EasyID3Manager
+from website_youtube_dl.common.easyID3_manager import EasyID3Manager
 
 # Global variables
 TEST_TITLE = "testTitle"

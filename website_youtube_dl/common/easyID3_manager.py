@@ -1,4 +1,4 @@
-from .youtubeDataKeys import MetaDataType
+from .youtube_data_keys import MetaDataType
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
 import logging
@@ -9,11 +9,11 @@ logger = logging.getLogger(__name__)
 
 class EasyID3Manager():  # pragma: no_cover
     """Manager for EasyID3 metadata operations on MP3 files.
-    
+
     This class provides functionality to read and write ID3 metadata tags
     to MP3 audio files using the mutagen library. It supports common metadata
     fields like title, album, artist, track number, and playlist information.
-    
+
     Attributes:
         file_path (str): Path to the MP3 file being managed.
         title (str): Title metadata of the audio file.
@@ -42,7 +42,7 @@ class EasyID3Manager():  # pragma: no_cover
                    track_number=None,
                    playlist_name=None):
         """Set metadata parameters for the audio file.
-        
+
         Args:
             filePath (str): Path to the MP3 file.
             title (str, optional): Title of the track. Defaults to None.
@@ -51,7 +51,7 @@ class EasyID3Manager():  # pragma: no_cover
             yt_hash (str, optional): YouTube hash or URL. Defaults to None.
             track_number (str, optional): Track number. Defaults to None.
             playlist_name (str, optional): Playlist name. Defaults to None.
-            
+
         Note:
             Logs a warning if the file path does not exist, but does not
             raise an exception. The file must exist when save_meta_data()
@@ -70,10 +70,10 @@ class EasyID3Manager():  # pragma: no_cover
 
     def save_meta_data(self):
         """Save metadata to the MP3 file.
-        
+
         Writes all set metadata fields (title, album, artist, yt_hash,
         track_number) to the ID3 tags of the MP3 file.
-        
+
         Raises:
             FileNotFoundError: If file_path is None or the file does not exist.
         """
@@ -95,11 +95,11 @@ class EasyID3Manager():  # pragma: no_cover
 
     def read_meta_data(self):
         """Read metadata from the MP3 file.
-        
+
         Reads all available ID3 metadata tags from the MP3 file and
         populates the corresponding instance attributes. Only reads tags
         that exist in the file.
-        
+
         Note:
             Requires file_path to be set and the file to exist.
         """
@@ -119,7 +119,7 @@ class EasyID3Manager():  # pragma: no_cover
 
     def _show_meta_data_info(self, path):  # pragma: no_cover
         """Display formatted metadata information for debugging.
-        
+
         Args:
             path (str): Path to the MP3 file to display metadata for.
         """

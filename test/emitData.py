@@ -1,4 +1,4 @@
-from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys
 
 
 class EmitData:

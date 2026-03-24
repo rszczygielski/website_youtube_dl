@@ -3,10 +3,10 @@ from enum import Enum
 
 class ConfigKeys(Enum):
     """Enumeration of configuration file keys and constants.
-    
+
     This enum contains all the keys and constant values used throughout
     the configuration file management system.
-    
+
     Attributes:
         GLOBAL (str): Section name for global configuration settings.
         PLAYLISTS (str): Section name for playlists configuration.

@@ -3,15 +3,15 @@ import yt_dlp
 from unittest import TestCase, main
 from unittest.mock import patch, call, MagicMock
 
-from website_youtube_dl.common.youtubeConfigManager import BaseConfigParser
-from website_youtube_dl.common.youtubeDataKeys import PlaylistInfo, MediaInfo, MainYoutubeKeys
-import website_youtube_dl.common.youtubeDL as youtubeDL
-from website_youtube_dl.common.youtubeAPI import (
+from website_youtube_dl.common.youtube_config_manager import BaseConfigParser
+from website_youtube_dl.common.youtube_data_keys import PlaylistInfo, MediaInfo, MainYoutubeKeys
+import website_youtube_dl.common.youtube_dl as youtube_dl
+from website_youtube_dl.common.youtube_api import (
     SingleMedia,
     MediaFromPlaylist,
     PlaylistMedia
 )
-from website_youtube_dl.common.youtubeOptions import (
+from website_youtube_dl.common.youtube_options import (
     YoutubeAudioOptions,
     YoutubeVideoOptions,
     YoutubeOptiones
@@ -100,8 +100,8 @@ class TestYoutubeDL(TestCase):
             ConfigParserMock()
         )
         
-        self.youtube_dl = youtubeDL.YoutubeDL(config_parser_manager)
-        self.youtube_playlists = youtubeDL.YoutubeDlPlaylists(config_parser_manager, MagicMock())
+        self.youtube_dl = youtube_dl.YoutubeDL(config_parser_manager)
+        self.youtube_playlists = youtube_dl.YoutubeDlPlaylists(config_parser_manager, MagicMock())
         
         # Configure test path and template
         self.youtube_dl._savePath = self.test_dir
@@ -202,8 +202,8 @@ class TestYoutubeDL(TestCase):
         mock_info.assert_called_once_with(self.PLAYLIST_HASH)
         self.assertEqual(result_meta[PlaylistInfo.TITLE.value], self.TEST_PLAYLIST_NAME)
 
-    @patch.object(youtubeDL.YoutubeDlPlaylists, "download_whole_audio_playlist")
-    @patch.object(youtubeDL.BaseConfigParser, "get_url_of_playlists")
+    @patch.object(youtube_dl.YoutubeDlPlaylists, "download_whole_audio_playlist")
+    @patch.object(youtube_dl.BaseConfigParser, "get_url_of_playlists")
     def test_download_all_config_playlists_audio(self, mock_get_urls, mock_download):
         mock_get_urls.return_value = self.TEST_PLAYLIST_URLS
         
@@ -217,7 +217,7 @@ class TestYoutubeDL(TestCase):
 
     @patch("os.listdir")
     @patch("os.path.isfile")
-    @patch.object(youtubeDL.YoutubeDL, "if_video_exist_on_youtube")
+    @patch.object(youtube_dl.YoutubeDL, "if_video_exist_on_youtube")
     def test_verify_local_mp3_files_detection(self, mock_exists, mock_isfile, mock_listdir):
         mock_listdir.return_value = ["valid.mp3", "broken.mp3", "notes.txt"]
         mock_isfile.side_effect = lambda p: p.endswith(".mp3")

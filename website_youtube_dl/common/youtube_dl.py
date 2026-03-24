@@ -1,20 +1,20 @@
 import yt_dlp
 import logging
 import os
-from .youtubeConfigManager import BaseConfigParser
-from .easyID3Manager import EasyID3Manager
-from .myLogger import Logger, LoggerClass
-from .youtubeDataKeys import (PlaylistInfo,
+from .youtube_config_manager import BaseConfigParser
+from .easyID3_manager import EasyID3Manager
+from .my_logger import Logger, LoggerClass
+from .youtube_data_keys import (PlaylistInfo,
                               MediaInfo)
-from .youtubeOptions import (YoutubeDefaultOptiones,
+from .youtube_options import (YoutubeDefaultOptiones,
                              YoutubeGetSingleInfoOptiones,
                              YoutubeGetPlaylistInfoOptiones,
                              YoutubeAudioOptions,
                              YoutubeVideoOptions,
                              VideoVerificationOptiones,
                              VideoExtension)
-from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
-from website_youtube_dl.common.youtubeAPI import (SingleMedia,
+from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys
+from website_youtube_dl.common.youtube_api import (SingleMedia,
                                                   MediaFromPlaylist,
                                                   PlaylistMedia,
                                                   ResultOfYoutube)
@@ -25,11 +25,11 @@ logger = logging.getLogger(__name__)
 
 class YoutubeDL():
     """Main class for YouTube media downloading operations.
-    
+
     Provides functionality to download single media items and playlists
     from YouTube, extract metadata, and verify video existence. Uses
     yt-dlp library for actual downloading operations.
-    
+
     Attributes:
         title_template_default (str): Default output template for file names.
         title_template (str): Current output template (can be modified temporarily).
@@ -48,7 +48,7 @@ class YoutubeDL():
             configManager: BaseConfigParser,
             ytLogger: LoggerClass = logger):
         """Initialize YoutubeDL with configuration manager and logger.
-        
+
         Args:
             configManager (BaseConfigParser): Configuration manager for
                 accessing save paths and settings.
@@ -427,19 +427,19 @@ class YoutubeDL():
 
 class YoutubeDlPlaylists(YoutubeDL):
     """Extended YouTube downloader with playlist-specific functionality.
-    
+
     Extends YoutubeDL to provide methods for downloading entire playlists
     (both audio and video) and managing ID3 metadata for downloaded tracks.
-    
+
     Attributes:
         easy_id3_manager (EasyID3Manager): Manager for ID3 metadata operations.
     """
-    
+
     def __init__(self, configManager: BaseConfigParser,
                  easy_id3_manager: EasyID3Manager,
                  ytLogger: LoggerClass = Logger):
         """Initialize YoutubeDlPlaylists with config manager and ID3 manager.
-        
+
         Args:
             configManager (BaseConfigParser): Configuration manager instance.
             easy_id3_manager (EasyID3Manager): EasyID3Manager instance for

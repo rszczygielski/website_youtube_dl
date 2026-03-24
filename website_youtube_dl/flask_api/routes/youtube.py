@@ -1,11 +1,11 @@
 import os
 from flask import send_file, render_template, Blueprint, request
 from flask import current_app as app
-from ...common.youtubeLogKeys import YoutubeLogs
+from ...common.youtube_log_keys import YoutubeLogs
 from ..sockets.base_namespace import BaseMediaNamespace
 from ..utils.general_funcions import get_format_instance
 from ..sockets.emits import DownloadMediaFinishEmit
-from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys
+from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys
 
 # --- Blueprints for standard HTTP routes ---
 youtube = Blueprint("youtube", __name__)

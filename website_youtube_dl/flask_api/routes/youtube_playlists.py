@@ -6,7 +6,7 @@ from ..sockets.emits import (
     UploadPlaylistToConfigEmit,
     GetPlaylistUrlEmit
 )
-from ...common.youtubeAPI import FormatMP3
+from ...common.youtube_api import FormatMP3
 
 # --- Blueprints for standard HTTP routes ---
 youtube_playlist = Blueprint("youtube_playlist", __name__)

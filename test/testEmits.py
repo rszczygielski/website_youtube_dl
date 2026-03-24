@@ -4,13 +4,13 @@ from unittest.mock import MagicMock
 from test.emitData import EmitData
 from website_youtube_dl import create_app, socketio
 from website_youtube_dl.config import TestingConfig
-from website_youtube_dl.common.youtubeDataKeys import MainYoutubeKeys, MediaInfo
-from website_youtube_dl.flaskAPI.services.flaskMedia import (
+from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys, MediaInfo
+from website_youtube_dl.flask_api.services.flask_media import (
     FlaskSingleMedia,
     FlaskMediaFromPlaylist,
     FlaskPlaylistMedia
 )
-from website_youtube_dl.flaskAPI.sockets.emits import (
+from website_youtube_dl.flask_api.sockets.emits import (
     DownloadMediaFinishEmit,
     SingleMediaInfoEmit,
     PlaylistMediaInfoEmit,
