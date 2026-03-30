@@ -18,10 +18,12 @@ $(document).ready(function () {
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube");
     });
+
     var downloadForm = document.getElementById("DownloadForm");
     var loadingSpinner = document.getElementById("loadingSpinner");
     var downloadLinkContainer = document.getElementById("downloadLinkContainer");
     var downloadButton = document.getElementById("DownloadButton");
+    var cancelDownloadButton = document.getElementById("cancelDownloadButton");
 
     function setSpinnerVisibility(isVisible) {
         if (!loadingSpinner) {
@@ -44,6 +46,23 @@ $(document).ready(function () {
         } else {
             downloadButton.classList.add("disabled");
         }
+    }
+
+    if (cancelDownloadButton) {
+        cancelDownloadButton.addEventListener("click", function () {
+            console.log("Cancelling download...");
+
+            var cancelData = new CancelDownload(userManager.getUserBrowserId());
+            var emitCancel = new EmitCancelDownload(socket);
+            emitCancel.sendEmit(cancelData);
+
+            setSpinnerVisibility(false);
+            setDownloadButtonEnabled(true);
+
+            if (downloadLinkContainer) {
+                downloadLinkContainer.innerHTML = "<br><span style='color: red;' class='neon-text'>Download cancelled by user.</span>";
+            }
+        });
     }
 
     downloadForm.addEventListener("submit", function (event) {

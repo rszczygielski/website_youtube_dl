@@ -7,7 +7,7 @@ $(document).ready(function () {
         console.log("Connected Youtube Playlists");
         userManager = new UserManager()
         const userBrowserId = userManager.getUserBrowserId()
-        console.log("Mój userBrowserId:", userBrowserId);
+        console.log("My userBrowserId:", userBrowserId);
         socket.emit("userSession", { "userBrowserId": userBrowserId })
         if (!socket_is_connected) {
             socket.emit("getHistory", {
@@ -25,6 +25,7 @@ $(document).ready(function () {
     var playlistSelect = document.getElementById("playlistSelect")
     var addPlaylistButton = document.getElementById("addPlaylistButton")
     var deletePlalistButton = document.getElementById("deletePlaylistButton")
+    var cancelDownloadButton = document.getElementById("cancelDownloadButton");
 
     var loadingSpinner = document.getElementById("loadingSpinner");
     var downloadLinkContainer = document.getElementById("downloadLinkContainer");
@@ -48,6 +49,26 @@ $(document).ready(function () {
         } else {
             downloadPlaylistButton.classList.add("disabled");
         }
+    }
+
+    // Add click event listener for the Cancel Download button
+    if (cancelDownloadButton) {
+        cancelDownloadButton.addEventListener("click", function () {
+            console.log("Cancelling download...");
+
+            // Create data objects and emit the cancel request to the server
+            var cancelData = new CancelDownload(userManager.getUserBrowserId());
+            var emitCancel = new EmitCancelDownload(socket);
+            emitCancel.sendEmit(cancelData);
+
+            // Update the UI immediately to reflect the cancellation
+            setSpinnerVisibility(false);
+            setDownloadButtonEnabled(true);
+
+            if (downloadLinkContainer) {
+                downloadLinkContainer.innerHTML = "<br><span style='color: red;' class='neon-text'>Download cancelled by user.</span>";
+            }
+        });
     }
 
     socket.on(UploadPlaylistsReceiver.emitMsg, function(response){
