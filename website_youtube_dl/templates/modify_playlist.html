@@ -75,7 +75,16 @@
             </table>
             <br>
         </div>
-        <div id="downloadSection">
+        <div class="download-file-area">
+            <div id="downloadSection" class="text-center">
+                <div id="loadingSpinner" class="d-inline-flex justify-content-center d-none">
+                    <button class="btn btn-primary" type="button" disabled>
+                        <span class="spinner-grow spinner-grow-sm" aria-hidden="true"></span>
+                        <span role="status">Loading...</span>
+                    </button>
+                </div>
+                <div id="downloadLinkContainer"></div>
+            </div>
         </div>
     </center>
 </body>

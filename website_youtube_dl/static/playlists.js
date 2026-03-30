@@ -2,6 +2,7 @@ $(document).ready(function () {
     console.log("ready")
     const socket = io("/playlists")
     var socket_is_connected = false;
+
     socket.on('connect', function () {
         console.log("Connected Youtube Playlists");
         userManager = new UserManager()
@@ -15,13 +16,39 @@ $(document).ready(function () {
         };
         socket_is_connected = true;
     });
+
     socket.on('disconnect', function () {
         console.log("Disconnected Youtube Playlists");
     });
+
     var downloadPlaylistButton = document.getElementById("downloadPlaylist");
     var playlistSelect = document.getElementById("playlistSelect")
     var addPlaylistButton = document.getElementById("addPlaylistButton")
     var deletePlalistButton = document.getElementById("deletePlaylistButton")
+
+    var loadingSpinner = document.getElementById("loadingSpinner");
+    var downloadLinkContainer = document.getElementById("downloadLinkContainer");
+
+    function setSpinnerVisibility(isVisible) {
+        if (!loadingSpinner) return;
+
+        if (isVisible) {
+            loadingSpinner.classList.remove("d-none");
+        } else {
+            loadingSpinner.classList.add("d-none");
+        }
+    }
+
+    function setDownloadButtonEnabled(isEnabled) {
+        if (!downloadPlaylistButton) return;
+
+        downloadPlaylistButton.disabled = !isEnabled;
+        if (isEnabled) {
+            downloadPlaylistButton.classList.remove("disabled");
+        } else {
+            downloadPlaylistButton.classList.add("disabled");
+        }
+    }
 
     socket.on(UploadPlaylistsReceiver.emitMsg, function(response){
         var uploadPlaylistsReceiver = new UploadPlaylistsReceiver(response)
@@ -45,15 +72,21 @@ $(document).ready(function () {
 
     socket.on(DownloadMediaFinishReceiver.emitMsg, function (response) {
         var downloadMediaFinishReceiver = new DownloadMediaFinishReceiver(response)
+
+        setSpinnerVisibility(false);
+        setDownloadButtonEnabled(true);
+
         if (downloadMediaFinishReceiver.isError()){
             console.log(downloadMediaFinishReceiver.getError())
             return
         }
-        var downloadSection = document.getElementById("downloadSection")
+
         var downloadMediaFinish = downloadMediaFinishReceiver.getData()
         console.log(downloadMediaFinish.hash)
-        // Use the `download` attribute to avoid navigating away from the page
-        downloadSection.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " download target='_blank' class='neon-button'>Download File</a>"
+
+        if (downloadLinkContainer) {
+            downloadLinkContainer.innerHTML = "<br><a href=/downloadFile/" + downloadMediaFinish.hash + " download target='_blank' class='neon-button'>Download File</a>"
+        }
     })
 
     socket.on(PlaylistTrackFinishReceiver.emitMsg, function (response) {
@@ -138,9 +171,15 @@ $(document).ready(function () {
 
     downloadPlaylistButton.addEventListener("click", function (event) {
         var downloadInfo = document.getElementById("downloadInfo");
-        var downloadSection = document.getElementById("downloadSection");
-        downloadSection.innerHTML = ''
-        downloadInfo.innerHTML = ''
+
+        if (downloadLinkContainer) {
+            downloadLinkContainer.innerHTML = '';
+        }
+        downloadInfo.innerHTML = '';
+
+        setSpinnerVisibility(true);
+        setDownloadButtonEnabled(false);
+
         var playlistToDownload = playlistSelect.value
         console.log(playlistToDownload)
         var playlist_nameObject = new PlaylistName(playlistToDownload)
