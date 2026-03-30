@@ -1,5 +1,10 @@
+// ==========================================
+// DATA MODELS
+// Classes representing data structures sent via WebSockets
+// ==========================================
 
-
+/** * Represents a single media track downloaded from YouTube.
+ */
 class SingleMedia {
     constructor(title, artist, url) {
         this.title = title;
@@ -8,283 +13,326 @@ class SingleMedia {
     }
 }
 
+/** * Represents a single media track that is part of a playlist.
+ */
 class SingleMediaFromPlaylist {
     constructor(title, url) {
         this.title = title;
-        this.url = url
+        this.url = url;
     }
 }
 
+/** * Represents an entire playlist containing a collection of tracks.
+ */
 class PlaylistMedia {
-    constructor(playlistName, trackList){
+    constructor(playlistName, trackList) {
         this.playlistName = playlistName;
         this.trackList = trackList;
     }
 }
 
-class DownloadMediaFinish{
+/** * Contains the generated hash for the finalized, zipped download file.
+ */
+class DownloadMediaFinish {
     constructor(hash) {
-        this.hash = hash
+        this.hash = hash;
     }
 }
 
-class FormData{
-
-    constructor(youtubeURL, downloadType, sessionId){
-        this.youtubeURL = youtubeURL
-        this.downloadType = downloadType
-        this.sessionId = sessionId
+/** * Contains the form data required to initiate a download.
+ */
+class FormData {
+    constructor(youtubeURL, downloadType, sessionId) {
+        this.youtubeURL = youtubeURL;
+        this.downloadType = downloadType;
+        this.sessionId = sessionId;
     }
 }
 
-class AddPlaylist{
-
-    constructor(playlistName, playlistUrl){
-        this.playlistName = playlistName
-        this.playlistUrl = playlistUrl
+/** * Contains the data needed to add a new playlist to the configuration.
+ */
+class AddPlaylist {
+    constructor(playlistName, playlistUrl) {
+        this.playlistName = playlistName;
+        this.playlistUrl = playlistUrl;
     }
 }
 
-class PlaylistName{
-    constructor(playlistName){
-        this.playlistName = playlistName
+/** * Wraps the name of a specific playlist.
+ */
+class PlaylistName {
+    constructor(playlistName) {
+        this.playlistName = playlistName;
     }
 }
 
-class UploadPlaylists{
-    constructor(playlistList){
-        this.playlistList = playlistList
+/** * Contains a list of all available playlists from the configuration.
+ */
+class UploadPlaylists {
+    constructor(playlistList) {
+        this.playlistList = playlistList;
     }
 }
 
-class PlaylistUrl{
+/** * Wraps the URL associated with a specific playlist.
+ */
+class PlaylistUrl {
     constructor(playlistUrl) {
-        this.playlistUrl = playlistUrl
+        this.playlistUrl = playlistUrl;
     }
 }
 
-class PlaylistIndex{
-    constructor(index){
-        this.index = index
+/** * Represents the index of a track in the UI table (e.g., to mark it as downloaded).
+ */
+class PlaylistIndex {
+    constructor(index) {
+        this.index = index;
     }
 }
 
-class BaseReceiver{
-    constructor (requestJson){
+/** * Contains the data required to request cancellation of an ongoing download.
+ */
+class CancelDownload {
+    constructor(userBrowserId) {
+        this.userBrowserId = userBrowserId;
+    }
+}
+
+// ==========================================
+// RECEIVERS
+// Classes for receiving and processing events from the server (Socket.IO)
+// ==========================================
+
+/** * Base class for handling incoming WebSocket messages.
+ */
+class BaseReceiver {
+    constructor(requestJson) {
         this.requestJson = requestJson;
     }
 
-    isError(){
-        if ("error" in this.requestJson){
-            return true
+    /** * Checks if the received message contains an error.
+     * @returns {boolean} True if an error is present, false otherwise.
+     */
+    isError() {
+        return "error" in this.requestJson;
+    }
+
+    /** * Retrieves the error message from the payload.
+     * @returns {string|undefined} The error message.
+     */
+    getError() {
+        if ("error" in this.requestJson) {
+            return this.requestJson["error"];
         }
-        return false
     }
 
-    getError(){
-        if ("error" in this.requestJson){
-            return this.requestJson["error"]
-        }
-    }
+    /** * Virtual method to convert raw message data into structured objects.
+     * Must be overridden by subclasses.
+     * @param {Object} data - The raw data from the server.
+     */
+    convertMessageToData(data) {}
 
-    convertMessageToData(){
-    }
-
-    getData(){
-        if ("data" in this.requestJson){
-            return this.convertMessageToData(this.requestJson["data"])
+    /** * Returns the processed data from the message payload.
+     * @returns {Object|undefined} The converted data object.
+     */
+    getData() {
+        if ("data" in this.requestJson) {
+            return this.convertMessageToData(this.requestJson["data"]);
         }
     }
 }
 
 class PlaylistMediaEmitReceiver extends BaseReceiver {
-    static emitMsg = "playlistMediaInfo"
+    static emitMsg = "playlistMediaInfo";
 
-    constructor(requestJson){
-        super(requestJson)
+    constructor(requestJson) {
+        super(requestJson);
     }
 
     convertMessageToData(data) {
-        var playlistName = data["playlistName"]
-        var trackList = data["trackList"]
+        var playlistName = data["playlistName"];
+        var trackList = data["trackList"];
 
-
-        var singleMediaArr = []
+        var singleMediaArr = [];
         for (var track of trackList) {
-            console.log(track)
-            singleMediaArr.push(new SingleMediaFromPlaylist(track["title"],
-                                            track["url"]))
+            console.log(track);
+            singleMediaArr.push(new SingleMediaFromPlaylist(track["title"], track["url"]));
         }
-        return new PlaylistMedia(playlistName, singleMediaArr)
+        return new PlaylistMedia(playlistName, singleMediaArr);
     }
 }
 
 class SingleMediaEmitReceiver extends BaseReceiver {
-    static emitMsg = "mediaInfo"
+    static emitMsg = "mediaInfo";
 
-    constructor(requestJson){
-        super(requestJson)
+    constructor(requestJson) {
+        super(requestJson);
     }
 
     convertMessageToData(data) {
-        return new SingleMedia(data["title"],
-                           data["artist"],
-                           data["webpage_url"])
+        return new SingleMedia(data["title"], data["artist"], data["webpage_url"]);
     }
 }
 
 class DownloadMediaFinishReceiver extends BaseReceiver {
-    static emitMsg = "downloadMediaFinish"
+    static emitMsg = "downloadMediaFinish";
 
-    constructor(requestJson){
-        super(requestJson)
+    constructor(requestJson) {
+        super(requestJson);
     }
 
     convertMessageToData(data) {
-        var hash = data["HASH"]
-        return new DownloadMediaFinish(hash)
+        return new DownloadMediaFinish(data["HASH"]);
     }
 }
 
 class UploadPlaylistsReceiver extends BaseReceiver {
-    static emitMsg = "uploadPlaylists"
+    static emitMsg = "uploadPlaylists";
 
-    constructor(requestJson){
-        super(requestJson)
+    constructor(requestJson) {
+        super(requestJson);
     }
 
     convertMessageToData(data) {
-        var playlistList = data["playlistList"]
-        return new UploadPlaylists(playlistList)
+        return new UploadPlaylists(data["playlistList"]);
     }
 }
 
 class PlaylistUrlReceiver extends BaseReceiver {
-    static emitMsg = "playlistUrl"
+    static emitMsg = "playlistUrl";
 
-    constructor(requestJson){
-        super(requestJson)
+    constructor(requestJson) {
+        super(requestJson);
     }
 
     convertMessageToData(data) {
-        var playlistUrl = data["playlistUrl"]
-        return new PlaylistUrl(playlistUrl)
+        return new PlaylistUrl(data["playlistUrl"]);
     }
 }
 
 class PlaylistTrackFinishReceiver extends BaseReceiver {
-    static emitMsg = "playlistTrackFinish"
+    static emitMsg = "playlistTrackFinish";
 
-    constructor(requestJson){
-        super(requestJson)
+    constructor(requestJson) {
+        super(requestJson);
     }
 
     convertMessageToData(data) {
-        var index = data["index"]
-        return new PlaylistIndex(index)
+        return new PlaylistIndex(data["index"]);
     }
 }
 
+// ==========================================
+// EMITTERS
+// Classes for formatting and sending events to the server (Socket.IO)
+// ==========================================
+
+/** * Base class for emitting messages via Socket.IO.
+ */
 class BaseEmit {
-
-    constructor(emitMsg, socket){
-        this.emitMsg = emitMsg
-        this.socket = socket
+    constructor(emitMsg, socket) {
+        this.emitMsg = emitMsg;
+        this.socket = socket;
     }
 
-    convert_data_to_message(){
-    }
+    /** * Virtual method to prepare the payload.
+     * Must be overridden by subclasses.
+     * @param {Object} data - The data to be converted.
+     */
+    convert_data_to_message(data) {}
 
-    sendEmit(data){
-        var convertedData = this.convert_data_to_message(data)
-        this.socket.emit(this.emitMsg, convertedData)
+    /** * Formats the data and emits the event to the server.
+     * @param {Object} data - The data object to send.
+     */
+    sendEmit(data) {
+        var convertedData = this.convert_data_to_message(data);
+        this.socket.emit(this.emitMsg, convertedData);
     }
 }
 
 class EmitFormData extends BaseEmit {
-
-    constructor(socket){
-        super("FormData", socket)
-
+    constructor(socket) {
+        super("FormData", socket);
     }
 
-    /**
-     * @param {FormData} data
+    /** * @param {FormData} formData
      */
-    convert_data_to_message(formData){
+    convert_data_to_message(formData) {
         return {
             "youtubeURL": formData.youtubeURL,
             "downloadType": formData.downloadType,
             "sessionId": formData.sessionId
-        }
+        };
     }
 }
 
-
 class EmitAddPlaylist extends BaseEmit {
-
-    constructor(socket){
-        super("addPlaylist", socket)
+    constructor(socket) {
+        super("addPlaylist", socket);
     }
 
-    /**
-     * @param {AddPlaylist} data
+    /** * @param {AddPlaylist} addPlaylist
      */
-    convert_data_to_message(addPlaylist){
+    convert_data_to_message(addPlaylist) {
         return {
             "playlistName": addPlaylist.playlistName,
             "playlistURL": addPlaylist.playlistUrl
-        }
+        };
     }
 }
-
 
 class EmitDeletePlaylist extends BaseEmit {
-
-    constructor(socket){
-        super("deletePlaylist", socket)
+    constructor(socket) {
+        super("deletePlaylist", socket);
     }
 
-    /**
-     * @param {PlaylistName} data
+    /** * @param {PlaylistName} playlistName
      */
-    convert_data_to_message(playlistName){
+    convert_data_to_message(playlistName) {
         return {
             "playlistToDelete": playlistName.playlistName
-        }
+        };
     }
 }
-
 
 class EmitPlaylistName extends BaseEmit {
-
-    constructor(socket){
-        super("playlistName", socket)
+    constructor(socket) {
+        super("playlistName", socket);
     }
 
-    /**
-     * @param {PlaylistName} data
+    /** * @param {PlaylistName} playlistName
      */
-    convert_data_to_message(playlistName){
+    convert_data_to_message(playlistName) {
         return {
             "playlistName": playlistName.playlistName
-        }
+        };
     }
 }
 
-
 class EmitDownloadFromConfigFile extends BaseEmit {
-
-    constructor(socket){
-        super("downloadFromConfigFile", socket)
+    constructor(socket) {
+        super("downloadFromConfigFile", socket);
     }
 
-    /**
-     * @param {PlaylistName} data
+    /** * @param {PlaylistName} playlistName
      */
-    convert_data_to_message(playlistName){
+    convert_data_to_message(playlistName) {
         return {
             "playlistToDownload": playlistName.playlistName
-        }
+        };
+    }
+}
+
+class EmitCancelDownload extends BaseEmit {
+    constructor(socket) {
+        super("cancelDownload", socket);
+    }
+
+    /** * @param {CancelDownload} cancelData
+     */
+    convert_data_to_message(cancelData) {
+        return {
+            "userBrowserId": cancelData.userBrowserId
+        };
     }
 }
