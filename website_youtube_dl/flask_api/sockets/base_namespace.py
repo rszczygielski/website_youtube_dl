@@ -63,6 +63,10 @@ class BaseMediaNamespace(Namespace):
         user_browser_id = data.get("userBrowserId")
         user_data = app.socket_manager.get_user_messages(user_browser_id)
 
+        # Filter messages for the current namespace to check if there is any active history
+        relevant_messages = [msg for msg in user_data if msg.namespace == self.namespace]
+        has_history = len(relevant_messages) > 0
+
         for message in user_data:
             # Only replay messages belonging to the current namespace
             if message.namespace != self.namespace:
@@ -84,6 +88,9 @@ class BaseMediaNamespace(Namespace):
                     add_to_queue=False,
                     namespace=self.namespace
                 )
+        # Returning a value triggers the acknowledgment callback on the client side
+        # providing the 'hasHistory' status to the JS emitter.
+        return {"hasHistory": has_history}
 
     def on_cancelDownload(self, data):
         """
