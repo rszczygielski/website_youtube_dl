@@ -3,6 +3,7 @@ import time
 from flask import current_app as app
 from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
 
+
 class SocketManager:
     """Manages Socket.IO connections, user message queues, and download file registry.
 
@@ -11,12 +12,14 @@ class SocketManager:
     - Event-driven session cleanup triggered by disconnections
     - User message queues for history and reconnection
     - Download file registry mapping hashes to file metadata
+    - Tracking and managing user-requested download cancellations
 
     Attributes:
         SESSION_TIMEOUT (int): Delay in seconds before cleaning up a disconnected session.
         active_connections (dict): Maps user_browser_id to BrowserSession.
         message_queues (dict): Maps user_browser_id to list of UserMessage.
         download_registry (dict): Maps hash to DownloadFileInfo.
+        cancelled_downloads (set): Stores user_browser_ids of users who requested to cancel their ongoing downloads.
     """
     SESSION_TIMEOUT = 1800  # Testing value: 30 seconds
 
@@ -25,36 +28,91 @@ class SocketManager:
         self.active_connections = {}
         self.message_queues = {}
         self.download_registry = {}
-        # Stores active threading.Timer objects mapped to user_browser_id
+        self.cancelled_downloads = set()
         self._cleanup_timers = {}
 
-    def _cleanup_session(self, user_browser_id, app_instance):
-        """Permanently remove session data and message queues for a user.
+    # ==========================================
+    # PUBLIC METHODS (API for Namespaces)
+    # ==========================================
 
-        Runs within the application context to allow safe access to app resources
-        like the logger from a background thread.
+    def process_emit(self, data, emit_type, user_browser_id: str, namespace: str, add_to_queue=True):
+        """
+        Process and send a successful Socket.IO emit to a specific user.
 
         Args:
-            user_browser_id (str): Unique identifier for the user's browser.
-            app_instance (Flask): The actual Flask application instance.
+            data (Any): The payload to send to the client.
+            emit_type (Type): The class representing the specific emit event.
+            user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace to broadcast on.
+            add_to_queue (bool, optional): Whether to store this emit in the user's history queue. Defaults to True.
         """
-        with app_instance.app_context():
-            app_instance.logger.info(f"Cleanup triggered: Removing data for user_browser_id: {user_browser_id}")
-            self.active_connections.pop(user_browser_id, None)
-            self.message_queues.pop(user_browser_id, None)
-            self._cleanup_timers.pop(user_browser_id, None)
+        process_emit_type = emit_type()
+        app.logger.debug(f'Processing emit {process_emit_type.emit_msg} for {user_browser_id}')
+
+        if add_to_queue:
+            self._add_msg_to_users_queue(user_browser_id, emit_type, data, namespace)
+
+        self._update_activity_timestamp(user_browser_id)
+        session_id = self._get_session_id_by_user_browser_id(user_browser_id)
+        process_emit_type.send_emit(data, session_id, namespace)
+
+    def process_emit_error(self, error_msg, emit_type, user_browser_id: str, namespace: str, add_to_queue=True):
+        """
+        Process and send an error Socket.IO emit to a specific user.
+
+        Args:
+            error_msg (str): The error message payload.
+            emit_type (Type): The class representing the specific emit event.
+            user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace to broadcast on.
+            add_to_queue (bool, optional): Whether to store this error in the user's history queue. Defaults to True.
+        """
+        process_emit_type = emit_type()
+        app.logger.debug(f'Processing error emit {process_emit_type.emit_msg} for {user_browser_id}')
+
+        if add_to_queue:
+            self._add_msg_to_users_queue(user_browser_id, emit_type, error_msg, namespace, is_error=True)
+
+        self._update_activity_timestamp(user_browser_id)
+        session_id = self._get_session_id_by_user_browser_id(user_browser_id)
+        process_emit_type.send_emit_error(error_msg, session_id, namespace)
+
+    def add_user_session(self, user_browser_id, session_id):
+        """
+        Register or update an active WebSocket connection for a user.
+
+        Also cancels any pending cleanup timers if the user reconnects within the timeout window.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+            session_id (str): The current Socket.IO session ID.
+        """
+        now = time.time()
+
+        # If user reconnects, abort the deletion process
+        self._cancel_cleanup_timer(user_browser_id)
+
+        if user_browser_id in self.active_connections:
+            app.logger.debug(f"Updating connection for user_browser_id: {user_browser_id}")
+
+        self.active_connections[user_browser_id] = BrowserSession(
+            session_id=session_id, last_activity_timestamp=now)
 
     def on_user_disconnect(self, user_browser_id):
-        """Schedule a cleanup task when a user disconnects from the socket.
+        """
+        Schedule a cleanup task when a user disconnects from the socket.
+
+        This initiates a timer. If the user does not reconnect before SESSION_TIMEOUT expires,
+        their queues and session data will be purged.
 
         Args:
-            user_browser_id (str): Unique identifier for the user's browser.
+            user_browser_id (str): Unique identifier for the user's browser session.
         """
         if not user_browser_id:
             return
 
         # Cancel any existing timer before starting a new one
-        self.cancel_cleanup_timer(user_browser_id)
+        self._cancel_cleanup_timer(user_browser_id)
 
         # Get the actual underlying app object to pass to the thread
         actual_app = app._get_current_object()
@@ -70,45 +128,125 @@ class SocketManager:
         self._cleanup_timers[user_browser_id] = timer
         timer.start()
 
-    def cancel_cleanup_timer(self, user_browser_id):
-        """Cancel the scheduled cleanup if the user reconnects before the timeout.
-
-        Args:
-            user_browser_id (str): Unique identifier for the user's browser.
+    def set_cancel_flag(self, user_browser_id):
         """
-        timer = self._cleanup_timers.get(user_browser_id)
-        if timer:
-            timer.cancel()
-            self._cleanup_timers.pop(user_browser_id, None)
-            app.logger.debug(f"Cleanup timer cancelled for user_browser_id: {user_browser_id}")
-
-    def add_user_session(self, user_browser_id, session_id):
-        """Add or update a user's active connection and cancel pending cleanup.
+        Set the download cancellation flag for a specific user.
 
         Args:
-            user_browser_id (str): Unique identifier for the user's browser.
-            session_id (str): Socket.IO session ID.
+            user_browser_id (str): Unique identifier for the user's browser session.
         """
-        now = time.time()
+        if user_browser_id:
+            self.cancelled_downloads.add(user_browser_id)
+            app.logger.info(f"Cancel flag set for user: {user_browser_id}")
 
-        # If user reconnects, abort the deletion process
-        self.cancel_cleanup_timer(user_browser_id)
-
-        if user_browser_id in self.active_connections:
-            app.logger.debug(f"Updating connection for user_browser_id: {user_browser_id}")
-
-        self.active_connections[user_browser_id] = BrowserSession(
-            session_id=session_id, last_activity_timestamp=now)
-
-    def add_msg_to_users_queue(self, user_browser_id, emit_type, data, namespace, is_error=False):
-        """Add a message to user's message queue for history and reconnection.
+    def is_cancelled(self, user_browser_id):
+        """
+        Check if the user has requested to cancel the ongoing download.
 
         Args:
-            user_browser_id (str): Unique identifier for the user's browser.
-            emit_type (Type): The emit type class.
-            data (Any): The data to be stored.
-            namespace (str): The namespace for the event.
-            is_error (bool): Whether this message represents an error.
+            user_browser_id (str): Unique identifier for the user's browser session.
+
+        Returns:
+            bool: True if a cancellation was requested, False otherwise.
+        """
+        return user_browser_id in self.cancelled_downloads
+
+    def clear_cancel_flag(self, user_browser_id):
+        """
+        Clear the cancellation flag for a user (e.g., before starting a new download).
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+        """
+        self.cancelled_downloads.discard(user_browser_id)
+
+    def get_user_messages(self, user_browser_id):
+        """
+        Retrieve all queued messages for a specific user.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+
+        Returns:
+            list[UserMessage]: A list of stored messages for the user. Returns an empty list if none exist.
+        """
+        return self.message_queues.get(user_browser_id, [])
+
+    def clear_user_data(self, user_browser_id):
+        """
+        Clear all messages from a user's message queue.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+        """
+        if user_browser_id in self.message_queues:
+            self.message_queues[user_browser_id] = []
+        app.logger.debug(f"Cleared user data for {user_browser_id}")
+
+    def add_message_to_session_hash(self, generated_hash, download_file_info: DownloadFileInfo):
+        """
+        Store download file metadata in the registry mapped to a unique hash.
+
+        Args:
+            generated_hash (str): The unique identifier string for the download link.
+            download_file_info (DownloadFileInfo): The object containing file path and playlist status.
+        """
+        self.download_registry[generated_hash] = download_file_info
+
+    def get_session_data_by_hash(self, generated_hash):
+        """
+        Retrieve download file metadata from the registry using its hash.
+
+        Args:
+            generated_hash (str): The unique identifier string.
+
+        Returns:
+            DownloadFileInfo | None: The metadata object if found, None otherwise.
+        """
+        return self.download_registry.get(generated_hash, None)
+
+    def get_user_browser_id_by_session(self, session_id):
+        """
+        Look up a user_browser_id associated with a specific Socket.IO session ID.
+
+        Args:
+            session_id (str): The Socket.IO session identifier.
+
+        Returns:
+            str | None: The matching user_browser_id, or None if not found.
+        """
+        for user_browser_id, session in self.active_connections.items():
+            if session.session_id == session_id:
+                return user_browser_id
+        return None
+
+    # ==========================================
+    # PROTECTED METHODS
+    # ==========================================
+
+    def _get_session_id_by_user_browser_id(self, user_browser_id):
+        """
+        Retrieve the Socket.IO session ID for a given user.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+
+        Returns:
+            str | None: The session ID if active, None otherwise.
+        """
+        session = self.active_connections.get(user_browser_id, None)
+        return session.session_id if session else None
+
+    def _add_msg_to_users_queue(self, user_browser_id, emit_type, data, namespace, is_error=False):
+        """
+        Append a new message object to the user's history queue.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+            emit_type (Type): The class representing the specific emit event.
+            data (Any): The payload of the message.
+            namespace (str): The relevant Socket.IO namespace.
+            is_error (bool, optional): Indicates if the message is an error. Defaults to False.
         """
         if user_browser_id is None:
             app.logger.warning("Cannot add message to queue: user_browser_id is None")
@@ -120,10 +258,15 @@ class SocketManager:
 
         message = UserMessage(emit_type=emit_type, data=data, namespace=namespace, is_error=is_error)
         self.message_queues[user_browser_id].append(message)
-        self.update_activity_timestamp(user_browser_id)
+        self._update_activity_timestamp(user_browser_id)
 
-    def update_activity_timestamp(self, user_browser_id):
-        """Update the last activity timestamp for a user connection."""
+    def _update_activity_timestamp(self, user_browser_id):
+        """
+        Refresh the last activity timestamp for a user's active connection.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+        """
         if user_browser_id in self.active_connections:
             session = self.active_connections[user_browser_id]
             self.active_connections[user_browser_id] = BrowserSession(
@@ -132,56 +275,32 @@ class SocketManager:
         else:
             app.logger.warning(f"User {user_browser_id} not found in active connections.")
 
-    def get_user_messages(self, user_browser_id):
-        """Get all messages in user's message queue."""
-        return self.message_queues.get(user_browser_id, [])
+    def _cleanup_session(self, user_browser_id, app_instance):
+        """
+        Permanently remove session data, message queues, and timers for a disconnected user.
 
-    def add_message_to_session_hash(self, generated_hash, download_file_info: DownloadFileInfo):
-        """Store download file information in registry by hash."""
-        self.download_registry[generated_hash] = download_file_info
+        Runs within the provided application context to safely access resources like the logger.
 
-    def get_session_data_by_hash(self, generated_hash):
-        """Retrieve download file information from registry by hash."""
-        return self.download_registry.get(generated_hash, None)
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+            app_instance (Flask): The actual Flask application instance.
+        """
+        with app_instance.app_context():
+            app_instance.logger.info(f"Cleanup triggered: Removing data for user_browser_id: {user_browser_id}")
+            self.active_connections.pop(user_browser_id, None)
+            self.message_queues.pop(user_browser_id, None)
+            self._cleanup_timers.pop(user_browser_id, None)
+            self.cancelled_downloads.discard(user_browser_id)
 
-    def get_user_browser_id_by_session(self, session_id):
-        """Get user_browser_id from Socket.IO session_id."""
-        for user_browser_id, session in self.active_connections.items():
-            if session.session_id == session_id:
-                return user_browser_id
-        return None
+    def _cancel_cleanup_timer(self, user_browser_id):
+        """
+        Abort a scheduled cleanup task for a user.
 
-    def get_session_id_by_user_browser_id(self, user_browser_id):
-        """Get Socket.IO session_id from user_browser_id."""
-        session = self.active_connections.get(user_browser_id, None)
-        return session.session_id if session else None
-
-    def clear_user_data(self, user_browser_id):
-        """Clear all messages from user's message queue."""
-        if user_browser_id in self.message_queues:
-            self.message_queues[user_browser_id] = []
-        app.logger.debug(f"Cleared user data for {user_browser_id}")
-
-    def process_emit(self, data, emit_type, user_browser_id: str, namespace: str, add_to_queue=True):
-        """Process and send a Socket.IO emit to the user."""
-        process_emit_type = emit_type()
-        app.logger.debug(f'Processing emit {process_emit_type.emit_msg} for {user_browser_id}')
-
-        if add_to_queue:
-            self.add_msg_to_users_queue(user_browser_id, emit_type, data, namespace)
-
-        self.update_activity_timestamp(user_browser_id)
-        session_id = self.get_session_id_by_user_browser_id(user_browser_id)
-        process_emit_type.send_emit(data, session_id, namespace)
-
-    def process_emit_error(self, error_msg, emit_type, user_browser_id: str, namespace: str, add_to_queue=True):
-        """Process and send a Socket.IO error emit to the user."""
-        process_emit_type = emit_type()
-        app.logger.debug(f'Processing error emit {process_emit_type.emit_msg} for {user_browser_id}')
-
-        if add_to_queue:
-            self.add_msg_to_users_queue(user_browser_id, emit_type, error_msg, namespace, is_error=True)
-
-        self.update_activity_timestamp(user_browser_id)
-        session_id = self.get_session_id_by_user_browser_id(user_browser_id)
-        process_emit_type.send_emit_error(error_msg, session_id, namespace)
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+        """
+        timer = self._cleanup_timers.get(user_browser_id)
+        if timer:
+            timer.cancel()
+            self._cleanup_timers.pop(user_browser_id, None)
+            app.logger.debug(f"Cleanup timer cancelled for user_browser_id: {user_browser_id}")
