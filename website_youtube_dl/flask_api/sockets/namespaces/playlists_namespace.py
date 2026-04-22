@@ -1,33 +1,12 @@
 from flask import Blueprint, render_template, request
 from flask import current_app as app
-
-from ..sockets.base_namespace import BaseMediaNamespace
-from ..sockets.emits import (
+from website_youtube_dl.common.youtube_api import FormatMP3
+from .base_namespace import BaseMediaNamespace
+from ..emits import (
     UploadPlaylistToConfigEmit,
     GetPlaylistUrlEmit
 )
-from ...common.youtube_api import FormatMP3
 
-# --- Blueprints for standard HTTP routes ---
-youtube_playlist = Blueprint("youtube_playlist", __name__)
-
-@youtube_playlist.route("/modify_playlist.html")
-def modify_playlist_html():
-    """Render the playlist management interface.
-
-    Retrieves existing playlists from the configuration and passes their names
-    to the template for rendering.
-
-    Returns:
-        str: Rendered HTML template for playlist modification.
-    """
-    playlist_list = app.config_parser_manager.get_playlists()
-    playlists_names = list(playlist_list.keys())
-    app.logger.debug(f"Rendering modify_playlist.html with {len(playlists_names)} playlists")
-    return render_template(
-        "modify_playlist.html",
-        playlists_names=playlists_names
-    )
 
 # --- SocketIO Namespace Class ---
 class PlaylistsNamespace(BaseMediaNamespace):

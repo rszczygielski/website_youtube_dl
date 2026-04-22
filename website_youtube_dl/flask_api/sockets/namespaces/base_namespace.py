@@ -1,10 +1,10 @@
 from flask import request, current_app as app
 from flask_socketio import Namespace
-from ..utils.general_funcions import generate_hash, get_files_from_dir
-from .session_data import DownloadFileInfo
-from .emits import DownloadMediaFinishEmit, PlaylistTrackFinish
-from .youtube_media_info_handler import YoutubeMediaInfoHandler
-from ..services.flask_youtube_downloader import FlaskYoutubeDownloader
+from website_youtube_dl.flask_api.services.flask_youtube_downloader import FlaskYoutubeDownloader
+from website_youtube_dl.flask_api.utils.general_funcions import generate_hash, get_files_from_dir
+from ..session_data import DownloadFileInfo
+from ..emits import DownloadMediaFinishEmit, PlaylistTrackFinish
+from ..youtube_media_info_handler import YoutubeMediaInfoHandler
 
 class BaseMediaNamespace(Namespace):
     """Base class handling shared Socket.IO logic across different namespaces.

@@ -1,47 +1,11 @@
 import os
 from flask import send_file, render_template, Blueprint, request
 from flask import current_app as app
-from ...common.youtube_log_keys import YoutubeLogs
-from ..sockets.base_namespace import BaseMediaNamespace
-from ..utils.general_funcions import get_format_instance
-from ..sockets.emits import DownloadMediaFinishEmit
+from website_youtube_dl.flask_api.utils.general_funcions import get_format_instance
 from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys
-
-# --- Blueprints for standard HTTP routes ---
-youtube = Blueprint("youtube", __name__)
-
-@youtube.route("/downloadFile/<name>")
-def download_file(name):
-    """Serve the downloaded file to the user as an attachment.
-
-    Args:
-        name (str): The unique hash identifying the file in the download registry.
-
-    Returns:
-        Response: The file as an attachment or a 404 error if not found.
-    """
-    session_download_data = app.socket_manager.get_session_data_by_hash(name)
-    if not session_download_data:
-        app.logger.warning(f"No session data for hash: {name}")
-        return "File not found", 404
-
-    full_path = os.path.join(
-        session_download_data.file_directory_path,
-        session_download_data.file_name
-    )
-    app.logger.info(YoutubeLogs.SENDING_TO_ATTACHMENT.value)
-    return send_file(full_path, as_attachment=True)
-
-@youtube.route("/youtube.html")
-def youtube_html():
-    """Render the YouTube downloader interface."""
-    return render_template("youtube.html")
-
-@youtube.route("/")
-@youtube.route("/index.html")
-def index():
-    """Render the main index page."""
-    return render_template('index.html')
+from website_youtube_dl.common.youtube_log_keys import YoutubeLogs
+from .base_namespace import BaseMediaNamespace
+from ..emits import DownloadMediaFinishEmit
 
 
 # --- SocketIO Namespace Class ---

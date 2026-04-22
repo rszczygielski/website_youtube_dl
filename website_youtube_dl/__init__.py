@@ -37,13 +37,15 @@ def create_app(config_class=Config, config_parser=ConfigParserManager,
     app.logger = init_logger(logger_config)
     app.socket_manager = SocketManager()
 
+    # Import the central Blueprint handling all standard HTTP web routes
+    from .flask_api.routes.web_routes import web_bp
+
     # Local imports to avoid circular dependencies during initialization
-    from .flask_api.routes.youtube import youtube, YoutubeNamespace
-    from .flask_api.routes.youtube_playlists import youtube_playlist, PlaylistsNamespace
+    from .flask_api.sockets.namespaces.youtube_namespace import YoutubeNamespace
+    from .flask_api.sockets.namespaces.playlists_namespace import PlaylistsNamespace
 
     # Register Flask Blueprints for HTTP routes
-    app.register_blueprint(youtube)
-    app.register_blueprint(youtube_playlist)
+    app.register_blueprint(web_bp)
 
     # Initialize Socket.IO with the app
     socketio.init_app(app, manage_session=False)
