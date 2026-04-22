@@ -2,8 +2,8 @@ from flask import request, current_app as app
 from flask_socketio import Namespace
 from ..utils.general_funcions import generate_hash, get_files_from_dir
 from .session_data import DownloadFileInfo
-from ..sockets.emits import DownloadMediaFinishEmit, PlaylistTrackFinish
-from ..sockets.youtube_media_info_handler import YoutubeMediaInfoHandler
+from .emits import DownloadMediaFinishEmit, PlaylistTrackFinish
+from .youtube_media_info_handler import YoutubeMediaInfoHandler
 from ..services.flask_youtube_downloader import FlaskYoutubeDownloader
 
 class BaseMediaNamespace(Namespace):

@@ -53,6 +53,43 @@ class YoutubeNamespace(BaseMediaNamespace):
     from BaseMediaNamespace.
     """
 
+    def on_FormData(self, formData):
+        """
+        Main entry point for handling the download form submission.
+
+        Extracts the URL and format from the incoming data, determines if it is
+        a single track or a playlist, and routes the request to the appropriate handler.
+
+        Args:
+            formData (dict): Incoming data from the client containing 'url' and 'format'.
+        """
+        app.logger.debug(f"[{self.namespace}] Received FormData: {formData}")
+
+        user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
+        if not user_browser_id:
+            return
+
+        app.socket_manager.clear_user_data(user_browser_id)
+
+        # Using the new private methods
+        youtube_url = self._extract_youtube_url(formData, user_browser_id)
+        request_format = self._extract_request_format(formData, user_browser_id)
+
+        if not youtube_url or not request_format:
+            return
+
+        is_playlist = self._is_playlist_in_url(youtube_url)
+
+        # Route to the appropriate download handler
+        if is_playlist:
+            self._handle_playlist_download(youtube_url,
+                                           request_format,
+                                           user_browser_id)
+        else:
+            self._handle_single_track_download(youtube_url,
+                                               request_format,
+                                               user_browser_id)
+
     def _extract_youtube_url(self, formData, user_browser_id):
         """
         Extracts and validates the YouTube URL from the incoming form data.
@@ -121,40 +158,3 @@ class YoutubeNamespace(BaseMediaNamespace):
         if not youtube_url:
             return False
         return MainYoutubeKeys.URL_LIST.value in youtube_url and MainYoutubeKeys.URL_VIDEO.value not in youtube_url
-
-    def on_FormData(self, formData):
-        """
-        Main entry point for handling the download form submission.
-
-        Extracts the URL and format from the incoming data, determines if it is
-        a single track or a playlist, and routes the request to the appropriate handler.
-
-        Args:
-            formData (dict): Incoming data from the client containing 'url' and 'format'.
-        """
-        app.logger.debug(f"[{self.namespace}] Received FormData: {formData}")
-
-        user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
-        if not user_browser_id:
-            return
-
-        app.socket_manager.clear_user_data(user_browser_id)
-
-        # Using the new private methods
-        youtube_url = self._extract_youtube_url(formData, user_browser_id)
-        request_format = self._extract_request_format(formData, user_browser_id)
-
-        if not youtube_url or not request_format:
-            return
-
-        is_playlist = self._is_playlist_in_url(youtube_url)
-
-        # Route to the appropriate download handler
-        if is_playlist:
-            self._handle_playlist_download(youtube_url,
-                                           request_format,
-                                           user_browser_id)
-        else:
-            self._handle_single_track_download(youtube_url,
-                                               request_format,
-                                               user_browser_id)
