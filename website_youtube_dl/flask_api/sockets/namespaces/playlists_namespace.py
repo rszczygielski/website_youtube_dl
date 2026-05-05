@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request
 from flask import current_app as app
 from website_youtube_dl.common.youtube_api import FormatMP3
-from .base_namespace import BaseMediaNamespace
+from .base_namespace import MediaBaseNamespace
 from ..emits import (
     UploadPlaylistToConfigEmit,
     GetPlaylistUrlEmit
@@ -9,7 +9,7 @@ from ..emits import (
 
 
 # --- SocketIO Namespace Class ---
-class PlaylistsNamespace(BaseMediaNamespace):
+class PlaylistsNamespace(MediaBaseNamespace):
     """Socket.IO Namespace handler for /playlists.
 
     This class manages real-time communication for playlist configuration,

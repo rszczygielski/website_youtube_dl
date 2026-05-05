@@ -6,12 +6,14 @@ from ..session_data import DownloadFileInfo
 from ..emits import DownloadMediaFinishEmit, PlaylistTrackFinish
 from ..youtube_media_info_handler import YoutubeMediaInfoHandler
 
-class BaseMediaNamespace(Namespace):
-    """Base class handling shared Socket.IO logic across different namespaces.
+class SessionBaseNamespace(Namespace):
+    """Base class handling core Socket.IO infrastructure and session management.
 
-    This class provides common event handlers for session management,
-    message history retrieval, and a unified method for finalizing
-    media downloads. It also triggers session cleanup on disconnect.
+    This class provides common event handlers for mapping user sessions,
+    retrieving message history, processing download cancellations, and
+    triggering session cleanup upon disconnection. It is strictly limited
+    to connection lifecycle management and is completely decoupled from
+    any media or business logic.
     """
 
     def __init__(self, namespace=None):
@@ -22,11 +24,6 @@ class BaseMediaNamespace(Namespace):
             namespace (str, optional): The Socket.IO namespace (e.g., '/youtube', '/playlist').
         """
         super().__init__(namespace)  # Initialize the base Namespace class from Flask-SocketIO
-
-        # Create service instances once at the base class level.
-        # InfoHandler receives the target namespace when this instance is created.
-        self.info_handler = YoutubeMediaInfoHandler(namespace=self.namespace)
-        self.downloader = FlaskYoutubeDownloader()
 
     # ==========================================
     # PUBLIC METHODS (Event Handlers & API)
@@ -119,6 +116,24 @@ class BaseMediaNamespace(Namespace):
         if user_browser_id:
             app.logger.info(f"[{self.namespace}] User {user_browser_id} disconnected")
             app.socket_manager.on_user_disconnect(user_browser_id)
+
+class MediaBaseNamespace(SessionBaseNamespace):
+    """Intermediate base class orchestrating media downloading processes.
+
+    Inherits core session management from SessionBaseNamespace and integrates
+    business logic services such as media information fetching and file downloading.
+    It provides the foundational methods needed to handle the end-to-end flow
+    of processing single tracks and playlists, emitting real-time progress updates,
+    and finalizing file preparation for the user.
+    """
+
+    def __init__(self, namespace=None):
+        super().__init__(namespace)
+
+        # Create service instances once at the base class level.
+        # InfoHandler receives the target namespace when this instance is created.
+        self.info_handler = YoutubeMediaInfoHandler(namespace=self.namespace)
+        self.downloader = FlaskYoutubeDownloader()
 
     def finalize_download(self, full_file_path, is_playlist, user_browser_id):
         """

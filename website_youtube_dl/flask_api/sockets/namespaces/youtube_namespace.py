@@ -4,17 +4,17 @@ from flask import current_app as app
 from website_youtube_dl.flask_api.utils.general_funcions import get_format_instance
 from website_youtube_dl.common.youtube_data_keys import MainYoutubeKeys
 from website_youtube_dl.common.youtube_log_keys import YoutubeLogs
-from .base_namespace import BaseMediaNamespace
+from .base_namespace import MediaBaseNamespace
 from ..emits import DownloadMediaFinishEmit
 
 
 # --- SocketIO Namespace Class ---
-class YoutubeNamespace(BaseMediaNamespace):
+class YoutubeNamespace(MediaBaseNamespace):
     """Socket.IO Namespace handler for /youtube.
 
     This class manages real-time communication for single track and playlist
     downloads from YouTube. It inherits session and history management
-    from BaseMediaNamespace.
+    from MediaBaseNamespace.
     """
 
     def on_FormData(self, formData):
