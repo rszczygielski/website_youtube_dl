@@ -1,7 +1,7 @@
 import os
 from unittest import TestCase, main
 from unittest.mock import patch, MagicMock
-from website_youtube_dl.flask_api.services.youtube_helper import YoutubeHelper
+from website_youtube_dl.flask_api.services.youtube_downloader import YoutubePlaylistDownloader
 from website_youtube_dl.common.youtube_dl import YoutubeDL
 from website_youtube_dl.common.easyID3_manager import EasyID3Manager
 from website_youtube_dl import create_app, socketio
@@ -19,8 +19,8 @@ from website_youtube_dl.common.youtube_options import (
 )
 
 
-class TestYoutubeHelper(TestCase):
-    """Unit tests for YoutubeHelper service."""
+class TestYoutubePlaylistDownloader(TestCase):
+    """Unit tests for YoutubePlaylistDownloader service."""
 
     # --- Test constants ---
 
@@ -55,7 +55,7 @@ class TestYoutubeHelper(TestCase):
     def setUp(self):
         app = create_app(TestingConfig)
         app.config_parser_manager = MagicMock()
-        app.youtube_helper = YoutubeHelper(app.config_parser_manager)
+        app.youtube_downloader = YoutubePlaylistDownloader(app.config_parser_manager)
         app.config_parser_manager.get_save_path = MagicMock(
             return_value=self.DOWNLOAD_BASE_PATH
         )
@@ -95,7 +95,7 @@ class TestYoutubeHelper(TestCase):
                                               expected_result,
                                               expected_emit_count=0):
         with self.app.app_context():
-            result = self.app.youtube_helper.download_single_video(
+            result = self.app.youtube_downloader.download_single_video(
                 self.URL_SINGLE_VIDEO, self.FORMAT_360P_INSTANCE)
         python_emit = self.socket_io_test_client.get_received()
         no_emit_data = len(python_emit)
@@ -113,7 +113,7 @@ class TestYoutubeHelper(TestCase):
 
     def test_download_single_media_video(self):
         mock_get_video_options = self.mock_method(
-            YoutubeHelper, "get_youtube_download_options", return_value=self.VIDEO_OPTIONS)
+            YoutubePlaylistDownloader, "get_youtube_download_options", return_value=self.VIDEO_OPTIONS)
         mock_download_video = self.mock_method(
             YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single)
         self._run_download_single_media_video_test(
@@ -127,7 +127,7 @@ class TestYoutubeHelper(TestCase):
 
     def test_download_single_media_video_with_error(self):
         mock_get_video_options = self.mock_method(
-            YoutubeHelper, "get_youtube_download_options", return_value=self.VIDEO_OPTIONS)
+            YoutubePlaylistDownloader, "get_youtube_download_options", return_value=self.VIDEO_OPTIONS)
         mock_download_video_error = self.mock_method(
             YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single_with_error)
         self._run_download_single_media_video_test(
@@ -145,7 +145,7 @@ class TestYoutubeHelper(TestCase):
         Helper to test download_single_audio with different download return values and expected results.
         """
         with self.app.app_context():
-            result = self.app.youtube_helper.download_single_audio(
+            result = self.app.youtube_downloader.download_single_audio(
                 self.URL_SINGLE_VIDEO, self.FORMAT_MP3_INSTANCE)
         python_emit = self.socket_io_test_client.get_received()
         no_emit_data = len(python_emit)
@@ -154,7 +154,7 @@ class TestYoutubeHelper(TestCase):
 
     def test_download_single_media_audio(self):
         mock_get_audio_options = self.mock_method(
-            YoutubeHelper, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
+            YoutubePlaylistDownloader, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
         mock_save_meta_data = self.mock_method(
             EasyID3Manager, "save_meta_data")
         mock_download_audio = self.mock_method(
@@ -171,7 +171,7 @@ class TestYoutubeHelper(TestCase):
 
     def test_download_single_media_audio_with_error(self):
         mock_get_audio_options = self.mock_method(
-            YoutubeHelper, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
+            YoutubePlaylistDownloader, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
         mock_download_audio = self.mock_method(
             YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single_with_error)
         self._run_download_single_media_audio_test(
@@ -189,7 +189,7 @@ class TestYoutubeHelper(TestCase):
         Helper to test download_audio_from_playlist with different download return values and expected results.
         """
         with self.app.app_context():
-            result = self.app.youtube_helper.download_audio_from_playlist(
+            result = self.app.youtube_downloader.download_audio_from_playlist(
                 single_media_url=self.URL_SINGLE_VIDEO,
                 req_format=self.FORMAT_MP3_INSTANCE,
                 playlist_name=self.SAMPLE_PLAYLIST_NAME,
@@ -202,7 +202,7 @@ class TestYoutubeHelper(TestCase):
 
     def test_download_audio_from_playlist(self):
         mock_get_audio_options = self.mock_method(
-            YoutubeHelper, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
+            YoutubePlaylistDownloader, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
         mock_save_meta_data = self.mock_method(
             EasyID3Manager, "save_meta_data")
         mock_download_audio = self.mock_method(
@@ -218,7 +218,7 @@ class TestYoutubeHelper(TestCase):
 
     def test_download_audio_from_playlist_with_error(self):
         mock_get_audio_options = self.mock_method(
-            YoutubeHelper, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
+            YoutubePlaylistDownloader, "get_youtube_download_options", return_value=self.AUDIO_OPTIONS)
         mock_download_audio = self.mock_method(
             YoutubeDL, "download_yt_media", return_value=self.result_of_youtube_single_with_error)
         self._run_download_audio_from_playlist_test(

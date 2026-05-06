@@ -1,6 +1,5 @@
 from flask import request, current_app as app
 from flask_socketio import Namespace
-from website_youtube_dl.flask_api.services.flask_youtube_downloader import FlaskYoutubeDownloader
 from website_youtube_dl.flask_api.utils.general_funcions import generate_hash, get_files_from_dir
 from ..session_data import DownloadFileInfo
 from ..emits import DownloadMediaFinishEmit, PlaylistTrackFinish
@@ -134,7 +133,6 @@ class MediaBaseNamespace(SessionBaseNamespace):
         # Create service instances once at the base class level.
         # InfoHandler receives the target namespace when this instance is created.
         self.info_handler = YoutubeMediaInfoHandler(namespace=self.namespace)
-        self.downloader = FlaskYoutubeDownloader()
 
     def finalize_download(self, full_file_path, is_playlist, user_browser_id):
         """
@@ -229,7 +227,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
                 return  # Abort the loop and the entire method immediately
 
             # Download the single track
-            full_path, title_template = self.downloader.process_playlist_track(
+            full_path, title_template = app.youtube_downloader.process_playlist_track(
                 playlistTrack=playlistTrack,
                 req_format=request_format,
                 playlist_name=playlist_media.playlist_name,
@@ -256,7 +254,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
                 )
 
         # Zip all files after the loop finishes successfully (if not cancelled)
-        full_zip_path = self.downloader.zip_downloaded_playlist(
+        full_zip_path = app.youtube_downloader.zip_downloaded_playlist(
             directory_path, playlist_media.playlist_name, file_paths
         )
 
@@ -286,7 +284,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
             app.socket_manager.set_downloading_status(user_browser_id, False)
             return
 
-        full_file_path = self.downloader.download_single_track_data(youtube_url, request_format)
+        full_file_path = app.youtube_downloader.download_single_track(youtube_url, request_format)
 
         self.finalize_download(full_file_path, is_playlist=False, user_browser_id=user_browser_id)
 

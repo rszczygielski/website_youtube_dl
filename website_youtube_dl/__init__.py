@@ -6,7 +6,7 @@ from platformdirs import user_config_dir
 
 from .common.youtube_config_manager import ConfigParserManager
 from .config import Config
-from .flask_api.services.youtube_helper import YoutubeHelper
+from .flask_api.services.youtube_downloader import YoutubePlaylistDownloader
 from .flask_api.sockets.socket_manager import SocketManager
 
 # Global SocketIO instance
@@ -33,7 +33,7 @@ def create_app(config_class=Config, config_parser=ConfigParserManager,
 
     # Initialize core managers and attach them to the app context
     app.config_parser_manager = init_config_pareser(config_parser, config_dir)
-    app.youtube_helper = YoutubeHelper(app.config_parser_manager)
+    app.youtube_downloader = YoutubePlaylistDownloader(app.config_parser_manager)
     app.logger = init_logger(logger_config)
     app.socket_manager = SocketManager()
 

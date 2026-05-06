@@ -7,9 +7,9 @@ from unittest.mock import patch, call
 from website_youtube_dl.config import TestingConfig
 from website_youtube_dl.flask_api.routes import youtube, youtube_playlists
 from website_youtube_dl.flask_api.handlers import youtube_emit
-from website_youtube_dl.flask_api.sockets import base_namespace 
+from website_youtube_dl.flask_api.sockets import base_namespace
 from website_youtube_dl.flask_api.handlers import youtube_download
-from website_youtube_dl.flask_api.services.youtube_helper import YoutubeHelper
+from website_youtube_dl.flask_api.services.youtube_downloader import YoutubePlaylistDownloader
 from website_youtube_dl.flask_api.services.flask_media import (FlaskSingleMedia,
                                                              FlaskPlaylistMedia)
 from website_youtube_dl.common.youtube_api import (FormatMP3,
@@ -420,7 +420,7 @@ class TestYoutubeWeb(TestCase):
                          emit_data.emit_name)
         self.assertTrue(result)
 
-    @patch.object(YoutubeHelper, "request_single_media_info",
+    @patch.object(YoutubePlaylistDownloader, "request_single_media_info",
                   return_value=result_of_youtube_single_with_error1)
     def test_send_emit_single_media_info_with_error(self,
                                                     mock_request_single_media):
@@ -473,7 +473,7 @@ class TestYoutubeWeb(TestCase):
         self.assertEqual(no_emit_data, 0)
 
     @patch.object(youtube_download, "send_emit_playlist_media", return_value=playlist_media)
-    @patch.object(YoutubeHelper, "download_single_video", return_value=SAMPLE_FULL_PATH_1)
+    @patch.object(YoutubePlaylistDownloader, "download_single_video", return_value=SAMPLE_FULL_PATH_1)
     @patch.object(youtube_download, "get_files_from_dir", return_value=PATH_FILES)
     def test_download_tracks_from_playlist_video(self,
                                                  mockGetFilesFromDir,
@@ -498,7 +498,7 @@ class TestYoutubeWeb(TestCase):
         self.mock_zip.assert_called_once()
 
     @patch.object(youtube_download, "send_emit_playlist_media", return_value=playlist_media)
-    @patch.object(YoutubeHelper, "download_audio_from_playlist", return_value=SAMPLE_FULL_PATH_1)
+    @patch.object(YoutubePlaylistDownloader, "download_audio_from_playlist", return_value=SAMPLE_FULL_PATH_1)
     @patch.object(youtube_download, "get_files_from_dir", return_value=PATH_FILES)
     def test_download_tracks_from_playlist_audio(self, mockGetFilesFromDir,
                                                  mock_download_audio,
@@ -529,7 +529,7 @@ class TestYoutubeWeb(TestCase):
         self.mock_zip.assert_called_once()
 
     @patch.object(youtube_download, "send_emit_playlist_media", return_value=playlist_media)
-    @patch.object(YoutubeHelper, "download_single_video", return_value="full_path_test")
+    @patch.object(YoutubePlaylistDownloader, "download_single_video", return_value="full_path_test")
     @patch.object(youtube_download, "get_files_from_dir", return_value=["file1", "file2"])
     def test_download_tracks_from_playlist_1080p(self,
                                                  mock_get_files,
@@ -549,7 +549,7 @@ class TestYoutubeWeb(TestCase):
         self.mock_zip.assert_called_once()
 
     @patch.object(youtube_download, "send_emit_playlist_media", return_value=playlist_media)
-    @patch.object(YoutubeHelper, "download_single_video", return_value="full_path_test")
+    @patch.object(YoutubePlaylistDownloader, "download_single_video", return_value="full_path_test")
     @patch.object(youtube_download, "get_files_from_dir", return_value=["file1", "file2"])
     def test_download_tracks_from_playlist_2160p(self, mock_get_files, mock_download_video, mock_send_emit):
         with self.app.app_context():

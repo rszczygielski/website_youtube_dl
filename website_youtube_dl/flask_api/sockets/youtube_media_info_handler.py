@@ -36,7 +36,7 @@ class YoutubeMediaInfoHandler:
         Returns:
             bool: True if the info was successfully fetched and emitted, False otherwise.
         """
-        single_media_info_result: ResultOfYoutube = app.youtube_helper.request_single_media_info(
+        single_media_info_result: ResultOfYoutube = app.youtube_downloader.request_single_media_info(
             single_media_url
         )
 
@@ -75,7 +75,7 @@ class YoutubeMediaInfoHandler:
         """
         app.logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
 
-        playlist_media_info_result = app.youtube_helper.request_playlist_media_info(
+        playlist_media_info_result = app.youtube_downloader.request_playlist_media_info(
             youtube_url
         )
 
