@@ -5,21 +5,24 @@ from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
 
 
 class SocketManager:
-    """Manages Socket.IO connections, user message queues, and download file registry.
+    """Manages Socket.IO connections, user message queues, and download states.
 
-    This class handles:
+    This class serves as the Single Source of Truth (SSOT) for real-time client
+    interactions. It handles:
     - Active WebSocket connections tracking
     - Event-driven session cleanup triggered by disconnections
     - User message queues for history and reconnection
-    - Download file registry mapping hashes to file metadata
+    - Tracking active download states for accurate UI synchronization (State Machine)
     - Tracking and managing user-requested download cancellations
+    - Download file registry mapping hashes to file metadata
 
     Attributes:
         SESSION_TIMEOUT (int): Delay in seconds before cleaning up a disconnected session.
         active_connections (dict): Maps user_browser_id to BrowserSession.
-        message_queues (dict): Maps user_browser_id to list of UserMessage.
-        download_registry (dict): Maps hash to DownloadFileInfo.
-        cancelled_downloads (set): Stores user_browser_ids of users who requested to cancel their ongoing downloads.
+        message_queues (dict): Maps user_browser_id to a list of UserMessage objects.
+        download_registry (dict): Maps generated hash to DownloadFileInfo.
+        cancelled_downloads (set): Stores user_browser_ids of users who requested download cancellation.
+        active_downloads (set): Stores user_browser_ids of users who currently have an active, ongoing download.
     """
     SESSION_TIMEOUT = 1800  # Testing value: 30 seconds
 
@@ -30,6 +33,7 @@ class SocketManager:
         self.download_registry = {}
         self.cancelled_downloads = set()
         self._cleanup_timers = {}
+        self.active_downloads = set()
 
     # ==========================================
     # PUBLIC METHODS (API for Namespaces)
@@ -127,6 +131,33 @@ class SocketManager:
         )
         self._cleanup_timers[user_browser_id] = timer
         timer.start()
+
+    def set_downloading_status(self, user_browser_id, is_downloading: bool):
+        """
+        Update the official downloading status for a specific user.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+            is_downloading (bool): True if a download has started, False if finished/cancelled.
+        """
+        if is_downloading:
+            self.active_downloads.add(user_browser_id)
+            app.logger.debug(f"User {user_browser_id} set to DOWNLOADING state.")
+        else:
+            self.active_downloads.discard(user_browser_id)
+            app.logger.debug(f"User {user_browser_id} set to IDLE state.")
+
+    def is_user_downloading(self, user_browser_id) -> bool:
+        """
+        Check if the user currently has an active download process running.
+
+        Args:
+            user_browser_id (str): Unique identifier for the user's browser session.
+
+        Returns:
+            bool: True if downloading, False otherwise.
+        """
+        return user_browser_id in self.active_downloads
 
     def set_cancel_flag(self, user_browser_id):
         """
@@ -291,6 +322,7 @@ class SocketManager:
             self.message_queues.pop(user_browser_id, None)
             self._cleanup_timers.pop(user_browser_id, None)
             self.cancelled_downloads.discard(user_browser_id)
+            self.active_downloads.discard(user_browser_id)
 
     def _cancel_cleanup_timer(self, user_browser_id):
         """

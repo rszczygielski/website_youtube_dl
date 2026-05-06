@@ -87,7 +87,8 @@ class SessionBaseNamespace(Namespace):
                 )
         # Returning a value triggers the acknowledgment callback on the client side
         # providing the 'hasHistory' status to the JS emitter.
-        return {"hasHistory": has_history}
+        is_active = app.socket_manager.is_user_downloading(user_browser_id)
+        return {"isDownloading": is_active}
 
     def on_cancelDownload(self, data):
         """
@@ -156,6 +157,8 @@ class MediaBaseNamespace(SessionBaseNamespace):
                 user_browser_id=user_browser_id,
                 namespace=self.namespace
             )
+            # Release the lock if finalization failed
+            app.socket_manager.set_downloading_status(user_browser_id, False)
             return
 
         # Register file for the download endpoint
@@ -172,6 +175,9 @@ class MediaBaseNamespace(SessionBaseNamespace):
             user_browser_id=user_browser_id,
             namespace=self.namespace
         )
+
+        # [STATE MACHINE] Release the lock - download is successfully completed
+        app.socket_manager.set_downloading_status(user_browser_id, False)
 
         # Clear session history after successful finalize
         app.socket_manager.clear_user_data(user_browser_id)
@@ -196,20 +202,25 @@ class MediaBaseNamespace(SessionBaseNamespace):
             request_format (Format): The requested media format object (e.g., FormatMP3).
             user_browser_id (str): The unique identifier for the user's browser session.
         """
-        # 0. Always clear the cancel flag at the start of a new download
+
+        # [STATE MACHINE] Lock the session - download started
+        app.socket_manager.set_downloading_status(user_browser_id, True)
+
+        # Always clear the cancel flag at the start of a new download
         app.socket_manager.clear_cancel_flag(user_browser_id)
 
-        # 1. Fetch playlist information and emit the initial data to the frontend
+        # Fetch playlist information and emit the initial data to the frontend
         playlist_media = self.info_handler.send_emit_playlist_media(youtube_url, user_browser_id)
         if not playlist_media:
             self.info_handler.send_emit_media_finish_error(f"Failed to get data from {youtube_url}", user_browser_id)
+            app.socket_manager.set_downloading_status(user_browser_id, False)
             return
 
         file_paths = []
         directory_path = app.config_parser_manager.get_save_path()
         downloaded_files = get_files_from_dir(directory_path)
 
-        # 2. Iterate through the tracks, download them, and emit status updates
+        # Iterate through the tracks, download them, and emit status updates
         for index, playlistTrack in enumerate(playlist_media.media_from_playlist_list):
 
             # Check if the user requested to cancel the download
@@ -244,12 +255,12 @@ class MediaBaseNamespace(SessionBaseNamespace):
                     user_browser_id=user_browser_id
                 )
 
-        # 3. Zip all files after the loop finishes successfully (if not cancelled)
+        # Zip all files after the loop finishes successfully (if not cancelled)
         full_zip_path = self.downloader.zip_downloaded_playlist(
             directory_path, playlist_media.playlist_name, file_paths
         )
 
-        # 4. Finalize the download process and provide the download link
+        # Finalize the download process and provide the download link
         self.finalize_download(full_zip_path, is_playlist=True, user_browser_id=user_browser_id)
 
     def _handle_single_track_download(self,
@@ -268,7 +279,11 @@ class MediaBaseNamespace(SessionBaseNamespace):
             request_format (Format): The requested media format object (e.g., FormatMP3).
             user_browser_id (str): The unique identifier for the user's browser session.
         """
+        # [STATE MACHINE] Lock the session - download started
+        app.socket_manager.set_downloading_status(user_browser_id, True)
+
         if not self.info_handler.send_emit_single_media_info_from_youtube(youtube_url, user_browser_id):
+            app.socket_manager.set_downloading_status(user_browser_id, False)
             return
 
         full_file_path = self.downloader.download_single_track_data(youtube_url, request_format)
@@ -293,6 +308,12 @@ class MediaBaseNamespace(SessionBaseNamespace):
             user_browser_id=user_browser_id,
             namespace=self.namespace
         )
+
+        # [STATE MACHINE] Release the lock - download is aborted
+        app.socket_manager.set_downloading_status(user_browser_id, False)
+
+        # Clear history upon cancellation so the UI resets completely
+        app.socket_manager.clear_user_data(user_browser_id)
 
         # Clean up the flag after successfully catching the cancellation
         app.socket_manager.clear_cancel_flag(user_browser_id)

@@ -65,7 +65,8 @@ class PlaylistsNamespace(MediaBaseNamespace):
                 error_msg=f"Failed to add playlist {playlist_name} to config",
                 emit_type=UploadPlaylistToConfigEmit,
                 user_browser_id=user_browser_id,
-                namespace=self.namespace
+                namespace=self.namespace,
+                add_to_queue=False
             )
 
     def on_deletePlaylist(self, formData):
@@ -86,7 +87,8 @@ class PlaylistsNamespace(MediaBaseNamespace):
                 data=playlist_list,
                 emit_type=UploadPlaylistToConfigEmit,
                 user_browser_id=user_browser_id,
-                namespace=self.namespace
+                namespace=self.namespace,
+                add_to_queue=False
             )
         else:
             app.logger.warning(f"Failed to delete playlist {playlist_name}")
@@ -111,5 +113,6 @@ class PlaylistsNamespace(MediaBaseNamespace):
             data=playlist_url,
             emit_type=GetPlaylistUrlEmit,
             user_browser_id=user_browser_id,
-            namespace=self.namespace
+            namespace=self.namespace,
+            add_to_queue=False
         )
