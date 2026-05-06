@@ -1,0 +1,20 @@
+site_name: Website Youtube DL Wiki
+theme:
+  name: material
+  palette:
+    scheme: slate # Enables Dark Mode by default!
+
+plugins:
+  - search
+  - mkdocstrings
+
+nav:
+  - Home: index.md
+  - Architecture & Services:
+    - YouTube Core Engine: code/youtube_dl.md
+    - Downloader Service: code/downloader_service.md
+    - Config Manager: code/config.md
+  - WebSocket API:
+    - Namespaces (Controllers): code/namespaces.md
+    - Socket Manager: code/sockets.md
+    - Media Info Emit: code/media_info.md

@@ -1,12 +1,12 @@
 import os
 import logging
-from ...common.youtube_log_keys import YoutubeLogs
-from ...common.youtube_api import SingleMedia, FormatMP3
-from ...common.youtube_dl import YoutubeDL
-from ...common.easyID3_manager import EasyID3Manager
-from ...common.youtube_config_manager import BaseConfigParser
-from ...common.my_logger import LoggerClass
-from ..utils.general_funcions import zip_all_files_in_list, generate_title_template_for_youtube_downloader
+from website_youtube_dl.common.youtube_log_keys import YoutubeLogs
+from website_youtube_dl.common.youtube_api import SingleMedia, FormatMP3
+from website_youtube_dl.common.youtube_dl import YoutubeDL
+from website_youtube_dl.common.easyID3_manager import EasyID3Manager
+from website_youtube_dl.common.youtube_config_manager import BaseConfigParser
+from website_youtube_dl.common.my_logger import LoggerClass
+from website_youtube_dl.flask_api.utils.general_funcions import zip_all_files_in_list, generate_title_template_for_youtube_downloader
 
 logger = logging.getLogger(__name__)
 
