@@ -23,6 +23,7 @@ jobs:
 
       - run:
           name: Build documentation
+          when: always
           command: |
             pip3 install ghp-import mkdocs
             mkdocs build
