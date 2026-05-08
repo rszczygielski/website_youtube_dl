@@ -25,7 +25,7 @@ jobs:
           name: Build documentation
           when: always
           command: |
-            pip3 install ghp-import mkdocs
+            pip3 install ghp-import mkdocs mkdocs-material
             mkdocs build
             # Configure Git identity so ghp-import can create a commit
             git config --global user.email "circleci@circleci.com"
