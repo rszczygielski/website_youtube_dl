@@ -21,6 +21,19 @@ jobs:
             coverage run -m pytest --junitxml=results/TestsReport.xml --html=results/TestsReport.html --self-contained-html test/*.py
             coverage html
 
+      - run:
+          name: Build documentation
+          command: |
+            pip3 install ghp-import mkdocs
+            mkdocs build
+            # Configure Git identity so ghp-import can create a commit
+            git config --global user.email "circleci@circleci.com"
+            git config --global user.name "CircleCI Builder"
+            # Update the remote URL to include the token for authentication
+            git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
+            # Push the built documentation from 'site' folder to the gh-pages branch
+            ghp-import -p -f site
+
       - store_test_results:
           path: results
 
