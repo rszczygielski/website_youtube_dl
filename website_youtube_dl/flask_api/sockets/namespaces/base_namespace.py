@@ -1,3 +1,4 @@
+from abc import ABC
 from flask import request, current_app as app
 from flask_socketio import Namespace
 from website_youtube_dl.flask_api.utils.general_funcions import generate_hash, get_files_from_dir
@@ -5,7 +6,7 @@ from ..session_data import DownloadFileInfo
 from ..emits import DownloadMediaFinishEmit, PlaylistTrackFinish
 from ..youtube_media_info_handler import YoutubeMediaInfoHandler
 
-class SessionBaseNamespace(Namespace):
+class SessionBaseNamespace(Namespace, ABC):
     """Base class handling core Socket.IO infrastructure and session management.
 
     This class provides common event handlers for mapping user sessions,
@@ -13,6 +14,8 @@ class SessionBaseNamespace(Namespace):
     triggering session cleanup upon disconnection. It is strictly limited
     to connection lifecycle management and is completely decoupled from
     any media or business logic.
+
+    As an Abstract Base Class (ABC), it cannot be instantiated directly.
     """
 
     def __init__(self, namespace=None):
@@ -123,8 +126,9 @@ class MediaBaseNamespace(SessionBaseNamespace):
     Inherits core session management from SessionBaseNamespace and integrates
     business logic services such as media information fetching and file downloading.
     It provides the foundational methods needed to handle the end-to-end flow
-    of processing single tracks and playlists, emitting real-time progress updates,
-    and finalizing file preparation for the user.
+    of processing single tracks and playlists.
+
+    As it inherits from an Abstract Base Class, it cannot be instantiated directly.
     """
 
     def __init__(self, namespace=None):
