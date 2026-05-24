@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#welcome-to-mkdocs" class="md-skip">
+        <a href="#welcome-to-website-youtube-dl-wiki" class="md-skip">
           Skip to content
         </a>
       
@@ -264,10 +264,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#commands" class="md-nav__link">
+  <a href="#key-features" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Commands
+        🚀 Key Features
       
     </span>
   </a>
@@ -275,13 +275,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#architecture-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project layout
+        🏗️ Architecture Overview
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📚 Documentation Map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📚 Documentation Map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture &amp; Services
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#websocket-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebSocket API
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -596,10 +635,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#commands" class="md-nav__link">
+  <a href="#key-features" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Commands
+        🚀 Key Features
       
     </span>
   </a>
@@ -607,13 +646,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#architecture-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project layout
+        🏗️ Architecture Overview
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentation-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        📚 Documentation Map
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="📚 Documentation Map">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#architecture-services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture &amp; Services
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#websocket-api" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        WebSocket API
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -634,21 +712,40 @@
 
 
 
-<h1 id="welcome-to-mkdocs">Welcome to MkDocs</h1>
-<p>For full documentation visit <a href="https://www.mkdocs.org">mkdocs.org</a>.</p>
-<h2 id="commands">Commands</h2>
+<h1 id="welcome-to-website-youtube-dl-wiki">Welcome to Website Youtube DL Wiki</h1>
+<p>Welcome to the official documentation for <strong>Website Youtube DL</strong>. This project is a robust, Flask-based web application designed to download media from YouTube. It leverages <code>yt-dlp</code> for core downloading mechanics and <code>Flask-SocketIO</code> for seamless, real-time communication with the client browser.</p>
+<hr />
+<h2 id="key-features">🚀 Key Features</h2>
 <ul>
-<li><code>mkdocs new [dir-name]</code> - Create a new project.</li>
-<li><code>mkdocs serve</code> - Start the live-reloading docs server.</li>
-<li><code>mkdocs build</code> - Build the documentation site.</li>
-<li><code>mkdocs -h</code> - Print help message and exit.</li>
+<li><strong>Single Media &amp; Playlists:</strong> Download individual videos, extracted audio tracks, or batch-process entire playlists with ease.</li>
+<li><strong>Automatic ID3 Tagging:</strong> Audio downloads are automatically converted to MP3 and tagged with appropriate metadata (Title, Artist, Album, Playlist Name, and Track Number) using <code>mutagen</code>.</li>
+<li><strong>Real-Time UI Updates:</strong> The frontend communicates asynchronously with the backend via WebSockets, providing live progress feedback, media information, and download links without requiring page reloads.</li>
+<li><strong>Configuration Management:</strong> Store custom save directories and frequently used YouTube playlist URLs locally in a configuration file.</li>
+<li><strong>ZIP Archiving:</strong> Automatically bundle and compress entire downloaded playlists into <code>.zip</code> archives for easy access.</li>
 </ul>
-<h2 id="project-layout">Project layout</h2>
-<pre><code>mkdocs.yml    # The configuration file.
-docs/
-    index.md  # The documentation homepage.
-    ...       # Other markdown pages, images and other files.
-</code></pre>
+<hr />
+<h2 id="architecture-overview">🏗️ Architecture Overview</h2>
+<p>The application is built with a strong emphasis on <strong>Separation of Concerns</strong>, dividing the system into distinct layers:</p>
+<ol>
+<li><strong>Common Domain (<code>common/</code>):</strong> The engine room of the application. It contains framework-agnostic business logic, including <code>yt-dlp</code> wrappers, data models, enum keys, ID3 tagging operations, and config parsing.</li>
+<li><strong>API &amp; Delivery (<code>flask_api/</code>):</strong> The web layer connecting the backend to the user. It houses HTTP routes, Socket.IO namespaces (controllers), and the bridge services orchestrating the download flow.</li>
+<li><strong>Presentation (<code>static/</code> &amp; <code>templates/</code>):</strong> A modern, dark-themed UI built with HTML, CSS (Bootstrap), and object-oriented JavaScript.</li>
+</ol>
+<hr />
+<h2 id="documentation-map">📚 Documentation Map</h2>
+<p>Navigate through the code references to understand the internal mechanics of the project:</p>
+<h3 id="architecture-services">Architecture &amp; Services</h3>
+<ul>
+<li><a href="code/youtube_dl/">YouTube Core Engine</a> - The core wrapper around <code>yt-dlp</code>.</li>
+<li><a href="code/downloader_service/">Downloader Service</a> - The service orchestrating single tracks, playlists, and zipping.</li>
+<li><a href="code/config/">Configuration Manager</a> - Management of paths and saved playlists.</li>
+</ul>
+<h3 id="websocket-api">WebSocket API</h3>
+<ul>
+<li><a href="code/namespaces/">Namespaces (Controllers)</a> - Event listeners for frontend communication.</li>
+<li><a href="code/sockets/">Socket Manager</a> - Session tracking, message queuing, and connection management.</li>
+<li><a href="code/media_info/">Media Information Handler</a> - Real-time emission of media metadata to the client.</li>
+</ul>
 
 
 
