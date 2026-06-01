@@ -1,14 +1,13 @@
 version: 2.1
 
-
 jobs:
   build:
     docker:
       - image: cimg/python:3.10.1
 
-
     steps:
       - checkout
+
       - run:
           name: Instal reqirements
           command: |
@@ -22,12 +21,19 @@ jobs:
             coverage html
 
       - run:
-          name: Build documentation
+          name: Generate Architecture Diagram
           when: always
           command: |
-            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python] pylint
+            # 1. Install system dependency for graph plotting (Graphviz)
+            sudo apt-get update && sudo apt-get install -y graphviz
+
+            # 2. Install pylint which includes pyreverse
+            pip3 install pylint
+
+            # 3. Generate the Mermaid diagram from source code
             pyreverse -o mermaid website_youtube_dl/flask_api/
 
+            # 4. Inject the generated diagram into the markdown file
             echo "# 🏗️ Auto-Generated Architecture Diagram" > docs/architecture.md
             echo "This diagram is generated automatically from the source code during the CI/CD pipeline." >> docs/architecture.md
             echo "" >> docs/architecture.md
@@ -35,13 +41,24 @@ jobs:
             cat classes.mermaid >> docs/architecture.md
             echo '```' >> docs/architecture.md
 
+      - run:
+          name: Build and Deploy Documentation
+          when: always
+          command: |
+            # 1. Install MkDocs stack
+            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python]
+
+            # 2. Build the static site
             mkdocs build
-            # Configure Git identity so ghp-import can create a commit
+
+            # 3. Configure Git identity so ghp-import can create a commit
             git config --global user.email "circleci@circleci.com"
             git config --global user.name "CircleCI Builder"
-            # Update the remote URL to include the token for authentication
+
+            # 4. Update the remote URL to include the token for authentication
             git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}.git
-            # Push the built documentation from 'site' folder to the gh-pages branch
+
+            # 5. Push the built documentation from 'site' folder to the gh-pages branch
             ghp-import -p -f site
 
       - store_test_results:
