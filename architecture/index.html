@@ -576,7 +576,153 @@
 
 <h1 id="auto-generated-architecture-diagram">🏗️ Auto-Generated Architecture Diagram</h1>
 <p>This diagram is generated automatically from the source code during the CI/CD pipeline.</p>
-<p>```mermaid</p>
+<pre class="mermaid"><code>classDiagram
+  class BaseEmit {
+    data_str : str
+    emit_msg
+    error_str : str
+    convert_data_to_message()*
+    send_emit(data, session_id, namespace)
+    send_emit_error(error_msg, session_id, namespace)
+  }
+  class BaseYoutubeDownloader {
+    config_parser_manager : BaseConfigParser
+    youtube_downloader : YoutubeDL
+    download_single_track(youtube_url: str, req_format)
+    download_single_video(single_media_url: str, req_format)
+    request_playlist_media_info(playlist_url)
+    request_single_media_info(single_media_url)
+  }
+  class BrowserSession {
+    last_activity_timestamp : float
+    session_id : str
+  }
+  class DownloadFileInfo {
+    file_directory_path : NoneType
+    file_name : NoneType
+    is_playlist : NoneType
+    set_file_download_data(fullFilePath)
+  }
+  class DownloadFileView {
+    get(name)
+  }
+  class DownloadMediaFinishEmit {
+    hash_data_key : str
+    convert_data_to_message(genereted_hash)
+  }
+  class FlaskMediaFromPlaylist {
+    title
+    url
+  }
+  class FlaskPlaylistMedia {
+    playlist_name : str
+    track_list : list[FlaskMediaFromPlaylist]
+    init_from_playlist_media(playlist_name, track_list)
+  }
+  class FlaskSingleMedia {
+    artist : str
+    title : str
+    url : str
+  }
+  class GetPlaylistUrlEmit {
+    playlist_url_data_key : str
+    convert_data_to_message(playlistUrl)
+  }
+  class IndexView {
+    get()
+  }
+  class MediaBaseNamespace {
+    info_handler
+    finalize_download(full_file_path, is_playlist, user_browser_id)
+  }
+  class ModifyPlaylistView {
+    get()
+  }
+  class PlaylistMediaInfoEmit {
+    playlist_name_data_key : str
+    track_list_data_key : str
+    convert_data_to_message(flask_playlist_media)
+  }
+  class PlaylistTrackFinish {
+    index_data_key : str
+    convert_data_to_message(index)
+  }
+  class PlaylistsNamespace {
+    on_addPlaylist(formData)
+    on_deletePlaylist(formData)
+    on_downloadFromConfigFile(formData)
+    on_playlistName(formData)
+  }
+  class SessionBaseNamespace {
+    on_cancelDownload(data)
+    on_disconnect()
+    on_getDownloadState(data)
+    on_getHistory(data)
+    on_userSession(data)
+  }
+  class SingleMediaInfoEmit {
+    convert_data_to_message(flask_single_media)
+  }
+  class SocketManager {
+    SESSION_TIMEOUT : int
+    active_connections : dict
+    active_downloads : set
+    cancelled_downloads : set
+    download_registry : dict
+    message_queues : dict
+    add_message_to_session_hash(generated_hash, download_file_info: DownloadFileInfo)
+    add_user_session(user_browser_id, session_id)
+    clear_cancel_flag(user_browser_id, namespace: str)
+    clear_user_data(user_browser_id)
+    get_session_data_by_hash(generated_hash)
+    get_user_browser_id_by_session(session_id)
+    get_user_messages(user_browser_id)
+    is_cancelled(user_browser_id, namespace: str)
+    is_user_downloading(user_browser_id, namespace: str) bool
+    on_user_disconnect(user_browser_id)
+    process_emit(data, emit_type, user_browser_id: str, namespace: str, add_to_queue)
+    process_emit_error(error_msg, emit_type, user_browser_id: str, namespace: str, add_to_queue)
+    set_cancel_flag(user_browser_id, namespace: str)
+    set_downloading_status(user_browser_id, namespace: str, is_downloading: bool)
+  }
+  class UploadPlaylistToConfigEmit {
+    playlist_list_data_key : str
+    convert_data_to_message(playlist_list)
+  }
+  class UserMessage {
+    data
+    emit_type : Type
+    is_error : bool
+    namespace : str
+  }
+  class YoutubeMediaInfoHandler {
+    namespace : NoneType
+    send_emit_media_finish_error(error_msg, user_browser_id)
+    send_emit_playlist_media(youtube_url, user_browser_id)
+    send_emit_single_media_info_from_youtube(single_media_url, user_browser_id)
+  }
+  class YoutubeNamespace {
+    on_FormData(formData)
+  }
+  class YoutubePlaylistDownloader {
+    process_playlist_track(playlistTrack, req_format, playlist_name: str, index: int, downloaded_files: list)
+    zip_downloaded_playlist(directory_path, playlist_name, file_paths)
+  }
+  class YoutubeView {
+    get()
+  }
+  YoutubePlaylistDownloader --|&gt; BaseYoutubeDownloader
+  DownloadMediaFinishEmit --|&gt; BaseEmit
+  GetPlaylistUrlEmit --|&gt; BaseEmit
+  PlaylistMediaInfoEmit --|&gt; BaseEmit
+  PlaylistTrackFinish --|&gt; BaseEmit
+  SingleMediaInfoEmit --|&gt; BaseEmit
+  UploadPlaylistToConfigEmit --|&gt; BaseEmit
+  MediaBaseNamespace --|&gt; SessionBaseNamespace
+  PlaylistsNamespace --|&gt; MediaBaseNamespace
+  YoutubeNamespace --|&gt; MediaBaseNamespace
+  YoutubeMediaInfoHandler --* MediaBaseNamespace : info_handler
+  FlaskMediaFromPlaylist --o FlaskPlaylistMedia : track_list</code></pre>
 
 
 
