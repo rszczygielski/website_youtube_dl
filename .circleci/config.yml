@@ -25,7 +25,16 @@ jobs:
           name: Build documentation
           when: always
           command: |
-            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python]
+            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python] pylint
+            pyreverse -o mermaid website_youtube_dl/flask_api/
+
+            echo "# 🏗️ Auto-Generated Architecture Diagram" > docs/architecture.md
+            echo "This diagram is generated automatically from the source code during the CI/CD pipeline." >> docs/architecture.md
+            echo "" >> docs/architecture.md
+            echo '```mermaid' >> docs/architecture.md
+            cat classes.mermaid >> docs/architecture.md
+            echo '```' >> docs/architecture.md
+
             mkdocs build
             # Configure Git identity so ghp-import can create a commit
             git config --global user.email "circleci@circleci.com"

@@ -8,9 +8,17 @@ plugins:
   - search
   - mkdocstrings
 
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
 nav:
   - Home: index.md
-  - Architecture & Services:
+  - System Diagram: architecture.md
+  - Core Modules:
     - YouTube Core Engine: code/youtube_dl.md
     - Downloader Service: code/downloader_service.md
     - Config Manager: code/config.md
