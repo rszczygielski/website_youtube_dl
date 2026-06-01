@@ -24,8 +24,8 @@ jobs:
           name: Generate Architecture Diagram
           when: always
           command: |
-            # 1. Install system dependency for graph plotting (Graphviz)
-            sudo apt-get update && sudo apt-get install -y graphviz
+            # Use 3.2.6 which natively supports the '-o mermaid' flag without Graphviz
+            pip3 install pylint==3.2.6
 
             # 2. Install pylint which includes pyreverse
             pip3 install pylint
