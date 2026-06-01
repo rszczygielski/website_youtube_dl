@@ -27,22 +27,21 @@ class BaseMediaClient {
             this.socket.emit("userSession", { "userBrowserId": userBrowserId });
 
             if (!this.socket_is_connected) {
-                // 2. Fetch history and the official state machine status
-                this.socket.emit("getHistory", { "userBrowserId": userBrowserId }, (response) => {
+                // 2. Fetch history (rebuilds the UI table)
+                this.socket.emit("getHistory", { "userBrowserId": userBrowserId });
 
-                    // [STATE MACHINE CHECK] Look for the explicit isDownloading flag
+                // 3. Ask the State Machine about the CURRENT status
+                this.socket.emit("getDownloadState", { "userBrowserId": userBrowserId }, (response) => {
                     if (response && response.isDownloading) {
-                        console.log("Server reports an active download. Locking UI...");
                         this.setSpinnerVisibility(true);
                         this.setMainButtonEnabled(false);
                     } else {
-                        console.log("No active download running on the server. UI is free.");
-                        // Force unlock just in case the UI got stuck before refresh
                         this.setSpinnerVisibility(false);
                         this.setMainButtonEnabled(true);
                     }
                 });
             }
+
             this.socket_is_connected = true;
         });
     }

@@ -62,10 +62,6 @@ class SessionBaseNamespace(Namespace, ABC):
         user_browser_id = data.get("userBrowserId")
         user_data = app.socket_manager.get_user_messages(user_browser_id)
 
-        # Filter messages for the current namespace to check if there is any active history
-        relevant_messages = [msg for msg in user_data if msg.namespace == self.namespace]
-        has_history = len(relevant_messages) > 0
-
         for message in user_data:
             # Only replay messages belonging to the current namespace
             if message.namespace != self.namespace:
@@ -87,9 +83,25 @@ class SessionBaseNamespace(Namespace, ABC):
                     add_to_queue=False,
                     namespace=self.namespace
                 )
-        # Returning a value triggers the acknowledgment callback on the client side
-        # providing the 'hasHistory' status to the JS emitter.
-        is_active = app.socket_manager.is_user_downloading(user_browser_id)
+
+    def on_getDownloadState(self, data):
+        """
+        Retrieve the current download state for a specific user session.
+
+        This method acts as a dedicated endpoint to query the State Machine
+        (SocketManager) and determine if the user currently has an active
+        download process running. The returned value triggers an acknowledgment
+        callback on the client side to lock or unlock the UI accordingly.
+
+        Args:
+            data (dict): A dictionary containing the 'userBrowserId' provided by the client.
+
+        Returns:
+            dict: A dictionary with a single key 'isDownloading' mapping to a boolean
+                  indicating the user's current download status.
+        """
+        user_browser_id = data.get("userBrowserId")
+        is_active = app.socket_manager.is_user_downloading(user_browser_id, self.namespace)
         return {"isDownloading": is_active}
 
     def on_cancelDownload(self, data):
@@ -105,7 +117,7 @@ class SessionBaseNamespace(Namespace, ABC):
         user_browser_id = data.get("userBrowserId")
         if user_browser_id:
             app.logger.info(f"[{self.namespace}] User {user_browser_id} requested download cancellation.")
-            app.socket_manager.set_cancel_flag(user_browser_id)
+            app.socket_manager.set_cancel_flag(user_browser_id, self.namespace)
 
     def on_disconnect(self):
         """
@@ -160,7 +172,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
                 namespace=self.namespace
             )
             # Release the lock if finalization failed
-            app.socket_manager.set_downloading_status(user_browser_id, False)
+            app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
             return
 
         # Register file for the download endpoint
@@ -179,7 +191,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
         )
 
         # [STATE MACHINE] Release the lock - download is successfully completed
-        app.socket_manager.set_downloading_status(user_browser_id, False)
+        app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
 
         # Clear session history after successful finalize
         app.socket_manager.clear_user_data(user_browser_id)
@@ -206,16 +218,16 @@ class MediaBaseNamespace(SessionBaseNamespace):
         """
 
         # [STATE MACHINE] Lock the session - download started
-        app.socket_manager.set_downloading_status(user_browser_id, True)
+        app.socket_manager.set_downloading_status(user_browser_id, True, self.namespace)
 
         # Always clear the cancel flag at the start of a new download
-        app.socket_manager.clear_cancel_flag(user_browser_id)
+        app.socket_manager.clear_cancel_flag(user_browser_id, self.namespace)
 
         # Fetch playlist information and emit the initial data to the frontend
         playlist_media = self.info_handler.send_emit_playlist_media(youtube_url, user_browser_id)
         if not playlist_media:
             self.info_handler.send_emit_media_finish_error(f"Failed to get data from {youtube_url}", user_browser_id)
-            app.socket_manager.set_downloading_status(user_browser_id, False)
+            app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
             return
 
         file_paths = []
@@ -226,7 +238,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
         for index, playlistTrack in enumerate(playlist_media.media_from_playlist_list):
 
             # Check if the user requested to cancel the download
-            if app.socket_manager.is_cancelled(user_browser_id):
+            if app.socket_manager.is_cancelled(user_browser_id, self.namespace):
                 self._process_download_cancellation(user_browser_id)
                 return  # Abort the loop and the entire method immediately
 
@@ -282,10 +294,10 @@ class MediaBaseNamespace(SessionBaseNamespace):
             user_browser_id (str): The unique identifier for the user's browser session.
         """
         # [STATE MACHINE] Lock the session - download started
-        app.socket_manager.set_downloading_status(user_browser_id, True)
+        app.socket_manager.set_downloading_status(user_browser_id, True, self.namespace)
 
         if not self.info_handler.send_emit_single_media_info_from_youtube(youtube_url, user_browser_id):
-            app.socket_manager.set_downloading_status(user_browser_id, False)
+            app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
             return
 
         full_file_path = app.youtube_downloader.download_single_track(youtube_url, request_format)
@@ -312,13 +324,13 @@ class MediaBaseNamespace(SessionBaseNamespace):
         )
 
         # [STATE MACHINE] Release the lock - download is aborted
-        app.socket_manager.set_downloading_status(user_browser_id, False)
+        app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
 
         # Clear history upon cancellation so the UI resets completely
         app.socket_manager.clear_user_data(user_browser_id)
 
         # Clean up the flag after successfully catching the cancellation
-        app.socket_manager.clear_cancel_flag(user_browser_id)
+        app.socket_manager.clear_cancel_flag(user_browser_id, self.namespace)
 
     def _emit_track_download_status(self, index, is_success, track_title, user_browser_id):
         """

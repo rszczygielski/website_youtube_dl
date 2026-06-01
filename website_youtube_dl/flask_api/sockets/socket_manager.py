@@ -132,64 +132,69 @@ class SocketManager:
         self._cleanup_timers[user_browser_id] = timer
         timer.start()
 
-    def set_downloading_status(self, user_browser_id, is_downloading: bool):
+    def set_downloading_status(self, user_browser_id, namespace: str, is_downloading: bool):
         """
         Update the official downloading status for a specific user.
 
         Args:
             user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace to broadcast on.
             is_downloading (bool): True if a download has started, False if finished/cancelled.
         """
         if is_downloading:
-            self.active_downloads.add(user_browser_id)
-            app.logger.debug(f"User {user_browser_id} set to DOWNLOADING state.")
+            self.active_downloads.add((user_browser_id, namespace))
+            app.logger.debug(f"User {user_browser_id} set to DOWNLOADING state in namespace {namespace}.")
         else:
-            self.active_downloads.discard(user_browser_id)
-            app.logger.debug(f"User {user_browser_id} set to IDLE state.")
+            self.active_downloads.discard((user_browser_id, namespace))
+            app.logger.debug(f"User {user_browser_id} set to IDLE state in namespace {namespace}.")
 
-    def is_user_downloading(self, user_browser_id) -> bool:
+    def is_user_downloading(self, user_browser_id, namespace: str) -> bool:
         """
         Check if the user currently has an active download process running.
 
         Args:
             user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace to check.
 
         Returns:
             bool: True if downloading, False otherwise.
         """
-        return user_browser_id in self.active_downloads
+        return (user_browser_id, namespace) in self.active_downloads
 
-    def set_cancel_flag(self, user_browser_id):
+    def set_cancel_flag(self, user_browser_id, namespace: str):
         """
-        Set the download cancellation flag for a specific user.
+        Set the download cancellation flag for a specific user in a specific namespace.
 
         Args:
             user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace.
         """
         if user_browser_id:
-            self.cancelled_downloads.add(user_browser_id)
-            app.logger.info(f"Cancel flag set for user: {user_browser_id}")
+            self.cancelled_downloads.add((user_browser_id, namespace))
+            app.logger.info(f"Cancel flag set for user: {user_browser_id} in {namespace}")
 
-    def is_cancelled(self, user_browser_id):
+    def is_cancelled(self, user_browser_id, namespace: str):
         """
         Check if the user has requested to cancel the ongoing download.
 
         Args:
             user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace to check.
 
         Returns:
             bool: True if a cancellation was requested, False otherwise.
         """
-        return user_browser_id in self.cancelled_downloads
+        return (user_browser_id, namespace) in self.cancelled_downloads
 
-    def clear_cancel_flag(self, user_browser_id):
+    def clear_cancel_flag(self, user_browser_id, namespace: str):
         """
         Clear the cancellation flag for a user (e.g., before starting a new download).
 
         Args:
             user_browser_id (str): Unique identifier for the user's browser session.
+            namespace (str): The Socket.IO namespace to clear the flag from.
         """
-        self.cancelled_downloads.discard(user_browser_id)
+        self.cancelled_downloads.discard((user_browser_id, namespace))
 
     def get_user_messages(self, user_browser_id):
         """
@@ -321,8 +326,14 @@ class SocketManager:
             self.active_connections.pop(user_browser_id, None)
             self.message_queues.pop(user_browser_id, None)
             self._cleanup_timers.pop(user_browser_id, None)
-            self.cancelled_downloads.discard(user_browser_id)
-            self.active_downloads.discard(user_browser_id)
+
+            active_to_remove = [item for item in self.active_downloads if item[0] == user_browser_id]
+            for item in active_to_remove:
+                self.active_downloads.discard(item)
+
+            cancelled_to_remove = [item for item in self.cancelled_downloads if item[0] == user_browser_id]
+            for item in cancelled_to_remove:
+                self.cancelled_downloads.discard(item)
 
     def _cancel_cleanup_timer(self, user_browser_id):
         """
