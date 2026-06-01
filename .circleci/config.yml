@@ -24,16 +24,13 @@ jobs:
           name: Generate Architecture Diagram
           when: always
           command: |
-            # Use 3.2.6 which natively supports the '-o mermaid' flag without Graphviz
-            pip3 install pylint==3.2.6
-
-            # 2. Install pylint which includes pyreverse
+            # 1. Install pylint which includes pyreverse
             pip3 install pylint
 
-            # 3. Generate the Mermaid diagram from source code
-            pyreverse -o mermaid website_youtube_dl/flask_api/
+            # 2. Generate the Mermaid diagram from source code 'mmd' (Mermaid Markdown) format
+            pyreverse -o mmd website_youtube_dl/flask_api/
 
-            # 4. Inject the generated diagram into the markdown file
+            # 3. Inject the generated diagram into the markdown file
             echo "# 🏗️ Auto-Generated Architecture Diagram" > docs/architecture.md
             echo "This diagram is generated automatically from the source code during the CI/CD pipeline." >> docs/architecture.md
             echo "" >> docs/architecture.md
