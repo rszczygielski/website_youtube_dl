@@ -1,0 +1,10 @@
+.md-typeset .mermaid {
+    overflow-x: auto;
+    width: 100%;
+    display: block;
+}
+
+.md-typeset .mermaid svg {
+    max-width: none !important;
+    height: auto !important;
+}
