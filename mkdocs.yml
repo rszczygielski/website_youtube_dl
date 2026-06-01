@@ -7,6 +7,9 @@ theme:
 plugins:
   - search
   - mkdocstrings
+  - panzoom:
+      include_selectors:
+        - ".mermaid"
 
 markdown_extensions:
   - pymdownx.superfences:
