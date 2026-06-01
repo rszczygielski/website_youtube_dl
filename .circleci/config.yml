@@ -43,7 +43,7 @@ jobs:
           when: always
           command: |
             # 1. Install MkDocs stack
-            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python] mkdocs-panzoom
+            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python]
 
             # 2. Build the static site
             mkdocs build

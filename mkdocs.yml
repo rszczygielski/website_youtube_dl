@@ -7,9 +7,6 @@ theme:
 plugins:
   - search
   - mkdocstrings
-  - panzoom:
-      include_selectors:
-        - ".mermaid"
 
 markdown_extensions:
   - pymdownx.superfences:
@@ -29,3 +26,6 @@ nav:
     - Namespaces (Controllers): code/namespaces.md
     - Socket Manager: code/sockets.md
     - Media Info Emit: code/media_info.md
+
+extra_css:
+  - stylesheets/extra.css
