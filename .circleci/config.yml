@@ -35,7 +35,7 @@ jobs:
             echo "This diagram is generated automatically from the source code during the CI/CD pipeline." >> docs/architecture.md
             echo "" >> docs/architecture.md
             echo '```mermaid' >> docs/architecture.md
-            cat classes.mermaid >> docs/architecture.md
+            cat classes.mmd >> docs/architecture.md
             echo '```' >> docs/architecture.md
 
       - run:
