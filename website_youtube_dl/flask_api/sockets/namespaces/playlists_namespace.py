@@ -17,7 +17,7 @@ class PlaylistsNamespace(MediaBaseNamespace):
     YouTube playlists.
     """
 
-    def on_downloadFromConfigFile(self, formData):
+    def on_downloadFromConfigFile(self, formData: dict) -> None:
         """Handle download requests for a playlist stored in the config file.
 
         Args:
@@ -38,7 +38,7 @@ class PlaylistsNamespace(MediaBaseNamespace):
             user_browser_id=user_browser_id
         )
 
-    def on_addPlaylist(self, formData):
+    def on_addPlaylist(self, formData: dict) -> None:
         """Add a new playlist entry to the application configuration.
 
         Args:
@@ -48,28 +48,28 @@ class PlaylistsNamespace(MediaBaseNamespace):
         playlist_url = formData["playlistURL"]
         user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
 
+        if not user_browser_id:
+            return
+
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
         result = app.config_parser_manager.add_playlist(playlist_name, playlist_url)
 
         if result:
             app.logger.info(f"Added playlist {playlist_name} to config")
             playlist_list = list(app.config_parser_manager.get_playlists().keys())
-            app.socket_manager.process_emit(
+            socket_ctx.emit(
                 data=playlist_list,
-                emit_type=UploadPlaylistToConfigEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+                emit_type=UploadPlaylistToConfigEmit
             )
         else:
             app.logger.warning(f"Failed to add playlist {playlist_name} to config")
-            app.socket_manager.process_emit_error(
+            socket_ctx.emit_error(
                 error_msg=f"Failed to add playlist {playlist_name} to config",
                 emit_type=UploadPlaylistToConfigEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace,
                 add_to_queue=False
             )
 
-    def on_deletePlaylist(self, formData):
+    def on_deletePlaylist(self, formData: dict) -> None:
         """Remove a playlist entry from the application configuration.
 
         Args:
@@ -78,28 +78,28 @@ class PlaylistsNamespace(MediaBaseNamespace):
         playlist_name = formData["playlistToDelete"]
         user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
 
+        if not user_browser_id:
+            return
+
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
         result = app.config_parser_manager.delete_playlist(playlist_name)
 
         if result:
             app.logger.info(f"Deleted playlist {playlist_name} from config")
             playlist_list = list(app.config_parser_manager.get_playlists().keys())
-            app.socket_manager.process_emit(
+            socket_ctx.emit(
                 data=playlist_list,
                 emit_type=UploadPlaylistToConfigEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace,
                 add_to_queue=False
             )
         else:
             app.logger.warning(f"Failed to delete playlist {playlist_name}")
-            app.socket_manager.process_emit_error(
+            socket_ctx.emit_error(
                 error_msg=f"Failed to delete playlist {playlist_name}",
-                emit_type=UploadPlaylistToConfigEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+                emit_type=UploadPlaylistToConfigEmit
             )
 
-    def on_playlistName(self, formData):
+    def on_playlistName(self, formData: dict) -> None:
         """Retrieve the URL of a specific playlist by its name.
 
         Args:
@@ -109,10 +109,13 @@ class PlaylistsNamespace(MediaBaseNamespace):
         playlist_url = app.config_parser_manager.get_playlist_url(playlist_name)
         user_browser_id = app.socket_manager.get_user_browser_id_by_session(request.sid)
 
-        app.socket_manager.process_emit(
+        if not user_browser_id:
+            return
+
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
+        socket_ctx.emit(
             data=playlist_url,
             emit_type=GetPlaylistUrlEmit,
-            user_browser_id=user_browser_id,
-            namespace=self.namespace,
             add_to_queue=False
         )
