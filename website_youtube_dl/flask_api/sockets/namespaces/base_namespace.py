@@ -18,7 +18,7 @@ class SessionBaseNamespace(Namespace, ABC):
     As an Abstract Base Class (ABC), it cannot be instantiated directly.
     """
 
-    def __init__(self, namespace=None):
+    def __init__(self, namespace: str = None) -> None:
         """
         Initialize the namespace and its associated services.
 
@@ -31,7 +31,7 @@ class SessionBaseNamespace(Namespace, ABC):
     # PUBLIC METHODS (Event Handlers & API)
     # ==========================================
 
-    def on_userSession(self, data):
+    def on_userSession(self, data: dict) -> None:
         """
         Map the Socket.IO session ID to a unique browser identifier.
 
@@ -47,7 +47,7 @@ class SessionBaseNamespace(Namespace, ABC):
         app.socket_manager.add_user_session(user_browser_id, request_sid)
         app.logger.info(f"[{self.namespace}] Mapping {request_sid} -> {user_browser_id}")
 
-    def on_getHistory(self, data):
+    def on_getHistory(self, data: dict) -> None:
         """
         Retrieve and replay the message history for a specific user session.
 
@@ -62,29 +62,27 @@ class SessionBaseNamespace(Namespace, ABC):
         user_browser_id = data.get("userBrowserId")
         user_data = app.socket_manager.get_user_messages(user_browser_id)
 
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         for message in user_data:
             # Only replay messages belonging to the current namespace
             if message.namespace != self.namespace:
                 continue
 
             if message.is_error:
-                app.socket_manager.process_emit_error(
+                socket_ctx.emit_error(
                     error_msg=message.data,
                     emit_type=message.emit_type,
-                    user_browser_id=user_browser_id,
                     add_to_queue=False,
-                    namespace=self.namespace
                 )
             else:
-                app.socket_manager.process_emit(
+                socket_ctx.emit(
                     data=message.data,
                     emit_type=message.emit_type,
-                    user_browser_id=user_browser_id,
                     add_to_queue=False,
-                    namespace=self.namespace
                 )
 
-    def on_getDownloadState(self, data):
+    def on_getDownloadState(self, data: dict) -> dict:
         """
         Retrieve the current download state for a specific user session.
 
@@ -101,10 +99,12 @@ class SessionBaseNamespace(Namespace, ABC):
                   indicating the user's current download status.
         """
         user_browser_id = data.get("userBrowserId")
-        is_active = app.socket_manager.is_user_downloading(user_browser_id, self.namespace)
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
+        is_active = socket_ctx.is_downloading
         return {"isDownloading": is_active}
 
-    def on_cancelDownload(self, data):
+    def on_cancelDownload(self, data: dict) -> None:
         """
         Handle a download cancellation request from the client.
 
@@ -116,10 +116,11 @@ class SessionBaseNamespace(Namespace, ABC):
         """
         user_browser_id = data.get("userBrowserId")
         if user_browser_id:
+            socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
             app.logger.info(f"[{self.namespace}] User {user_browser_id} requested download cancellation.")
-            app.socket_manager.set_cancel_flag(user_browser_id, self.namespace)
+            socket_ctx.set_cancel_flag()
 
-    def on_disconnect(self):
+    def on_disconnect(self) -> None:
         """
         Handle WebSocket disconnection by scheduling a session cleanup.
 
@@ -143,14 +144,14 @@ class MediaBaseNamespace(SessionBaseNamespace):
     As it inherits from an Abstract Base Class, it cannot be instantiated directly.
     """
 
-    def __init__(self, namespace=None):
+    def __init__(self, namespace: str = None) -> None:
         super().__init__(namespace)
 
         # Create service instances once at the base class level.
         # InfoHandler receives the target namespace when this instance is created.
         self.info_handler = YoutubeMediaInfoHandler(namespace=self.namespace)
 
-    def finalize_download(self, full_file_path, is_playlist, user_browser_id):
+    def finalize_download(self, full_file_path: str, is_playlist: bool, user_browser_id: str) -> None:
         """
         Finalize the download process by registering the file and notifying the client.
 
@@ -162,20 +163,19 @@ class MediaBaseNamespace(SessionBaseNamespace):
             is_playlist (bool): Whether the download was a playlist.
             user_browser_id (str): Unique identifier for the user's browser.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         if not full_file_path:
             app.logger.error(f"[{self.namespace}] No file path returned - download failed")
-
-            app.socket_manager.process_emit_error(
+            socket_ctx.emit_error(
                 error_msg="Failed download - try again",
-                emit_type=DownloadMediaFinishEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+                emit_type=DownloadMediaFinishEmit
             )
             # Release the lock if finalization failed
-            app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
+            socket_ctx.set_downloading(False)
             return
 
-        # Register file for the download endpoint
+        # Register file for the download endpoint (Zostaje w SocketManager - rejestr globalny)
         generated_hash = generate_hash()
         app.socket_manager.add_message_to_session_hash(
             generated_hash,
@@ -183,27 +183,25 @@ class MediaBaseNamespace(SessionBaseNamespace):
         )
 
         # Notify client with the download hash
-        app.socket_manager.process_emit(
+        socket_ctx.emit(
             data=generated_hash,
-            emit_type=DownloadMediaFinishEmit,
-            user_browser_id=user_browser_id,
-            namespace=self.namespace
+            emit_type=DownloadMediaFinishEmit
         )
 
         # [STATE MACHINE] Release the lock - download is successfully completed
-        app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
+        socket_ctx.set_downloading(False)
 
         # Clear session history after successful finalize
-        app.socket_manager.clear_user_data(user_browser_id)
+        socket_ctx.clear_data()
 
     # ==========================================
     # PROTECTED METHODS
     # ==========================================
 
     def _handle_playlist_download(self,
-                                  youtube_url,
+                                  youtube_url: str,
                                   request_format,
-                                  user_browser_id):
+                                  user_browser_id: str) -> None:
         """
         Orchestrate the end-to-end process of downloading an entire playlist.
 
@@ -216,18 +214,19 @@ class MediaBaseNamespace(SessionBaseNamespace):
             request_format (Format): The requested media format object (e.g., FormatMP3).
             user_browser_id (str): The unique identifier for the user's browser session.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
 
         # [STATE MACHINE] Lock the session - download started
-        app.socket_manager.set_downloading_status(user_browser_id, True, self.namespace)
+        socket_ctx.set_downloading(True)
 
         # Always clear the cancel flag at the start of a new download
-        app.socket_manager.clear_cancel_flag(user_browser_id, self.namespace)
+        socket_ctx.clear_cancel_flag()
 
         # Fetch playlist information and emit the initial data to the frontend
         playlist_media = self.info_handler.send_emit_playlist_media(youtube_url, user_browser_id)
         if not playlist_media:
             self.info_handler.send_emit_media_finish_error(f"Failed to get data from {youtube_url}", user_browser_id)
-            app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
+            socket_ctx.set_downloading(False)
             return
 
         file_paths = []
@@ -238,7 +237,7 @@ class MediaBaseNamespace(SessionBaseNamespace):
         for index, playlistTrack in enumerate(playlist_media.media_from_playlist_list):
 
             # Check if the user requested to cancel the download
-            if app.socket_manager.is_cancelled(user_browser_id, self.namespace):
+            if socket_ctx.is_cancelled:
                 self._process_download_cancellation(user_browser_id)
                 return  # Abort the loop and the entire method immediately
 
@@ -251,23 +250,20 @@ class MediaBaseNamespace(SessionBaseNamespace):
                 downloaded_files=downloaded_files
             )
 
-            # Process result and emit status via helper method
             if full_path:
+                is_success = True
                 file_paths.append(full_path)
                 downloaded_files.append(title_template)
-                self._emit_track_download_status(
-                    index=index,
-                    is_success=True,
-                    track_title=playlistTrack.title,
-                    user_browser_id=user_browser_id
-                    )
             else:
-                self._emit_track_download_status(
-                    index=index,
-                    is_success=False,
-                    track_title=playlistTrack.title,
-                    user_browser_id=user_browser_id
-                )
+                is_success = False
+
+            # Process result and emit status via helper method
+            self._emit_track_download_status(
+                index=index,
+                is_success=is_success,
+                track_title=playlistTrack.title,
+                user_browser_id=user_browser_id
+            )
 
         # Zip all files after the loop finishes successfully (if not cancelled)
         full_zip_path = app.youtube_downloader.zip_downloaded_playlist(
@@ -278,9 +274,9 @@ class MediaBaseNamespace(SessionBaseNamespace):
         self.finalize_download(full_zip_path, is_playlist=True, user_browser_id=user_browser_id)
 
     def _handle_single_track_download(self,
-                                      youtube_url,
+                                      youtube_url: str,
                                       request_format,
-                                      user_browser_id):
+                                      user_browser_id: str) -> None:
         """
         Orchestrate the end-to-end process of downloading a single media track.
 
@@ -293,18 +289,20 @@ class MediaBaseNamespace(SessionBaseNamespace):
             request_format (Format): The requested media format object (e.g., FormatMP3).
             user_browser_id (str): The unique identifier for the user's browser session.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         # [STATE MACHINE] Lock the session - download started
-        app.socket_manager.set_downloading_status(user_browser_id, True, self.namespace)
+        socket_ctx.set_downloading(True)
 
         if not self.info_handler.send_emit_single_media_info_from_youtube(youtube_url, user_browser_id):
-            app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
+            socket_ctx.set_downloading(False)
             return
 
         full_file_path = app.youtube_downloader.download_single_track(youtube_url, request_format)
 
         self.finalize_download(full_file_path, is_playlist=False, user_browser_id=user_browser_id)
 
-    def _process_download_cancellation(self, user_browser_id):
+    def _process_download_cancellation(self, user_browser_id: str) -> None:
         """
         Process the cancellation of an ongoing download.
 
@@ -314,25 +312,24 @@ class MediaBaseNamespace(SessionBaseNamespace):
         Args:
             user_browser_id (str): The unique identifier for the user's browser session.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
         app.logger.warning(f"[{self.namespace}] Playlist download cancelled by user {user_browser_id}.")
 
-        app.socket_manager.process_emit_error(
+        socket_ctx.emit_error(
             error_msg="Download cancelled by user.",
-            emit_type=DownloadMediaFinishEmit,
-            user_browser_id=user_browser_id,
-            namespace=self.namespace
+            emit_type=DownloadMediaFinishEmit
         )
 
         # [STATE MACHINE] Release the lock - download is aborted
-        app.socket_manager.set_downloading_status(user_browser_id, False, self.namespace)
+        socket_ctx.set_downloading(False)
 
         # Clear history upon cancellation so the UI resets completely
-        app.socket_manager.clear_user_data(user_browser_id)
+        socket_ctx.clear_data()
 
         # Clean up the flag after successfully catching the cancellation
-        app.socket_manager.clear_cancel_flag(user_browser_id, self.namespace)
+        socket_ctx.clear_cancel_flag()
 
-    def _emit_track_download_status(self, index, is_success, track_title, user_browser_id):
+    def _emit_track_download_status(self, index: int, is_success: bool, track_title: str, user_browser_id: str) -> None:
         """
         Emit the success or error status of a single track download to the client.
 
@@ -342,18 +339,16 @@ class MediaBaseNamespace(SessionBaseNamespace):
             track_title (str): The title of the track (used for logging errors).
             user_browser_id (str): The unique identifier for the user's browser session.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         if is_success:
-            app.socket_manager.process_emit(
+            socket_ctx.emit(
                 data=index,
-                emit_type=PlaylistTrackFinish,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+                emit_type=PlaylistTrackFinish
             )
         else:
             app.logger.error(f"{track_title} song not downloaded")
-            app.socket_manager.process_emit_error(
+            socket_ctx.emit_error(
                 error_msg=index,
-                emit_type=PlaylistTrackFinish,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+                emit_type=PlaylistTrackFinish
             )
