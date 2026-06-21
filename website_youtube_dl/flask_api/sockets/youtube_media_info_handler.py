@@ -16,7 +16,7 @@ class YoutubeMediaInfoHandler:
     and emitting real-time Socket.IO events to the client.
     """
 
-    def __init__(self, namespace=None):
+    def __init__(self, namespace: str = None) -> None:
         """
         Initialize the info handler with a specific Socket.IO namespace.
 
@@ -25,7 +25,7 @@ class YoutubeMediaInfoHandler:
         """
         self.namespace = namespace
 
-    def send_emit_single_media_info_from_youtube(self, single_media_url, user_browser_id):
+    def send_emit_single_media_info_from_youtube(self, single_media_url: str, user_browser_id: str) -> bool:
         """
         Fetch single media information from YouTube and emit it to the client.
 
@@ -36,6 +36,8 @@ class YoutubeMediaInfoHandler:
         Returns:
             bool: True if the info was successfully fetched and emitted, False otherwise.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         single_media_info_result: ResultOfYoutube = app.youtube_downloader.request_single_media_info(
             single_media_url
         )
@@ -46,23 +48,20 @@ class YoutubeMediaInfoHandler:
 
         app.logger.debug(f"Got single media info, processing emit {single_media_url}")
 
-        # Changed 'mediaInfo' to 'media_info' to follow PEP 8 snake_case convention
         media_info: SingleMedia = single_media_info_result.get_data()
 
         flask_single_media = FlaskSingleMedia(
             media_info.title, media_info.artist, media_info.url
         )
 
-        app.socket_manager.process_emit(
+        socket_ctx.emit(
             data=flask_single_media,
-            emit_type=SingleMediaInfoEmit,
-            user_browser_id=user_browser_id,
-            namespace=self.namespace
+            emit_type=SingleMediaInfoEmit
         )
 
         return True
 
-    def send_emit_playlist_media(self, youtube_url, user_browser_id):
+    def send_emit_playlist_media(self, youtube_url: str, user_browser_id: str) -> PlaylistMedia | None:
         """
         Fetch playlist information from YouTube and emit it to the client.
 
@@ -73,6 +72,8 @@ class YoutubeMediaInfoHandler:
         Returns:
             PlaylistMedia | None: The fetched playlist media object, or None if it fails.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         app.logger.debug(YoutubeLogs.DOWNLAOD_PLAYLIST.value)
 
         playlist_media_info_result = app.youtube_downloader.request_playlist_media_info(
@@ -95,16 +96,14 @@ class YoutubeMediaInfoHandler:
         app.logger.debug(f"Playlist name: {playlist_name} tracks: {len(playlist_media.media_from_playlist_list)}")
         app.logger.debug(f"Browser ID: {user_browser_id} for playlist emit")
 
-        app.socket_manager.process_emit(
+        socket_ctx.emit(
             data=flask_playlist_media,
-            emit_type=PlaylistMediaInfoEmit,
-            user_browser_id=user_browser_id,
-            namespace=self.namespace
+            emit_type=PlaylistMediaInfoEmit
         )
 
         return playlist_media
 
-    def send_emit_media_finish_error(self, error_msg, user_browser_id):
+    def send_emit_media_finish_error(self, error_msg: str, user_browser_id: str) -> None:
         """
         Log an error message and emit a finish error event to the client.
 
@@ -112,11 +111,11 @@ class YoutubeMediaInfoHandler:
             error_msg (str): The error message to log and send.
             user_browser_id (str): Unique identifier for the user's browser session.
         """
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+
         app.logger.warning(error_msg)
 
-        app.socket_manager.process_emit_error(
+        socket_ctx.emit_error(
             error_msg=error_msg,
-            emit_type=DownloadMediaFinishEmit,
-            user_browser_id=user_browser_id,
-            namespace=self.namespace
+            emit_type=DownloadMediaFinishEmit
         )
