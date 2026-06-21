@@ -9,26 +9,28 @@
       
       
       
+        <link rel="prev" href="..">
       
-        <link rel="next" href="architecture/">
+      
+        <link rel="next" href="../code/youtube_dl/">
       
       
         
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
-        <title>Website Youtube DL Wiki</title>
+        <title>System Diagram - Website Youtube DL Wiki</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -47,11 +49,11 @@
       
     
     
-      <link rel="stylesheet" href="assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -74,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#welcome-to-website-youtube-dl-wiki" class="md-skip">
+        <a href="#modular-system-architecture" class="md-skip">
           Skip to content
         </a>
       
@@ -90,7 +92,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Website Youtube DL Wiki" class="md-header__button md-logo" aria-label="Website Youtube DL Wiki" data-md-component="logo">
+    <a href=".." title="Website Youtube DL Wiki" class="md-header__button md-logo" aria-label="Website Youtube DL Wiki" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -110,7 +112,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Home
+              System Diagram
             
           </span>
         </div>
@@ -188,7 +190,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Website Youtube DL Wiki" class="md-nav__button md-logo" aria-label="Website Youtube DL Wiki" data-md-component="logo">
+    <a href=".." title="Website Youtube DL Wiki" class="md-nav__button md-logo" aria-label="Website Youtube DL Wiki" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
@@ -198,6 +200,33 @@
   </label>
   
   <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
     
       
       
@@ -222,7 +251,7 @@
   <span class="md-ellipsis">
     
   
-    Home
+    System Diagram
   
 
     
@@ -233,14 +262,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-    Home
+    System Diagram
   
 
     
@@ -266,10 +295,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
+  <a href="#module-emits" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🚀 Key Features
+        Module: Emits
       
     </span>
   </a>
@@ -277,10 +306,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture-overview" class="md-nav__link">
+  <a href="#module-flask_media" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🏗️ Architecture Overview
+        Module: Flask_media
       
     </span>
   </a>
@@ -288,41 +317,68 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-map" class="md-nav__link">
+  <a href="#module-namespaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📚 Documentation Map
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📚 Documentation Map">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#architecture-services" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Architecture &amp; Services
+        Module: Namespaces
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#websocket-api" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#module-session_data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        WebSocket API
+        Module: Session_data
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#module-socket_manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Socket_manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-web_views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Web_views
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-youtube_downloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Youtube_downloader
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-youtube_media_info_handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Youtube_media_info_handler
+      
+    </span>
+  </a>
   
 </li>
       
@@ -330,33 +386,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="architecture/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    System Diagram
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -415,7 +444,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code/youtube_dl/" class="md-nav__link">
+      <a href="../code/youtube_dl/" class="md-nav__link">
         
   
   
@@ -443,7 +472,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code/downloader_service/" class="md-nav__link">
+      <a href="../code/downloader_service/" class="md-nav__link">
         
   
   
@@ -471,7 +500,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code/config/" class="md-nav__link">
+      <a href="../code/config/" class="md-nav__link">
         
   
   
@@ -553,7 +582,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code/namespaces/" class="md-nav__link">
+      <a href="../code/namespaces/" class="md-nav__link">
         
   
   
@@ -581,7 +610,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code/sockets/" class="md-nav__link">
+      <a href="../code/sockets/" class="md-nav__link">
         
   
   
@@ -609,7 +638,7 @@
   
   
     <li class="md-nav__item">
-      <a href="code/media_info/" class="md-nav__link">
+      <a href="../code/media_info/" class="md-nav__link">
         
   
   
@@ -664,10 +693,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#key-features" class="md-nav__link">
+  <a href="#module-emits" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🚀 Key Features
+        Module: Emits
       
     </span>
   </a>
@@ -675,10 +704,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#architecture-overview" class="md-nav__link">
+  <a href="#module-flask_media" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🏗️ Architecture Overview
+        Module: Flask_media
       
     </span>
   </a>
@@ -686,41 +715,68 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#documentation-map" class="md-nav__link">
+  <a href="#module-namespaces" class="md-nav__link">
     <span class="md-ellipsis">
       
-        📚 Documentation Map
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="📚 Documentation Map">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#architecture-services" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Architecture &amp; Services
+        Module: Namespaces
       
     </span>
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
-  <a href="#websocket-api" class="md-nav__link">
+      
+        <li class="md-nav__item">
+  <a href="#module-session_data" class="md-nav__link">
     <span class="md-ellipsis">
       
-        WebSocket API
+        Module: Session_data
       
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#module-socket_manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Socket_manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-web_views" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Web_views
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-youtube_downloader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Youtube_downloader
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#module-youtube_media_info_handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Module: Youtube_media_info_handler
+      
+    </span>
+  </a>
   
 </li>
       
@@ -741,40 +797,24 @@
 
 
 
-<h1 id="welcome-to-website-youtube-dl-wiki">Welcome to Website Youtube DL Wiki</h1>
-<p>Welcome to the official documentation for <strong>Website Youtube DL</strong>. This project is a robust, Flask-based web application designed to download media from YouTube. It leverages <code>yt-dlp</code> for core downloading mechanics and <code>Flask-SocketIO</code> for seamless, real-time communication with the client browser.</p>
-<hr />
-<h2 id="key-features">🚀 Key Features</h2>
-<ul>
-<li><strong>Single Media &amp; Playlists:</strong> Download individual videos, extracted audio tracks, or batch-process entire playlists with ease.</li>
-<li><strong>Automatic ID3 Tagging:</strong> Audio downloads are automatically converted to MP3 and tagged with appropriate metadata (Title, Artist, Album, Playlist Name, and Track Number) using <code>mutagen</code>.</li>
-<li><strong>Real-Time UI Updates:</strong> The frontend communicates asynchronously with the backend via WebSockets, providing live progress feedback, media information, and download links without requiring page reloads.</li>
-<li><strong>Configuration Management:</strong> Store custom save directories and frequently used YouTube playlist URLs locally in a configuration file.</li>
-<li><strong>ZIP Archiving:</strong> Automatically bundle and compress entire downloaded playlists into <code>.zip</code> archives for easy access.</li>
-</ul>
-<hr />
-<h2 id="architecture-overview">🏗️ Architecture Overview</h2>
-<p>The application is built with a strong emphasis on <strong>Separation of Concerns</strong>, dividing the system into distinct layers:</p>
-<ol>
-<li><strong>Common Domain (<code>common/</code>):</strong> The engine room of the application. It contains framework-agnostic business logic, including <code>yt-dlp</code> wrappers, data models, enum keys, ID3 tagging operations, and config parsing.</li>
-<li><strong>API &amp; Delivery (<code>flask_api/</code>):</strong> The web layer connecting the backend to the user. It houses HTTP routes, Socket.IO namespaces (controllers), and the bridge services orchestrating the download flow.</li>
-<li><strong>Presentation (<code>static/</code> &amp; <code>templates/</code>):</strong> A modern, dark-themed UI built with HTML, CSS (Bootstrap), and object-oriented JavaScript.</li>
-</ol>
-<hr />
-<h2 id="documentation-map">📚 Documentation Map</h2>
-<p>Navigate through the code references to understand the internal mechanics of the project:</p>
-<h3 id="architecture-services">Architecture &amp; Services</h3>
-<ul>
-<li><a href="code/youtube_dl/">YouTube Core Engine</a> - The core wrapper around <code>yt-dlp</code>.</li>
-<li><a href="code/downloader_service/">Downloader Service</a> - The service orchestrating single tracks, playlists, and zipping.</li>
-<li><a href="code/config/">Configuration Manager</a> - Management of paths and saved playlists.</li>
-</ul>
-<h3 id="websocket-api">WebSocket API</h3>
-<ul>
-<li><a href="code/namespaces/">Namespaces (Controllers)</a> - Event listeners for frontend communication.</li>
-<li><a href="code/sockets/">Socket Manager</a> - Session tracking, message queuing, and connection management.</li>
-<li><a href="code/media_info/">Media Information Handler</a> - Real-time emission of media metadata to the client.</li>
-</ul>
+<h1 id="modular-system-architecture">🏗️ Modular System Architecture</h1>
+<p>This documentation provides a modular, vertically stacked view of the system architecture. Dashed boxes indicate external dependencies.</p>
+<h2 id="module-emits">Module: Emits</h2>
+<p><img alt="Emits Architecture" src="../classes_emits.svg" /></p>
+<h2 id="module-flask_media">Module: Flask_media</h2>
+<p><img alt="Flask_media Architecture" src="../classes_flask_media.svg" /></p>
+<h2 id="module-namespaces">Module: Namespaces</h2>
+<p><img alt="Namespaces Architecture" src="../classes_namespaces.svg" /></p>
+<h2 id="module-session_data">Module: Session_data</h2>
+<p><img alt="Session_data Architecture" src="../classes_session_data.svg" /></p>
+<h2 id="module-socket_manager">Module: Socket_manager</h2>
+<p><img alt="Socket_manager Architecture" src="../classes_socket_manager.svg" /></p>
+<h2 id="module-web_views">Module: Web_views</h2>
+<p><img alt="Web_views Architecture" src="../classes_web_views.svg" /></p>
+<h2 id="module-youtube_downloader">Module: Youtube_downloader</h2>
+<p><img alt="Youtube_downloader Architecture" src="../classes_youtube_downloader.svg" /></p>
+<h2 id="module-youtube_media_info_handler">Module: Youtube_media_info_handler</h2>
+<p><img alt="Youtube_media_info_handler Architecture" src="../classes_youtube_media_info_handler.svg" /></p>
 
 
 
@@ -824,10 +864,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": [], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
