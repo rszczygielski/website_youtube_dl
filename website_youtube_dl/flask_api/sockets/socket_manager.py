@@ -3,6 +3,46 @@ import time
 from flask import current_app as app
 from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
 
+class UserSocketContext:
+    """
+    Facade (Adapter) for SocketManager binding operations to a specific
+    user and namespace. Simplifies method calls in event handlers.
+    """
+    def __init__(self, manager: 'SocketManager', user_browser_id: str, namespace: str):
+        self.manager = manager
+        self.user_browser_id = user_browser_id
+        self.namespace = namespace
+
+    def emit(self, data, emit_type, add_to_queue=True):
+        self.manager.process_emit(data, emit_type, self.user_browser_id, self.namespace, add_to_queue)
+
+    def emit_error(self, error_msg, emit_type, add_to_queue=True):
+        self.manager.process_emit_error(error_msg, emit_type, self.user_browser_id, self.namespace, add_to_queue)
+
+    def set_downloading(self, is_downloading: bool):
+        self.manager.set_downloading_status(self.user_browser_id, self.namespace, is_downloading)
+
+    @property
+    def is_downloading(self) -> bool:
+        return self.manager.is_user_downloading(self.user_browser_id, self.namespace)
+
+    def set_cancel_flag(self):
+        self.manager.set_cancel_flag(self.user_browser_id, self.namespace)
+
+    @property
+    def is_cancelled(self) -> bool:
+        return self.manager.is_cancelled(self.user_browser_id, self.namespace)
+
+    def clear_cancel_flag(self):
+        self.manager.clear_cancel_flag(self.user_browser_id, self.namespace)
+
+    # Convenience methods for user data
+    def get_messages(self):
+        return self.manager.get_user_messages(self.user_browser_id)
+
+    def clear_data(self):
+        self.manager.clear_user_data(self.user_browser_id)
+
 
 class SocketManager:
     """Manages Socket.IO connections, user message queues, and download states.
@@ -255,6 +295,13 @@ class SocketManager:
             if session.session_id == session_id:
                 return user_browser_id
         return None
+
+    def get_context(self, user_browser_id: str, namespace: str) -> UserSocketContext:
+        """
+        Creates a bound context for a specific user and namespace.
+        Use this in Namespace controllers to simplify API calls.
+        """
+        return UserSocketContext(self, user_browser_id, namespace)
 
     # ==========================================
     # PROTECTED METHODS
