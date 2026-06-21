@@ -33,7 +33,7 @@ jobs:
 
             # Set execute permissions and run the diagram generation script
             chmod +x tools/generate_diagrams.sh
-            /tools/generate_diagrams.sh
+            ./tools/generate_diagrams.sh
 
       - run:
           name: Build and Deploy Documentation
