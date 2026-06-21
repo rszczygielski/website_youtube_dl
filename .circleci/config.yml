@@ -24,19 +24,19 @@ jobs:
           name: Generate Architecture Diagram
           when: always
           command: |
-            # 1. Install pylint which includes pyreverse
-            pip3 install pylint
+- run:
+          name: Generate and Split Architecture Diagrams (SVG)
+          when: always
+          command: |
+            echo "Installing system dependencies (Graphviz)..."
+            sudo apt-get update && sudo apt-get install -y graphviz
 
-            # 2. Generate the Mermaid diagram from source code 'mmd' (Mermaid Markdown) format
-            pyreverse -o mmd website_youtube_dl/flask_api/
+            echo "Installing Python packages (pylint, pydot)..."
+            pip3 install pylint pydot
 
-            # 3. Inject the generated diagram into the markdown file
-            echo "# 🏗️ Auto-Generated Architecture Diagram" > docs/architecture.md
-            echo "This diagram is generated automatically from the source code during the CI/CD pipeline." >> docs/architecture.md
-            echo "" >> docs/architecture.md
-            echo '```mermaid' >> docs/architecture.md
-            cat classes.mmd >> docs/architecture.md
-            echo '```' >> docs/architecture.md
+            # Set execute permissions and run the diagram generation script
+            chmod +x tools/generate_diagrams.sh
+            /tools/generate_diagrams.sh
 
       - run:
           name: Build and Deploy Documentation
