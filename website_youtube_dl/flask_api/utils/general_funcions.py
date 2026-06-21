@@ -2,6 +2,7 @@ import random
 import string
 import zipfile
 import os
+from typing import List, Any
 from website_youtube_dl.common.youtube_api import (FormatMP3,
                                                   Format360p,
                                                   Format480p,
@@ -10,7 +11,7 @@ from website_youtube_dl.common.youtube_api import (FormatMP3,
                                                   Format2160p)
 from flask import current_app as app
 
-def get_format_instance(format_str):
+def get_format_instance(format_str: str) -> Any:
     format_classes = {
         "mp3": FormatMP3,
         "360p": Format360p,
@@ -25,7 +26,7 @@ def get_format_instance(format_str):
     return format_classes.get(format_str)()
 
 
-def generate_title_template_for_youtube_downloader(downloaded_files, title):
+def generate_title_template_for_youtube_downloader(downloaded_files: List[str], title: str) -> str:
     counter = 1
     orig_title = title
     while title in downloaded_files:
@@ -36,20 +37,19 @@ def generate_title_template_for_youtube_downloader(downloaded_files, title):
     return "/%(title)s"
 
 
-def generate_hash():
+def generate_hash() -> str:
     return ''.join(random.sample(string.ascii_letters + string.digits, 6))
 
-def get_files_from_dir(dirPath):  # pragma: no_cover
+
+def get_files_from_dir(dirPath: str) -> List[str]:  # pragma: no_cover
     return [f.split(".")[0] for f in os.listdir(dirPath)
             if os.path.isfile(os.path.join(dirPath, f))]
 
 
-def zip_all_files_in_list(direcoryPath, playlist_name, listOfFilePaths):  # pragma: no_cover
+def zip_all_files_in_list(direcoryPath: str, playlist_name: str, listOfFilePaths: List[str]) -> str:  # pragma: no_cover
     type_of_compres = "zip"
     zip_file_full_path = os.path.join(direcoryPath, playlist_name)
     with zipfile.ZipFile(f"{zip_file_full_path}.{type_of_compres}", "w") as zipInstance:
         for filePath in listOfFilePaths:
             zipInstance.write(filePath, filePath.split("/")[-1])
     return f"{zip_file_full_path.split('/')[-1]}.{type_of_compres}"
-
-

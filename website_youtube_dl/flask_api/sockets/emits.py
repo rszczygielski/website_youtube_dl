@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 from ...common.youtube_data_keys import PlaylistInfo, MediaInfo
 from flask_socketio import emit
 from flask import current_app as app
@@ -7,10 +8,10 @@ class BaseEmit(ABC):
     data_str = "data"
     error_str = "error"
 
-    def __init__(self, emit_msg) -> None:
+    def __init__(self, emit_msg: str) -> None:
         self.emit_msg = emit_msg
 
-    def send_emit(self, data, session_id, namespace):
+    def send_emit(self, data: Any, session_id: str, namespace: str) -> None:
         converted_data = self.convert_data_to_message(data)
         app.logger.debug(f'Sending emit {self.emit_msg} to session {session_id} with data {converted_data}')
         emit(self.emit_msg, {
@@ -18,14 +19,14 @@ class BaseEmit(ABC):
                       to=session_id,
                       namespace=namespace)
 
-    def send_emit_error(self, error_msg, session_id, namespace):
+    def send_emit_error(self, error_msg: str, session_id: str, namespace: str) -> None:
         emit(self.emit_msg, {
                       self.error_str: error_msg},
                       to=session_id,
                       namespace=namespace)
 
     @abstractmethod
-    def convert_data_to_message(self):  # pragma: no_cover
+    def convert_data_to_message(self, data: Any) -> dict:  # pragma: no_cover
         pass
 
 
@@ -36,7 +37,7 @@ class DownloadMediaFinishEmit(BaseEmit):
         emit_msg = "downloadMediaFinish"
         super().__init__(emit_msg)
 
-    def convert_data_to_message(self, genereted_hash):
+    def convert_data_to_message(self, genereted_hash: str) -> dict:
         return {self.hash_data_key: genereted_hash}
 
 
@@ -45,7 +46,7 @@ class SingleMediaInfoEmit(BaseEmit):
         emit_msg = "mediaInfo"
         super().__init__(emit_msg)
 
-    def convert_data_to_message(self, flask_single_media):
+    def convert_data_to_message(self, flask_single_media: Any) -> dict:
         media_info_dict = {
             MediaInfo.TITLE.value: flask_single_media.title,
             MediaInfo.ARTIST.value: flask_single_media.artist,
@@ -62,7 +63,7 @@ class PlaylistMediaInfoEmit(BaseEmit):
         emit_msg = "playlistMediaInfo"
         super().__init__(emit_msg)
 
-    def convert_data_to_message(self, flask_playlist_media):
+    def convert_data_to_message(self, flask_playlist_media: Any) -> dict:
         playlist_name_value = flask_playlist_media.playlist_name
         playlist_track_list = []
         for track in flask_playlist_media.track_list:
@@ -78,31 +79,31 @@ class PlaylistMediaInfoEmit(BaseEmit):
 class UploadPlaylistToConfigEmit(BaseEmit):
     playlist_list_data_key = "playlistList"
 
-    def __init__(self):
+    def __init__(self) -> None:
         emit_msg = "uploadPlaylists"
         super().__init__(emit_msg)
 
-    def convert_data_to_message(self, playlist_list):
+    def convert_data_to_message(self, playlist_list: list) -> dict:
         return {self.playlist_list_data_key: playlist_list}
 
 
 class GetPlaylistUrlEmit(BaseEmit):
     playlist_url_data_key = "playlistUrl"
 
-    def __init__(self):
+    def __init__(self) -> None:
         emit_msg = "playlistUrl"
         super().__init__(emit_msg)
 
-    def convert_data_to_message(self, playlistUrl):
+    def convert_data_to_message(self, playlistUrl: str) -> dict:
         return {self.playlist_url_data_key: playlistUrl}
 
 
 class PlaylistTrackFinish(BaseEmit):
     index_data_key = "index"
 
-    def __init__(self):
+    def __init__(self) -> None:
         emit_msg = "playlistTrackFinish"
         super().__init__(emit_msg)
 
-    def convert_data_to_message(self, index):
+    def convert_data_to_message(self, index: int) -> dict:
         return {self.index_data_key: index}

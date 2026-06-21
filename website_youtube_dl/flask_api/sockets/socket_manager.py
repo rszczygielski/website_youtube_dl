@@ -8,39 +8,39 @@ class UserSocketContext:
     Facade (Adapter) for SocketManager binding operations to a specific
     user and namespace. Simplifies method calls in event handlers.
     """
-    def __init__(self, manager: 'SocketManager', user_browser_id: str, namespace: str):
+    def __init__(self, manager: 'SocketManager', user_browser_id: str, namespace: str) -> None:
         self.manager = manager
         self.user_browser_id = user_browser_id
         self.namespace = namespace
 
-    def emit(self, data, emit_type, add_to_queue=True):
+    def emit(self, data, emit_type, add_to_queue=True) -> None:
         self.manager.process_emit(data, emit_type, self.user_browser_id, self.namespace, add_to_queue)
 
-    def emit_error(self, error_msg, emit_type, add_to_queue=True):
+    def emit_error(self, error_msg, emit_type, add_to_queue=True) -> None:
         self.manager.process_emit_error(error_msg, emit_type, self.user_browser_id, self.namespace, add_to_queue)
 
-    def set_downloading(self, is_downloading: bool):
+    def set_downloading(self, is_downloading: bool) -> None:
         self.manager.set_downloading_status(self.user_browser_id, self.namespace, is_downloading)
 
     @property
     def is_downloading(self) -> bool:
         return self.manager.is_user_downloading(self.user_browser_id, self.namespace)
 
-    def set_cancel_flag(self):
+    def set_cancel_flag(self) -> None:
         self.manager.set_cancel_flag(self.user_browser_id, self.namespace)
 
     @property
     def is_cancelled(self) -> bool:
         return self.manager.is_cancelled(self.user_browser_id, self.namespace)
 
-    def clear_cancel_flag(self):
+    def clear_cancel_flag(self) -> None:
         self.manager.clear_cancel_flag(self.user_browser_id, self.namespace)
 
     # Convenience methods for user data
-    def get_messages(self):
+    def get_messages(self) -> list[UserMessage]:
         return self.manager.get_user_messages(self.user_browser_id)
 
-    def clear_data(self):
+    def clear_data(self) -> None:
         self.manager.clear_user_data(self.user_browser_id)
 
 
@@ -66,7 +66,7 @@ class SocketManager:
     """
     SESSION_TIMEOUT = 1800  # Testing value: 30 seconds
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize SocketManager and prepare cleanup timer registry."""
         self.active_connections = {}
         self.message_queues = {}
@@ -79,7 +79,7 @@ class SocketManager:
     # PUBLIC METHODS (API for Namespaces)
     # ==========================================
 
-    def process_emit(self, data, emit_type, user_browser_id: str, namespace: str, add_to_queue=True):
+    def process_emit(self, data, emit_type, user_browser_id: str, namespace: str, add_to_queue=True) -> None:
         """
         Process and send a successful Socket.IO emit to a specific user.
 
@@ -100,7 +100,7 @@ class SocketManager:
         session_id = self._get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit(data, session_id, namespace)
 
-    def process_emit_error(self, error_msg, emit_type, user_browser_id: str, namespace: str, add_to_queue=True):
+    def process_emit_error(self, error_msg, emit_type, user_browser_id: str, namespace: str, add_to_queue=True) -> None:
         """
         Process and send an error Socket.IO emit to a specific user.
 
@@ -121,7 +121,7 @@ class SocketManager:
         session_id = self._get_session_id_by_user_browser_id(user_browser_id)
         process_emit_type.send_emit_error(error_msg, session_id, namespace)
 
-    def add_user_session(self, user_browser_id, session_id):
+    def add_user_session(self, user_browser_id, session_id) -> None:
         """
         Register or update an active WebSocket connection for a user.
 
@@ -142,7 +142,7 @@ class SocketManager:
         self.active_connections[user_browser_id] = BrowserSession(
             session_id=session_id, last_activity_timestamp=now)
 
-    def on_user_disconnect(self, user_browser_id):
+    def on_user_disconnect(self, user_browser_id) -> None:
         """
         Schedule a cleanup task when a user disconnects from the socket.
 
@@ -172,7 +172,7 @@ class SocketManager:
         self._cleanup_timers[user_browser_id] = timer
         timer.start()
 
-    def set_downloading_status(self, user_browser_id, namespace: str, is_downloading: bool):
+    def set_downloading_status(self, user_browser_id, namespace: str, is_downloading: bool) -> None:
         """
         Update the official downloading status for a specific user.
 
@@ -201,7 +201,7 @@ class SocketManager:
         """
         return (user_browser_id, namespace) in self.active_downloads
 
-    def set_cancel_flag(self, user_browser_id, namespace: str):
+    def set_cancel_flag(self, user_browser_id, namespace: str) -> None:
         """
         Set the download cancellation flag for a specific user in a specific namespace.
 
@@ -213,7 +213,7 @@ class SocketManager:
             self.cancelled_downloads.add((user_browser_id, namespace))
             app.logger.info(f"Cancel flag set for user: {user_browser_id} in {namespace}")
 
-    def is_cancelled(self, user_browser_id, namespace: str):
+    def is_cancelled(self, user_browser_id, namespace: str) -> bool:
         """
         Check if the user has requested to cancel the ongoing download.
 
@@ -226,7 +226,7 @@ class SocketManager:
         """
         return (user_browser_id, namespace) in self.cancelled_downloads
 
-    def clear_cancel_flag(self, user_browser_id, namespace: str):
+    def clear_cancel_flag(self, user_browser_id, namespace: str) -> None:
         """
         Clear the cancellation flag for a user (e.g., before starting a new download).
 
@@ -236,7 +236,7 @@ class SocketManager:
         """
         self.cancelled_downloads.discard((user_browser_id, namespace))
 
-    def get_user_messages(self, user_browser_id):
+    def get_user_messages(self, user_browser_id) -> list[UserMessage]:
         """
         Retrieve all queued messages for a specific user.
 
@@ -248,7 +248,7 @@ class SocketManager:
         """
         return self.message_queues.get(user_browser_id, [])
 
-    def clear_user_data(self, user_browser_id):
+    def clear_user_data(self, user_browser_id) -> None:
         """
         Clear all messages from a user's message queue.
 
@@ -259,7 +259,7 @@ class SocketManager:
             self.message_queues[user_browser_id] = []
         app.logger.debug(f"Cleared user data for {user_browser_id}")
 
-    def add_message_to_session_hash(self, generated_hash, download_file_info: DownloadFileInfo):
+    def add_message_to_session_hash(self, generated_hash, download_file_info: DownloadFileInfo) -> None:
         """
         Store download file metadata in the registry mapped to a unique hash.
 
@@ -269,7 +269,7 @@ class SocketManager:
         """
         self.download_registry[generated_hash] = download_file_info
 
-    def get_session_data_by_hash(self, generated_hash):
+    def get_session_data_by_hash(self, generated_hash) -> DownloadFileInfo | None:
         """
         Retrieve download file metadata from the registry using its hash.
 
@@ -281,7 +281,7 @@ class SocketManager:
         """
         return self.download_registry.get(generated_hash, None)
 
-    def get_user_browser_id_by_session(self, session_id):
+    def get_user_browser_id_by_session(self, session_id) -> str | None:
         """
         Look up a user_browser_id associated with a specific Socket.IO session ID.
 
@@ -307,7 +307,7 @@ class SocketManager:
     # PROTECTED METHODS
     # ==========================================
 
-    def _get_session_id_by_user_browser_id(self, user_browser_id):
+    def _get_session_id_by_user_browser_id(self, user_browser_id) -> str | None:
         """
         Retrieve the Socket.IO session ID for a given user.
 
@@ -320,7 +320,7 @@ class SocketManager:
         session = self.active_connections.get(user_browser_id, None)
         return session.session_id if session else None
 
-    def _add_msg_to_users_queue(self, user_browser_id, emit_type, data, namespace, is_error=False):
+    def _add_msg_to_users_queue(self, user_browser_id, emit_type, data, namespace, is_error=False) -> None:
         """
         Append a new message object to the user's history queue.
 
@@ -343,7 +343,7 @@ class SocketManager:
         self.message_queues[user_browser_id].append(message)
         self._update_activity_timestamp(user_browser_id)
 
-    def _update_activity_timestamp(self, user_browser_id):
+    def _update_activity_timestamp(self, user_browser_id) -> None:
         """
         Refresh the last activity timestamp for a user's active connection.
 
@@ -358,7 +358,7 @@ class SocketManager:
         else:
             app.logger.warning(f"User {user_browser_id} not found in active connections.")
 
-    def _cleanup_session(self, user_browser_id, app_instance):
+    def _cleanup_session(self, user_browser_id, app_instance) -> None:
         """
         Permanently remove session data, message queues, and timers for a disconnected user.
 
@@ -382,7 +382,7 @@ class SocketManager:
             for item in cancelled_to_remove:
                 self.cancelled_downloads.discard(item)
 
-    def _cancel_cleanup_timer(self, user_browser_id):
+    def _cancel_cleanup_timer(self, user_browser_id) -> None:
         """
         Abort a scheduled cleanup task for a user.
 

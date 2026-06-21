@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Type, Optional
+from typing import Any, Type, Optional, Iterator
 
 
 @dataclass
@@ -21,7 +21,7 @@ class UserMessage:
     namespace: str
     is_error: bool = False
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         """Allow unpacking like tuple for backward compatibility.
 
         Returns:
@@ -49,7 +49,7 @@ class BrowserSession:
     session_id: str
     last_activity_timestamp: float
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         """Allow unpacking like tuple for backward compatibility.
 
         Returns:
@@ -90,7 +90,7 @@ class DownloadFileInfo():
         self.set_file_download_data(fullFilePath)
         self.is_playlist = is_playlist
 
-    def set_file_download_data(self, fullFilePath):
+    def set_file_download_data(self, fullFilePath: str) -> None:
         """Extract file name and directory path from full file path.
 
         Args:
