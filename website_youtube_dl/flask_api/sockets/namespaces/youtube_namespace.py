@@ -17,7 +17,7 @@ class YoutubeNamespace(MediaBaseNamespace):
     from MediaBaseNamespace.
     """
 
-    def on_FormData(self, formData):
+    def on_FormData(self, formData: dict) -> None:
         """
         Main entry point for handling the download form submission.
 
@@ -33,7 +33,8 @@ class YoutubeNamespace(MediaBaseNamespace):
         if not user_browser_id:
             return
 
-        app.socket_manager.clear_user_data(user_browser_id)
+        socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+        socket_ctx.clear_data()
 
         # Using the new private methods
         youtube_url = self._extract_youtube_url(formData, user_browser_id)
@@ -54,7 +55,7 @@ class YoutubeNamespace(MediaBaseNamespace):
                                                request_format,
                                                user_browser_id)
 
-    def _extract_youtube_url(self, formData, user_browser_id):
+    def _extract_youtube_url(self, formData: dict, user_browser_id: str) -> str | None:
         """
         Extracts and validates the YouTube URL from the incoming form data.
         Emits an error to the client if the URL is missing.
@@ -70,17 +71,16 @@ class YoutubeNamespace(MediaBaseNamespace):
         if not youtube_url:
             app.logger.warning(YoutubeLogs.NO_URL.value)
 
-            app.socket_manager.process_emit(
-                data=YoutubeLogs.NO_URL.value,
-                emit_type=DownloadMediaFinishEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+            socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+            socket_ctx.emit_error(
+                error_msg=YoutubeLogs.NO_URL.value,
+                emit_type=DownloadMediaFinishEmit
             )
             return None
 
         return youtube_url
 
-    def _extract_request_format(self, formData, user_browser_id):
+    def _extract_request_format(self, formData: dict, user_browser_id: str) -> object | None:
         """
         Extracts and validates the requested download format from the form data.
         Emits an error to the client if the format is missing.
@@ -95,11 +95,10 @@ class YoutubeNamespace(MediaBaseNamespace):
         if MainYoutubeKeys.DOWNLOAD_TYP.value not in formData:
             app.logger.warning(YoutubeLogs.NO_FORMAT.value)
 
-            app.socket_manager.process_emit(
-                data=YoutubeLogs.NO_FORMAT.value,
-                emit_type=DownloadMediaFinishEmit,
-                user_browser_id=user_browser_id,
-                namespace=self.namespace
+            socket_ctx = app.socket_manager.get_context(user_browser_id, self.namespace)
+            socket_ctx.emit_error(
+                error_msg=YoutubeLogs.NO_FORMAT.value,
+                emit_type=DownloadMediaFinishEmit
             )
             return None
 
@@ -109,7 +108,7 @@ class YoutubeNamespace(MediaBaseNamespace):
         return request_format
 
     @staticmethod
-    def _is_playlist_in_url(youtube_url):
+    def _is_playlist_in_url(youtube_url: str) -> bool:
         """
         Determines if the provided URL belongs to a YouTube playlist rather than a single video.
 
