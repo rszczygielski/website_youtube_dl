@@ -24,10 +24,7 @@ jobs:
           name: Generate Architecture Diagram
           when: always
           command: |
-- run:
-          name: Generate and Split Architecture Diagrams (SVG)
-          when: always
-          command: |
+
             echo "Installing system dependencies (Graphviz)..."
             sudo apt-get update && sudo apt-get install -y graphviz
 
