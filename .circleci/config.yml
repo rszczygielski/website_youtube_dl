@@ -32,7 +32,7 @@ jobs:
             pip3 install pylint pydot
 
             # Set execute permissions and run the diagram generation script
-            chmod +x tools/generate_diagrams.sh
+            chmod +x ./tools/generate_diagrams.sh
             ./tools/generate_diagrams.sh
 
       - run:
