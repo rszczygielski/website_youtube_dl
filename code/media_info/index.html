@@ -930,14 +930,13 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">YoutubeMediaInfoHandler</span><span class="p">:</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">YoutubeMediaInfoHandler</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Service responsible for fetching media metadata from YouTube</span>
 <span class="sd">    and emitting real-time Socket.IO events to the client.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize the info handler with a specific Socket.IO namespace.</span>
 
@@ -946,7 +945,7 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span> <span class="o">=</span> <span class="n">namespace</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">send_emit_single_media_info_from_youtube</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">single_media_url</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_emit_single_media_info_from_youtube</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">single_media_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fetch single media information from YouTube and emit it to the client.</span>
 
@@ -957,6 +956,8 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            bool: True if the info was successfully fetched and emitted, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">socket_ctx</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">user_browser_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+
         <span class="n">single_media_info_result</span><span class="p">:</span> <span class="n">ResultOfYoutube</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">youtube_downloader</span><span class="o">.</span><span class="n">request_single_media_info</span><span class="p">(</span>
             <span class="n">single_media_url</span>
         <span class="p">)</span>
@@ -967,23 +968,20 @@ and emitting real-time Socket.IO events to the client.</p>
 
         <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got single media info, processing emit </span><span class="si">{</span><span class="n">single_media_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Changed &#39;mediaInfo&#39; to &#39;media_info&#39; to follow PEP 8 snake_case convention</span>
         <span class="n">media_info</span><span class="p">:</span> <span class="n">SingleMedia</span> <span class="o">=</span> <span class="n">single_media_info_result</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
 
         <span class="n">flask_single_media</span> <span class="o">=</span> <span class="n">FlaskSingleMedia</span><span class="p">(</span>
             <span class="n">media_info</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">media_info</span><span class="o">.</span><span class="n">artist</span><span class="p">,</span> <span class="n">media_info</span><span class="o">.</span><span class="n">url</span>
         <span class="p">)</span>
 
-        <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">process_emit</span><span class="p">(</span>
+        <span class="n">socket_ctx</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">flask_single_media</span><span class="p">,</span>
-            <span class="n">emit_type</span><span class="o">=</span><span class="n">SingleMediaInfoEmit</span><span class="p">,</span>
-            <span class="n">user_browser_id</span><span class="o">=</span><span class="n">user_browser_id</span><span class="p">,</span>
-            <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span>
+            <span class="n">emit_type</span><span class="o">=</span><span class="n">SingleMediaInfoEmit</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">send_emit_playlist_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">youtube_url</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_emit_playlist_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">youtube_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlaylistMedia</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Fetch playlist information from YouTube and emit it to the client.</span>
 
@@ -994,6 +992,8 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">        Returns:</span>
 <span class="sd">            PlaylistMedia | None: The fetched playlist media object, or None if it fails.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">socket_ctx</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">user_browser_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+
         <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">YoutubeLogs</span><span class="o">.</span><span class="n">DOWNLAOD_PLAYLIST</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
         <span class="n">playlist_media_info_result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">youtube_downloader</span><span class="o">.</span><span class="n">request_playlist_media_info</span><span class="p">(</span>
@@ -1016,16 +1016,14 @@ and emitting real-time Socket.IO events to the client.</p>
         <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Playlist name: </span><span class="si">{</span><span class="n">playlist_name</span><span class="si">}</span><span class="s2"> tracks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">playlist_media</span><span class="o">.</span><span class="n">media_from_playlist_list</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Browser ID: </span><span class="si">{</span><span class="n">user_browser_id</span><span class="si">}</span><span class="s2"> for playlist emit&quot;</span><span class="p">)</span>
 
-        <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">process_emit</span><span class="p">(</span>
+        <span class="n">socket_ctx</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
             <span class="n">data</span><span class="o">=</span><span class="n">flask_playlist_media</span><span class="p">,</span>
-            <span class="n">emit_type</span><span class="o">=</span><span class="n">PlaylistMediaInfoEmit</span><span class="p">,</span>
-            <span class="n">user_browser_id</span><span class="o">=</span><span class="n">user_browser_id</span><span class="p">,</span>
-            <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span>
+            <span class="n">emit_type</span><span class="o">=</span><span class="n">PlaylistMediaInfoEmit</span>
         <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">playlist_media</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">send_emit_media_finish_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">send_emit_media_finish_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Log an error message and emit a finish error event to the client.</span>
 
@@ -1033,13 +1031,13 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">            error_msg (str): The error message to log and send.</span>
 <span class="sd">            user_browser_id (str): Unique identifier for the user&#39;s browser session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">socket_ctx</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">user_browser_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+
         <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
 
-        <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">process_emit_error</span><span class="p">(</span>
+        <span class="n">socket_ctx</span><span class="o">.</span><span class="n">emit_error</span><span class="p">(</span>
             <span class="n">error_msg</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
-            <span class="n">emit_type</span><span class="o">=</span><span class="n">DownloadMediaFinishEmit</span><span class="p">,</span>
-            <span class="n">user_browser_id</span><span class="o">=</span><span class="n">user_browser_id</span><span class="p">,</span>
-            <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span>
+            <span class="n">emit_type</span><span class="o">=</span><span class="n">DownloadMediaFinishEmit</span>
         <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
               </details>
@@ -1111,7 +1109,7 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="normal">23</span>
 <span class="normal">24</span>
 <span class="normal">25</span>
-<span class="normal">26</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">26</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">namespace</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize the info handler with a specific Socket.IO namespace.</span>
 
@@ -1188,7 +1186,8 @@ and emitting real-time Socket.IO events to the client.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>website_youtube_dl/flask_api/sockets/youtube_media_info_handler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">107</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
+<span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
 <span class="normal">110</span>
@@ -1202,8 +1201,7 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="normal">118</span>
 <span class="normal">119</span>
 <span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">send_emit_media_finish_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">):</span>
+<span class="normal">121</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">send_emit_media_finish_error</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error_msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Log an error message and emit a finish error event to the client.</span>
 
@@ -1211,13 +1209,13 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">        error_msg (str): The error message to log and send.</span>
 <span class="sd">        user_browser_id (str): Unique identifier for the user&#39;s browser session.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">socket_ctx</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">user_browser_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+
     <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">error_msg</span><span class="p">)</span>
 
-    <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">process_emit_error</span><span class="p">(</span>
+    <span class="n">socket_ctx</span><span class="o">.</span><span class="n">emit_error</span><span class="p">(</span>
         <span class="n">error_msg</span><span class="o">=</span><span class="n">error_msg</span><span class="p">,</span>
-        <span class="n">emit_type</span><span class="o">=</span><span class="n">DownloadMediaFinishEmit</span><span class="p">,</span>
-        <span class="n">user_browser_id</span><span class="o">=</span><span class="n">user_browser_id</span><span class="p">,</span>
-        <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span>
+        <span class="n">emit_type</span><span class="o">=</span><span class="n">DownloadMediaFinishEmit</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
             </details>
@@ -1297,6 +1295,7 @@ and emitting real-time Socket.IO events to the client.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
+                  <code><span title="website_youtube_dl.common.youtube_api.PlaylistMedia">PlaylistMedia</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1310,7 +1309,8 @@ and emitting real-time Socket.IO events to the client.</p>
 
             <details class="mkdocstrings-source">
               <summary>Source code in <code>website_youtube_dl/flask_api/sockets/youtube_media_info_handler.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 65</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 64</span>
+<span class="normal"> 65</span>
 <span class="normal"> 66</span>
 <span class="normal"> 67</span>
 <span class="normal"> 68</span>
@@ -1349,8 +1349,7 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="normal">101</span>
 <span class="normal">102</span>
 <span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">send_emit_playlist_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">youtube_url</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">):</span>
+<span class="normal">104</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">send_emit_playlist_media</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">youtube_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PlaylistMedia</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fetch playlist information from YouTube and emit it to the client.</span>
 
@@ -1361,6 +1360,8 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        PlaylistMedia | None: The fetched playlist media object, or None if it fails.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">socket_ctx</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">user_browser_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+
     <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">YoutubeLogs</span><span class="o">.</span><span class="n">DOWNLAOD_PLAYLIST</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
 
     <span class="n">playlist_media_info_result</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">youtube_downloader</span><span class="o">.</span><span class="n">request_playlist_media_info</span><span class="p">(</span>
@@ -1383,11 +1384,9 @@ and emitting real-time Socket.IO events to the client.</p>
     <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Playlist name: </span><span class="si">{</span><span class="n">playlist_name</span><span class="si">}</span><span class="s2"> tracks: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">playlist_media</span><span class="o">.</span><span class="n">media_from_playlist_list</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Browser ID: </span><span class="si">{</span><span class="n">user_browser_id</span><span class="si">}</span><span class="s2"> for playlist emit&quot;</span><span class="p">)</span>
 
-    <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">process_emit</span><span class="p">(</span>
+    <span class="n">socket_ctx</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">flask_playlist_media</span><span class="p">,</span>
-        <span class="n">emit_type</span><span class="o">=</span><span class="n">PlaylistMediaInfoEmit</span><span class="p">,</span>
-        <span class="n">user_browser_id</span><span class="o">=</span><span class="n">user_browser_id</span><span class="p">,</span>
-        <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span>
+        <span class="n">emit_type</span><span class="o">=</span><span class="n">PlaylistMediaInfoEmit</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">playlist_media</span>
@@ -1469,6 +1468,7 @@ and emitting real-time Socket.IO events to the client.</p>
       <tbody>
           <tr class="doc-section-item">
 <td><code>bool</code></td>            <td>
+                  <code><span title="bool">bool</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1516,8 +1516,7 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
-<span class="normal">62</span>
-<span class="normal">63</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">send_emit_single_media_info_from_youtube</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">single_media_url</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">):</span>
+<span class="normal">62</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">send_emit_single_media_info_from_youtube</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">single_media_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user_browser_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Fetch single media information from YouTube and emit it to the client.</span>
 
@@ -1528,6 +1527,8 @@ and emitting real-time Socket.IO events to the client.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        bool: True if the info was successfully fetched and emitted, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">socket_ctx</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">get_context</span><span class="p">(</span><span class="n">user_browser_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">)</span>
+
     <span class="n">single_media_info_result</span><span class="p">:</span> <span class="n">ResultOfYoutube</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">youtube_downloader</span><span class="o">.</span><span class="n">request_single_media_info</span><span class="p">(</span>
         <span class="n">single_media_url</span>
     <span class="p">)</span>
@@ -1538,18 +1539,15 @@ and emitting real-time Socket.IO events to the client.</p>
 
     <span class="n">app</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got single media info, processing emit </span><span class="si">{</span><span class="n">single_media_url</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Changed &#39;mediaInfo&#39; to &#39;media_info&#39; to follow PEP 8 snake_case convention</span>
     <span class="n">media_info</span><span class="p">:</span> <span class="n">SingleMedia</span> <span class="o">=</span> <span class="n">single_media_info_result</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
 
     <span class="n">flask_single_media</span> <span class="o">=</span> <span class="n">FlaskSingleMedia</span><span class="p">(</span>
         <span class="n">media_info</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">media_info</span><span class="o">.</span><span class="n">artist</span><span class="p">,</span> <span class="n">media_info</span><span class="o">.</span><span class="n">url</span>
     <span class="p">)</span>
 
-    <span class="n">app</span><span class="o">.</span><span class="n">socket_manager</span><span class="o">.</span><span class="n">process_emit</span><span class="p">(</span>
+    <span class="n">socket_ctx</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">flask_single_media</span><span class="p">,</span>
-        <span class="n">emit_type</span><span class="o">=</span><span class="n">SingleMediaInfoEmit</span><span class="p">,</span>
-        <span class="n">user_browser_id</span><span class="o">=</span><span class="n">user_browser_id</span><span class="p">,</span>
-        <span class="n">namespace</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">namespace</span>
+        <span class="n">emit_type</span><span class="o">=</span><span class="n">SingleMediaInfoEmit</span>
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">True</span>
