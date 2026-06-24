@@ -175,12 +175,10 @@ class MediaBaseNamespace(SessionBaseNamespace):
             socket_ctx.set_downloading(False)
             return
 
-        # Register file for the download endpoint (Zostaje w SocketManager - rejestr globalny)
-        generated_hash = generate_hash()
-        app.socket_manager.add_message_to_session_hash(
-            generated_hash,
+        # Register file for the download endpoint
+        generated_hash = app.socket_manager.download_registry.register_file(
             DownloadFileInfo(full_file_path, is_playlist)
-        )
+            )
 
         # Notify client with the download hash
         socket_ctx.emit(

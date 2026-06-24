@@ -38,7 +38,7 @@ class DownloadFileView(MethodView):
             tuple: A warning message and a 404 status code if the hash
                    is not found or expired.
         """
-        session_download_data = app.socket_manager.get_session_data_by_hash(name)
+        session_download_data = app.socket_manager.download_registry.get_file(name)
         if not session_download_data:
             app.logger.warning(f"No session data for hash: {name}")
             return "File not found", 404

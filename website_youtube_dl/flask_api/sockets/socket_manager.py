@@ -2,6 +2,7 @@ import threading
 import time
 from flask import current_app as app
 from ..sockets.session_data import DownloadFileInfo, UserMessage, BrowserSession
+from .download_registry import DownloadRegistry
 
 class UserSocketContext:
     """
@@ -70,7 +71,7 @@ class SocketManager:
         """Initialize SocketManager and prepare cleanup timer registry."""
         self.active_connections = {}
         self.message_queues = {}
-        self.download_registry = {}
+        self.download_registry = DownloadRegistry()
         self.cancelled_downloads = set()
         self._cleanup_timers = {}
         self.active_downloads = set()
@@ -258,28 +259,6 @@ class SocketManager:
         if user_browser_id in self.message_queues:
             self.message_queues[user_browser_id] = []
         app.logger.debug(f"Cleared user data for {user_browser_id}")
-
-    def add_message_to_session_hash(self, generated_hash, download_file_info: DownloadFileInfo) -> None:
-        """
-        Store download file metadata in the registry mapped to a unique hash.
-
-        Args:
-            generated_hash (str): The unique identifier string for the download link.
-            download_file_info (DownloadFileInfo): The object containing file path and playlist status.
-        """
-        self.download_registry[generated_hash] = download_file_info
-
-    def get_session_data_by_hash(self, generated_hash) -> DownloadFileInfo | None:
-        """
-        Retrieve download file metadata from the registry using its hash.
-
-        Args:
-            generated_hash (str): The unique identifier string.
-
-        Returns:
-            DownloadFileInfo | None: The metadata object if found, None otherwise.
-        """
-        return self.download_registry.get(generated_hash, None)
 
     def get_user_browser_id_by_session(self, session_id) -> str | None:
         """
