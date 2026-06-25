@@ -25,7 +25,7 @@ for svg_file in docs/classes_*.svg; do
   module_name=$(echo "$filename" | sed -E 's/classes_(.*)\.svg/\1/' | awk '{print toupper(substr($0,1,1)) substr($0,2)}')
 
   echo "## Module: ${module_name}" >> docs/architecture.md
-  echo "![${module_name} Architecture](${filename})" >> docs/architecture.md
+  echo "[![${module_name} Architecture](${filename})](${filename})" >> docs/architecture.md
   echo "" >> docs/architecture.md
 done
 

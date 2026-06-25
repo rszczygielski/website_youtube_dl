@@ -39,8 +39,8 @@ jobs:
           name: Build and Deploy Documentation
           when: always
           command: |
-            # 1. Install MkDocs stack
-            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python]
+            # 1. Install MkDocs stack + GLightbox
+            pip3 install ghp-import mkdocs mkdocs-material mkdocstrings[python] mkdocs-glightbox
 
             # 2. Build the static site
             mkdocs build
